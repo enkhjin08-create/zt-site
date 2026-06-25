@@ -1,20 +1,23 @@
 /* ============================================================
    Зөвхөн түүнд — Бараа удирдах Netlify Function (серверийн код)
 
-   Энэ нь Админ хэсгээс нэмсэн НЭМЭЛТ бараануудыг хадгална (zuvhuntuund.com-ийн
-   103 бэлэн барааны үндсэн сан, assets/data.js дотор хэвээр үлдэнэ). Энд
-   нэмэгдсэн бараанууд сайт ачаалах үед үндсэн сантай НЭГТГЭГДЭНЭ
-   (assets/products-api.js → app.js-ийн PRODUCTS массив).
+   Энэ нь 2 зүйлийг хадгална:
+   1. "products"  — Админ хэсгээс ШИНЭЭР нэмсэн бараанууд
+   2. "overrides" — zuvhuntuund.com-ийн 103 бэлэн барааны (assets/data.js доторх)
+      аль нэгэнд админ хийсэн ЗАСВАР (үнэ, role, ангилал, Дууссан төлөв г.м.),
+      id-аар холбогддог. assets/data.js файл өөрөө хэвээр үлдэнэ — зүгээр
+      сайт ачаалах үед эдгээр засвар дээр нь "наалддаг" (overlay).
 
-   Захиалгын Function-тэй ИЖИЛ JSONBin bin-ийг ашигладаг (өөр түлхүүрээр —
-   {"orders":[...], "products":[...]}) тул хоёул бичих үедээ нөгөөгийнхөө
-   мэдээллийг устгахгүйн тулд бүтэн баримтыг (doc) уншиж бичнэ.
+   Захиалгын Function-тэй ИЖИЛ JSONBin bin-ийг ашигладаг тул бичих
+   үед нөгөөгийнхөө мэдээллийг устгахгүйн тулд бүтэн баримтыг уншиж бичнэ.
 
-   4 үйлдэл дэмжинэ:
-   - action="list"    → нийтэд нээлттэй (PIN шаардахгүй) — сайт дээр бараа харуулахад хэрэгтэй
-   - action="add"     → зөвхөн зөв PIN-тэй бол шинэ бараа нэмнэ
-   - action="update"  → зөвхөн зөв PIN-тэй бол бараа засна (үнэ, Дууссан төлөв г.м.)
-   - action="delete"  → зөвхөн зөв PIN-тэй бол бараа устгана
+   6 үйлдэл дэмжинэ:
+   - action="list"           → нийтэд нээлттэй — нэмсэн бараа + бүх засвар буцаана
+   - action="add"            → зөв PIN-тэй бол шинэ бараа нэмнэ
+   - action="update"         → зөв PIN-тэй бол НЭМСЭН барааг засна
+   - action="delete"         → зөв PIN-тэй бол НЭМСЭН барааг устгана
+   - action="setOverride"    → зөв PIN-тэй бол ҮНДСЭН 103 барааны нэгэнд засвар хийнэ
+   - action="clearOverride"  → зөв PIN-тэй бол засврыг арилгаж, анхны байдалд оруулна
    ============================================================ */
 
 const JSONBIN_BASE = "https://api.jsonbin.io/v3/b/";
@@ -36,7 +39,8 @@ async function readDoc(){
   const record = data.record || {};
   return {
     orders: Array.isArray(record.orders) ? record.orders : [],
-    products: Array.isArray(record.products) ? record.products : []
+    products: Array.isArray(record.products) ? record.products : [],
+    overrides: (record.overrides && typeof record.overrides === "object") ? record.overrides : {}
   };
 }
 
@@ -81,6 +85,24 @@ function sanitizeProduct(input, existing){
   };
 }
 
+function sanitizeOverride(input, existing){
+  input = input || {};
+  existing = existing || {};
+  const patch = Object.assign({}, existing);
+  const str = (v, max) => String(v == null ? "" : v).slice(0, max);
+  const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+
+  if(input.name != null) patch.name = str(input.name, 120);
+  if(input.price != null) patch.price = num(input.price);
+  if("oldPrice" in input) patch.oldPrice = (input.oldPrice === "" || input.oldPrice == null) ? null : num(input.oldPrice);
+  if(input.category != null && VALID_CATEGORIES.includes(input.category)) patch.category = input.category;
+  if(input.role != null && VALID_ROLES.includes(input.role)) patch.role = input.role;
+  if(typeof input.soldOut === "boolean") patch.soldOut = input.soldOut;
+  if(input.image != null) patch.image = str(input.image, 500);
+  if(input.url != null) patch.url = str(input.url, 500);
+  return patch;
+}
+
 exports.handler = async (event) => {
   if(event.httpMethod !== "POST"){
     return json(405, { error: "Method not allowed" });
@@ -96,7 +118,7 @@ exports.handler = async (event) => {
   try{
     if(body.action === "list"){
       const doc = await readDoc();
-      return json(200, { ok: true, products: doc.products });
+      return json(200, { ok: true, products: doc.products, overrides: doc.overrides });
     }
 
     if(body.action === "add"){
@@ -122,6 +144,25 @@ exports.handler = async (event) => {
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
       const doc = await readDoc();
       doc.products = doc.products.filter(p => p.id !== body.id);
+      await writeDoc(doc);
+      return json(200, { ok: true });
+    }
+
+    if(body.action === "setOverride"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(body.id == null) return json(400, { error: "Missing id" });
+      const doc = await readDoc();
+      const key = String(body.id);
+      doc.overrides[key] = sanitizeOverride(body.patch, doc.overrides[key]);
+      await writeDoc(doc);
+      return json(200, { ok: true, override: doc.overrides[key] });
+    }
+
+    if(body.action === "clearOverride"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(body.id == null) return json(400, { error: "Missing id" });
+      const doc = await readDoc();
+      delete doc.overrides[String(body.id)];
       await writeDoc(doc);
       return json(200, { ok: true });
     }

@@ -101,9 +101,13 @@
       </form>
     </div>
 
-    <h3 style="font-size:16px;margin-bottom:12px">Нэмсэн бараанууд</h3>
-    <div id="custom-product-list" style="display:flex;flex-direction:column;gap:12px"></div>
-    <div class="empty-state" id="product-empty" style="display:none">Нэмсэн бараа алга байна.</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+      <h3 style="font-size:16px;margin:0">Бүх бараа</h3>
+      <input id="product-search" class="field-input" type="text" placeholder="Нэрээр хайх..." style="max-width:220px">
+    </div>
+    <div class="filter-pills" id="admin-cat-pills"></div>
+    <div id="all-product-list" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
+    <div class="empty-state" id="product-empty" style="display:none">Илэрц алга байна.</div>
   </div>
 </div>
 
@@ -272,50 +276,192 @@ function switchTab(tab){
   document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("is-active", b.dataset.tab === tab));
   document.getElementById("orders-tab").style.display = tab === "orders" ? "" : "none";
   document.getElementById("products-tab").style.display = tab === "products" ? "" : "none";
-  if(tab === "products" && customProductsCache === null) loadCustomProducts();
+  if(tab === "products" && !productsLoaded) loadAllProducts();
 }
 
-/* ---------------- Product management ---------------- */
-let customProductsCache = null;
+/* ---------------- Product management (base catalog + custom) ---------------- */
+let productsLoaded = false;
+let adminCatFilter = "all";
+let adminSearch = "";
 const ROLE_LABELS = { main: "Гол бэлэг", extra: "Нэмэлт зүйлс", container: "Сав, баглаа боодол" };
 
-async function loadCustomProducts(){
-  const list = document.getElementById("custom-product-list");
+async function loadAllProducts(){
+  const list = document.getElementById("all-product-list");
   list.innerHTML = `<p class="lede">Уншиж байна...</p>`;
   document.getElementById("product-empty").style.display = "none";
   try{
-    customProductsCache = await listCustomProducts();
-    renderCustomProductList();
+    await initProducts();
+    productsLoaded = true;
+    renderAdminCatPills();
+    renderAllProductsList();
   }catch(e){
     list.innerHTML = `<p class="lede">Уншихад алдаа гарлаа.</p>`;
   }
 }
 
-function renderCustomProductList(){
-  const list = document.getElementById("custom-product-list");
+function renderAdminCatPills(){
+  const pills = [["all","Бүгд"], ...Object.entries(CATEGORIES).map(([k,c]) => [k, c.label])];
+  document.getElementById("admin-cat-pills").innerHTML = pills.map(([k,label]) =>
+    `<button class="pill ${adminCatFilter===k?"is-active":""}" onclick="setAdminCatFilter('${k}')">${label}</button>`).join("");
+}
+function setAdminCatFilter(k){ adminCatFilter = k; renderAdminCatPills(); renderAllProductsList(); }
+
+document.getElementById("product-search").addEventListener("input", (e) => {
+  adminSearch = e.target.value.trim().toLowerCase();
+  renderAllProductsList();
+});
+
+function renderAllProductsList(){
+  let list = PRODUCTS.slice();
+  if(adminCatFilter !== "all") list = list.filter(p => p.category === adminCatFilter);
+  if(adminSearch) list = list.filter(p => p.name.toLowerCase().includes(adminSearch));
+  list.sort((a,b) => (a.custom === b.custom ? 0 : (a.custom ? -1 : 1)) || (b.id - a.id));
+
+  const wrap = document.getElementById("all-product-list");
   const empty = document.getElementById("product-empty");
-  if(!customProductsCache || !customProductsCache.length){ list.innerHTML = ""; empty.style.display = "block"; return; }
+  if(!list.length){ wrap.innerHTML = ""; empty.style.display = "block"; return; }
   empty.style.display = "none";
-  list.innerHTML = customProductsCache.slice().reverse().map(customProductCardHTML).join("");
+  wrap.innerHTML = list.map(adminProductRowHTML).join("");
 }
 
-function customProductCardHTML(p){
+function adminProductRowHTML(p){
   const cat = CATEGORIES[p.category] || CATEGORIES.extra;
-  const roleLabel = ROLE_LABELS[p.role] || p.role;
   const safeImage = escapeHTML(p.image || "");
-  return `<div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-    <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${cat.tint};display:flex;align-items:center;justify-content:center;color:${cat.color}">
-      ${p.image ? `<img src="${safeImage}" style="width:100%;height:100%;object-fit:cover" alt="">` : `<svg viewBox="0 0 100 100" width="26" height="26">${ICONS[p.category] || ICONS.extra}</svg>`}
+  const isCustom = !!p.custom;
+  const isOverridden = !isCustom && !!LAST_OVERRIDES[String(p.id)];
+  const rowId = "row" + p.id;
+
+  return `<div class="admin-row" id="${rowId}" style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px">
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <div style="width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${cat.tint};display:flex;align-items:center;justify-content:center;color:${cat.color}">
+        ${p.image ? `<img src="${safeImage}" style="width:100%;height:100%;object-fit:cover" alt="">` : `<svg viewBox="0 0 100 100" width="24" height="24">${ICONS[p.category] || ICONS.extra}</svg>`}
+      </div>
+      <div style="flex:1;min-width:140px">
+        <div style="font-weight:700;font-size:14px">${escapeHTML(p.name)}
+          ${isCustom ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--sage-tint);border:none">Нэмсэн</span>` : ""}
+          ${isOverridden ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--ribbon-tint);border:none">Засагдсан</span>` : ""}
+        </div>
+        <div style="font-size:12px;color:var(--ink-faint)">#${p.id}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="toggleRowEdit(${p.id})" data-toggle-btn>Засах</button>
     </div>
-    <div style="flex:1;min-width:160px">
-      <div style="font-weight:700">${escapeHTML(p.name)} ${p.soldOut ? '<span class="badge sold" style="position:static">Дууссан</span>' : ""}</div>
-      <div style="font-size:12.5px;color:var(--ink-faint)">${cat.label} · ${roleLabel} · ${formatPrice(p.price)}</div>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost btn-sm" onclick="toggleProductSoldOut(${p.id}, ${!p.soldOut})">${p.soldOut ? "Дахин бэлэн" : "Дууссан гэж тэмдэглэх"}</button>
-      <button class="btn btn-outline btn-sm" onclick="deleteProductConfirm(${p.id})">Устгах</button>
+
+    <div id="edit${rowId}" style="display:none;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px">
+        <div>
+          <label class="field-label">Нэр</label>
+          <input id="name${rowId}" class="field-input" type="text" value="${escapeHTML(p.name)}" ${isCustom ? "" : "disabled"}>
+        </div>
+        <div>
+          <label class="field-label">Үнэ (₮)</label>
+          <input id="price${rowId}" class="field-input" type="number" min="0" step="100" value="${p.price}">
+        </div>
+        <div>
+          <label class="field-label">Хуучин үнэ</label>
+          <input id="oldPrice${rowId}" class="field-input" type="number" min="0" step="100" value="${p.oldPrice || ""}">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
+        <div>
+          <label class="field-label">Ангилал</label>
+          <select id="category${rowId}" class="field-input">
+            ${Object.entries(CATEGORIES).map(([k,c]) => `<option value="${k}" ${p.category===k?"selected":""}>${c.label}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Builder-д хаана харагдах вэ?</label>
+          <select id="role${rowId}" class="field-input">
+            <option value="main" ${p.role==="main"?"selected":""}>Гол бэлэг (Алхам 3)</option>
+            <option value="extra" ${p.role==="extra"?"selected":""}>Нэмэлт зүйлс (Алхам 4)</option>
+            <option value="container" ${p.role==="container"?"selected":""}>Сав, баглаа боодол (Алхам 2)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Төлөв</label>
+          <select id="soldOut${rowId}" class="field-input">
+            <option value="false" ${!p.soldOut?"selected":""}>Бэлэн</option>
+            <option value="true" ${p.soldOut?"selected":""}>Дууссан</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div>
+          <label class="field-label">Зургийн холбоос</label>
+          <input id="image${rowId}" class="field-input" type="text" value="${safeImage}">
+        </div>
+        <div>
+          <label class="field-label">Дэлгүүрийн холбоос</label>
+          <input id="url${rowId}" class="field-input" type="text" value="${escapeHTML(p.url || "")}">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="saveProductRow(${p.id}, ${isCustom})">Хадгалах</button>
+        ${isCustom
+          ? `<button class="btn btn-outline btn-sm" onclick="deleteProductConfirm(${p.id})">Устгах</button>`
+          : (isOverridden ? `<button class="btn btn-outline btn-sm" onclick="revertOverride(${p.id})">Анхны байдалд оруулах</button>` : "")}
+      </div>
     </div>
   </div>`;
+}
+
+function toggleRowEdit(id){
+  const el = document.getElementById("editrow" + id);
+  if(el) el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function readRowFields(id){
+  const rowId = "row" + id;
+  const val = (name) => document.getElementById(name + rowId).value;
+  return {
+    name: val("name"),
+    price: Number(val("price")),
+    oldPrice: val("oldPrice") === "" ? null : Number(val("oldPrice")),
+    category: val("category"),
+    role: val("role"),
+    soldOut: val("soldOut") === "true",
+    image: val("image"),
+    url: val("url")
+  };
+}
+
+async function saveProductRow(id, isCustom){
+  const patch = readRowFields(id);
+  try{
+    if(isCustom){
+      await adminUpdateProduct(adminPin, id, patch);
+    }else{
+      await adminSetOverride(adminPin, id, patch);
+    }
+    toast("Хадгалагдлаа ✓");
+    await loadAllProducts();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+async function revertOverride(id){
+  if(!confirm("Энэ барааны засварыг арилгаж, анхны байдалд оруулах уу?")) return;
+  try{
+    await adminClearOverride(adminPin, id);
+    toast("Анхны байдалд оруулсан");
+    await loadAllProducts();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+async function deleteProductConfirm(id){
+  if(!confirm("Энэ барааг устгах уу? Буцаах боломжгүй.")) return;
+  try{
+    await adminDeleteProduct(adminPin, id);
+    toast("Бараа устгагдлаа");
+    await loadAllProducts();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
 }
 
 async function submitProductForm(e){
@@ -339,36 +485,12 @@ async function submitProductForm(e){
     await adminAddProduct(adminPin, product);
     toast("Бараа нэмэгдлээ ✓");
     f.reset();
-    await loadCustomProducts();
+    await loadAllProducts();
   }catch(err){
     if(err.status === 401){ logout(); return; }
     toast("Алдаа гарлаа. Дахин оролдоорой.");
   }
   btn.disabled = false; btn.textContent = "Бараа нэмэх";
-}
-
-async function toggleProductSoldOut(id, val){
-  try{
-    const p = customProductsCache.find(x => x.id === id);
-    if(!p) return;
-    await adminUpdateProduct(adminPin, id, Object.assign({}, p, { soldOut: val }));
-    await loadCustomProducts();
-  }catch(e){
-    if(e.status === 401){ logout(); return; }
-    toast("Алдаа гарлаа");
-  }
-}
-
-async function deleteProductConfirm(id){
-  if(!confirm("Энэ барааг устгах уу? Буцаах боломжгүй.")) return;
-  try{
-    await adminDeleteProduct(adminPin, id);
-    toast("Бараа устгагдлаа");
-    await loadCustomProducts();
-  }catch(e){
-    if(e.status === 401){ logout(); return; }
-    toast("Алдаа гарлаа");
-  }
 }
 </script>
 </body>

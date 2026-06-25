@@ -34,6 +34,7 @@
 
 <script src="assets/data.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/products-api.js"></script>
 <script src="assets/orders.js"></script>
 <script>
 renderHeader("builder.html");
@@ -129,13 +130,16 @@ function renderStepPanel(){
             <div class="t">${r.label}</div>
           </div>`).join("")}
       </div>
+      <p style="font-size:13.5px;color:var(--ink-soft);margin-top:18px">
+        Хэрвээ та бэлгээ сонгож чадахгүй байвал <a href="category.html?cat=giftset" style="color:var(--ribbon-dark);font-weight:700;text-decoration:underline">манай бэлэн бэлгийн багцуудаас үзнэ үү →</a>
+      </p>
       ${stepActionsHTML({nextDisabled: !box.recipient})}
     `;
     return;
   }
 
   if(step === 2){
-    const containers = PRODUCTS.filter(p => p.category === "box");
+    const containers = PRODUCTS.filter(p => (p.role || defaultRoleForCategory(p.category)) === "container");
     panel.innerHTML = `
       <p class="eyebrow">Алхам 2</p>
       <h2>Ямар сав/баглаа боодол хэрэгтэй вэ?</h2>
@@ -157,9 +161,9 @@ function renderStepPanel(){
   }
 
   if(step === 3 || step === 4){
-    const cats = step===3 ? ["cup","giftset","flower"] : ["extra"];
+    const wantRole = step===3 ? "main" : "extra";
     const title = step===3 ? "Гол бэлгээ сонгоорой" : "Дагалдах зүйлс нэмэх үү?";
-    let list = PRODUCTS.filter(p => cats.includes(p.category) && !p.soldOut);
+    let list = PRODUCTS.filter(p => (p.role || defaultRoleForCategory(p.category)) === wantRole && !p.soldOut);
     if(recFilterOn && box.recipient) list = list.filter(p => p.recipients.includes(box.recipient));
     panel.innerHTML = `
       <p class="eyebrow">Алхам ${step}</p>
@@ -395,9 +399,12 @@ function clearBox(){
   renderStepsNav(); renderStepPanel(); renderBoxPreview();
 }
 
-renderStepsNav();
-renderStepPanel();
-renderBoxPreview();
+(async function(){
+  await initProducts();
+  renderStepsNav();
+  renderStepPanel();
+  renderBoxPreview();
+})();
 </script>
 </body>
 </html>

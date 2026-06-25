@@ -22,20 +22,24 @@ function json(status, body){
   };
 }
 
-async function readOrders(){
+async function readDoc(){
   const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID + "/latest", {
     headers: { "X-Master-Key": process.env.JSONBIN_MASTER_KEY }
   });
   if(!res.ok) throw new Error("JSONBin read failed: " + res.status);
   const data = await res.json();
-  return (data.record && Array.isArray(data.record.orders)) ? data.record.orders : [];
+  const record = data.record || {};
+  return {
+    orders: Array.isArray(record.orders) ? record.orders : [],
+    products: Array.isArray(record.products) ? record.products : []
+  };
 }
 
-async function writeOrders(orders){
+async function writeDoc(doc){
   const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID, {
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-Master-Key": process.env.JSONBIN_MASTER_KEY },
-    body: JSON.stringify({ orders })
+    body: JSON.stringify(doc)
   });
   if(!res.ok) throw new Error("JSONBin write failed: " + res.status);
 }
@@ -94,25 +98,25 @@ exports.handler = async (event) => {
   try{
     if(body.action === "submit"){
       const order = sanitizeOrder(body.order);
-      const orders = await readOrders();
-      orders.push(order);
-      await writeOrders(orders);
+      const doc = await readDoc();
+      doc.orders.push(order);
+      await writeDoc(doc);
       return json(200, { ok: true, id: order.id });
     }
 
     if(body.action === "list"){
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
-      const orders = await readOrders();
-      return json(200, { ok: true, orders });
+      const doc = await readDoc();
+      return json(200, { ok: true, orders: doc.orders });
     }
 
     if(body.action === "updateStatus"){
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
-      const orders = await readOrders();
-      const idx = orders.findIndex(o => o.id === body.id);
+      const doc = await readDoc();
+      const idx = doc.orders.findIndex(o => o.id === body.id);
       if(idx >= 0){
-        orders[idx].status = String(body.status || "new").slice(0, 20);
-        await writeOrders(orders);
+        doc.orders[idx].status = String(body.status || "new").slice(0, 20);
+        await writeDoc(doc);
       }
       return json(200, { ok: true });
     }

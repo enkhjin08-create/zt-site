@@ -166,7 +166,7 @@ function renderHeader(active){
       <img class="wordmark-img" src="assets/images/logo-wordmark-sm.png" alt="Зөвхөн түүнд" height="22">
     </a>
     <nav class="main-nav">${navLinks}</nav>
-    <a class="nav-cart" href="builder.html"><span>🎀 Хайрцаг</span><span class="count">0</span></a>
+    <a class="nav-cart" href="builder.html"><span>🎁 Сагс</span><span class="count">0</span></a>
   </div>`;
   document.querySelectorAll(".site-header").forEach(el => el.innerHTML = html);
   updateCartBadge();

@@ -36,14 +36,80 @@
     </div>
   </div>
 
-  <div id="stat-row" style="display:flex;gap:14px;margin:26px 0 22px;flex-wrap:wrap"></div>
-  <div class="filter-pills" id="status-pills"></div>
-  <div id="order-list" style="display:flex;flex-direction:column;gap:14px;margin-top:6px"></div>
-  <div class="empty-state" id="order-empty" style="display:none">Захиалга алга байна.</div>
+  <div class="filter-pills" style="margin-top:24px">
+    <button class="pill is-active" data-tab="orders" onclick="switchTab('orders')">Захиалгууд</button>
+    <button class="pill" data-tab="products" onclick="switchTab('products')">Бараа удирдах</button>
+  </div>
+
+  <div id="orders-tab">
+    <div id="stat-row" style="display:flex;gap:14px;margin:22px 0 22px;flex-wrap:wrap"></div>
+    <div class="filter-pills" id="status-pills"></div>
+    <div id="order-list" style="display:flex;flex-direction:column;gap:14px;margin-top:6px"></div>
+    <div class="empty-state" id="order-empty" style="display:none">Захиалга алга байна.</div>
+  </div>
+
+  <div id="products-tab" style="display:none;margin-top:22px">
+    <div class="step-panel" style="margin-bottom:24px;padding:26px">
+      <h3 style="font-size:18px;margin-bottom:4px">Шинэ бараа нэмэх</h3>
+      <p class="lede" style="font-size:13px;margin-bottom:16px">Энд нэмсэн бараа шууд сайт дээр (Бүтээгдэхүүн хуудас, Бэлэг бэлдэх хэсэг) харагдана.</p>
+      <form id="product-form" onsubmit="submitProductForm(event)">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px">
+          <div>
+            <label class="field-label">Нэр</label>
+            <input name="name" class="field-input" type="text" placeholder="Жишээ: Зул сарын аяга" required>
+          </div>
+          <div>
+            <label class="field-label">Үнэ (₮)</label>
+            <input name="price" class="field-input" type="number" min="0" step="100" required>
+          </div>
+          <div>
+            <label class="field-label">Хуучин үнэ (заавал биш)</label>
+            <input name="oldPrice" class="field-input" type="number" min="0" step="100">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+          <div>
+            <label class="field-label">Ангилал</label>
+            <select name="category" class="field-input">
+              <option value="cup">CuteCup аяга</option>
+              <option value="giftset">Бэлгийн багц</option>
+              <option value="flower">Цэцэгс</option>
+              <option value="extra">Дагалдах зүйлс</option>
+              <option value="box">Сав, баглаа боодол</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Builder-д хаана харагдах вэ?</label>
+            <select name="role" class="field-input">
+              <option value="main">Гол бэлэг (Алхам 3)</option>
+              <option value="extra">Нэмэлт зүйлс (Алхам 4)</option>
+              <option value="container">Сав, баглаа боодол (Алхам 2)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+          <div>
+            <label class="field-label">Зургийн холбоос (URL, заавал биш)</label>
+            <input name="image" class="field-input" type="text" placeholder="https://...">
+          </div>
+          <div>
+            <label class="field-label">Дэлгүүрийн холбоос (заавал биш)</label>
+            <input name="url" class="field-input" type="text" placeholder="https://zuvhuntuund.com/...">
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top:18px">Бараа нэмэх</button>
+      </form>
+    </div>
+
+    <h3 style="font-size:16px;margin-bottom:12px">Нэмсэн бараанууд</h3>
+    <div id="custom-product-list" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div class="empty-state" id="product-empty" style="display:none">Нэмсэн бараа алга байна.</div>
+  </div>
 </div>
 
 <script src="assets/data.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/products-api.js"></script>
 <script src="assets/orders.js"></script>
 <script>
 const STATUSES = {
@@ -200,6 +266,110 @@ async function changeStatus(id, status){
 
 const savedPin = sessionStorage.getItem("zt_admin_pin");
 if(savedPin){ adminPin = savedPin; showDashboard(false); }
+
+/* ---------------- Tabs ---------------- */
+function switchTab(tab){
+  document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("is-active", b.dataset.tab === tab));
+  document.getElementById("orders-tab").style.display = tab === "orders" ? "" : "none";
+  document.getElementById("products-tab").style.display = tab === "products" ? "" : "none";
+  if(tab === "products" && customProductsCache === null) loadCustomProducts();
+}
+
+/* ---------------- Product management ---------------- */
+let customProductsCache = null;
+const ROLE_LABELS = { main: "Гол бэлэг", extra: "Нэмэлт зүйлс", container: "Сав, баглаа боодол" };
+
+async function loadCustomProducts(){
+  const list = document.getElementById("custom-product-list");
+  list.innerHTML = `<p class="lede">Уншиж байна...</p>`;
+  document.getElementById("product-empty").style.display = "none";
+  try{
+    customProductsCache = await listCustomProducts();
+    renderCustomProductList();
+  }catch(e){
+    list.innerHTML = `<p class="lede">Уншихад алдаа гарлаа.</p>`;
+  }
+}
+
+function renderCustomProductList(){
+  const list = document.getElementById("custom-product-list");
+  const empty = document.getElementById("product-empty");
+  if(!customProductsCache || !customProductsCache.length){ list.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  list.innerHTML = customProductsCache.slice().reverse().map(customProductCardHTML).join("");
+}
+
+function customProductCardHTML(p){
+  const cat = CATEGORIES[p.category] || CATEGORIES.extra;
+  const roleLabel = ROLE_LABELS[p.role] || p.role;
+  const safeImage = escapeHTML(p.image || "");
+  return `<div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+    <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${cat.tint};display:flex;align-items:center;justify-content:center;color:${cat.color}">
+      ${p.image ? `<img src="${safeImage}" style="width:100%;height:100%;object-fit:cover" alt="">` : `<svg viewBox="0 0 100 100" width="26" height="26">${ICONS[p.category] || ICONS.extra}</svg>`}
+    </div>
+    <div style="flex:1;min-width:160px">
+      <div style="font-weight:700">${escapeHTML(p.name)} ${p.soldOut ? '<span class="badge sold" style="position:static">Дууссан</span>' : ""}</div>
+      <div style="font-size:12.5px;color:var(--ink-faint)">${cat.label} · ${roleLabel} · ${formatPrice(p.price)}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="toggleProductSoldOut(${p.id}, ${!p.soldOut})">${p.soldOut ? "Дахин бэлэн" : "Дууссан гэж тэмдэглэх"}</button>
+      <button class="btn btn-outline btn-sm" onclick="deleteProductConfirm(${p.id})">Устгах</button>
+    </div>
+  </div>`;
+}
+
+async function submitProductForm(e){
+  e.preventDefault();
+  const f = e.target;
+  const product = {
+    name: f.name.value.trim(),
+    price: Number(f.price.value),
+    oldPrice: f.oldPrice.value ? Number(f.oldPrice.value) : null,
+    category: f.category.value,
+    role: f.role.value,
+    image: f.image.value.trim(),
+    url: f.url.value.trim(),
+    soldOut: false
+  };
+  if(!product.name || !product.price){ toast("Нэр, үнээ бөглөнө үү 🙏"); return; }
+
+  const btn = f.querySelector("button[type=submit]");
+  btn.disabled = true; btn.textContent = "Нэмэж байна...";
+  try{
+    await adminAddProduct(adminPin, product);
+    toast("Бараа нэмэгдлээ ✓");
+    f.reset();
+    await loadCustomProducts();
+  }catch(err){
+    if(err.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа. Дахин оролдоорой.");
+  }
+  btn.disabled = false; btn.textContent = "Бараа нэмэх";
+}
+
+async function toggleProductSoldOut(id, val){
+  try{
+    const p = customProductsCache.find(x => x.id === id);
+    if(!p) return;
+    await adminUpdateProduct(adminPin, id, Object.assign({}, p, { soldOut: val }));
+    await loadCustomProducts();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+async function deleteProductConfirm(id){
+  if(!confirm("Энэ барааг устгах уу? Буцаах боломжгүй.")) return;
+  try{
+    await adminDeleteProduct(adminPin, id);
+    toast("Бараа устгагдлаа");
+    await loadCustomProducts();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
 </script>
 </body>
 </html>

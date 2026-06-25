@@ -1060,3 +1060,13 @@ function tagRecipients(p) {
 }
 
 PRODUCTS.forEach(p => { p.recipients = tagRecipients(p); });
+
+// Бараа бүр "Гол бэлэг" (main), "Нэмэлт зүйлс" (extra), эсвэл "Сав баглаа" (container)
+// гэсэн 3 үүргийн нэгэнд харьяалагдана. Builder-ийн алхам бүр (Сав/Гол бэлэг/Нэмэлт)
+// яг энэ `role` талбараар шүүнэ. Хуучин 103 барааны role-ыг ангиллаас нь автоматаар
+// тооцоолно; Админ хэсгээс шинэ бараа нэмэхдээ үүнийг шууд сонгож тохируулна.
+function defaultRoleForCategory(cat){
+  if(cat === "box") return "container";
+  if(cat === "extra") return "extra";
+  return "main"; // cup, giftset, flower
+}

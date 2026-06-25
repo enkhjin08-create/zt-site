@@ -31,6 +31,7 @@
 
 <script src="assets/data.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/products-api.js"></script>
 <script>
 renderHeader("category.html");
 renderFooter();
@@ -75,6 +76,10 @@ document.addEventListener("click", (e) => {
 
 pillsHTML();
 renderGrid();
+(async function(){
+  await initProducts();
+  renderGrid();
+})();
 </script>
 </body>
 </html>

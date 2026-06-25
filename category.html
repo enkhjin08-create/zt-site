@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бүтээгдэхүүн — Зөвхөн түүнд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header"></header>
+
+<div class="wrap page-head">
+  <p class="crumb"><a href="index.html">Нүүр</a> / Бүтээгдэхүүн</p>
+  <h1 id="page-title">Бүтээгдэхүүн</h1>
+  <p class="lede" id="page-sub">zuvhuntuund.com дэлгүүрийн агуулахаас. Захиалга баталгаажуулалт, хүргэлт — Zochil дэлгүүрээр.</p>
+</div>
+
+<div class="wrap section" style="padding-top:18px">
+  <div class="filter-pills" id="cat-pills"></div>
+  <div class="filter-pills" id="rec-pills" style="margin-top:-14px"></div>
+  <div class="product-grid" id="grid"></div>
+  <div class="empty-state" id="empty" style="display:none">Энэ ангилалд одоогоор бараа алга байна. Өөр шүүлтүүр сонгоод үзээрэй.</div>
+</div>
+
+<footer class="site-footer"></footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+renderHeader("category.html");
+renderFooter();
+
+const params = new URLSearchParams(location.search);
+let activeCat = params.get("cat") || "all";
+let activeRec = params.get("recipient") || "all";
+
+function pillsHTML(){
+  const catPills = [["all","Бүгд"], ...Object.entries(CATEGORIES).map(([k,c])=>[k,c.label])];
+  document.getElementById("cat-pills").innerHTML = catPills.map(([k,label]) =>
+    `<button class="pill ${activeCat===k?"is-active":""}" data-cat="${k}">${label}</button>`).join("");
+
+  const recPills = [["all","Бүх хүлээн авагч"], ...Object.entries(RECIPIENTS).map(([k,r])=>[k, r.emoji+" "+r.label])];
+  document.getElementById("rec-pills").innerHTML = recPills.map(([k,label]) =>
+    `<button class="pill ${activeRec===k?"is-active":""}" data-rec="${k}" style="font-size:12.5px;opacity:.85">${label}</button>`).join("");
+}
+
+function renderGrid(){
+  let list = PRODUCTS.slice();
+  if(activeCat !== "all") list = list.filter(p => p.category === activeCat);
+  if(activeRec !== "all") list = list.filter(p => p.recipients.includes(activeRec));
+  list.sort((a,b)=> (a.soldOut - b.soldOut) || (b.id - a.id));
+
+  const grid = document.getElementById("grid");
+  const empty = document.getElementById("empty");
+  if(list.length === 0){ grid.innerHTML = ""; empty.style.display="block"; return; }
+  empty.style.display = "none";
+  grid.innerHTML = list.map(productCardHTML).join("");
+
+  const title = activeCat === "all" ? "Бүтээгдэхүүн" : CATEGORIES[activeCat].label;
+  document.getElementById("page-title").textContent = title;
+  document.title = title + " — Зөвхөн түүнд";
+}
+
+document.addEventListener("click", (e) => {
+  const catBtn = e.target.closest("[data-cat]");
+  if(catBtn){ activeCat = catBtn.dataset.cat; pillsHTML(); renderGrid(); history.replaceState(null,"", `?cat=${activeCat}&recipient=${activeRec}`); }
+  const recBtn = e.target.closest("[data-rec]");
+  if(recBtn){ activeRec = recBtn.dataset.rec; pillsHTML(); renderGrid(); history.replaceState(null,"", `?cat=${activeCat}&recipient=${activeRec}`); }
+});
+
+pillsHTML();
+renderGrid();
+</script>
+</body>
+</html>

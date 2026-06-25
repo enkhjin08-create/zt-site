@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бүтээгдэхүүн дэлгэрэнгүй — Зөвхөн түүнд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header"></header>
+
+<div class="wrap" id="content"></div>
+
+<div class="wrap section">
+  <div class="section-head">
+    <div><p class="eyebrow">Санаачлага</p><h2>Төстэй бэлэг</h2></div>
+  </div>
+  <div class="product-grid" id="related"></div>
+</div>
+
+<footer class="site-footer"></footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+renderHeader("category.html");
+renderFooter();
+
+const DESCRIPTIONS = {
+  cup: "Өдөр тутмын дулаан мэдрэмж — кофе, цай уух дуртай хүндээ тохирсон CuteCup аяга. Гараар сонгож, хайрцагтаа нэмээрэй.",
+  giftset: "Хэд хэдэн зүйл нэг дор уядаг бэлгийн багц. Өөрөө хайрцаглаж дахин уях шаардлагагүй — шууд бэлэг болгон өргөж болно.",
+  flower: "Шинэхэн цэцгийн баглаа. Хайрцагтай хослуулж, эсвэл дан өргөж болно.",
+  extra: "Хайрцагаа өнгөлөх жижиг мэдрэмж — захидал, лаа, нэг хуудас сэтгэл хөдлөл.",
+  box: "Бэлгээ сайхан өргөхөд хэрэгтэй сав, баглаа боодлын суурь хэсэг."
+};
+
+const id = Number(new URLSearchParams(location.search).get("id"));
+const p = getProduct(id);
+const content = document.getElementById("content");
+
+if(!p){
+  content.innerHTML = `<div class="empty-state"><h2>Бараа олдсонгүй</h2><p>Холбоос буруу байж магадгүй.</p><a class="btn btn-primary" href="category.html" style="margin-top:14px">Бүтээгдэхүүн рүү буцах</a></div>`;
+}else{
+  document.title = p.name + " — Зөвхөн түүнд";
+  const cat = CATEGORIES[p.category];
+  content.innerHTML = `
+    <p class="crumb"><a href="index.html">Нүүр</a> / <a href="category.html?cat=${p.category}">${cat.label}</a> / ${p.name}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;padding:24px 0 10px">
+      <div>${productArtHTML(p, {height:"420px"})}</div>
+      <div>
+        <p class="eyebrow">${cat.label}</p>
+        <h1 style="font-size:32px">${p.name}</h1>
+        <div class="price-row" style="margin:14px 0 18px">
+          <span class="price" style="font-size:26px">${formatPrice(p.price)}</span>
+          ${p.oldPrice ? `<span class="price-old">${formatPrice(p.oldPrice)}</span>` : ""}
+          ${p.soldOut ? `<span class="badge sold" style="position:static">Дууссан</span>` : ""}
+        </div>
+        <p class="lede">${DESCRIPTIONS[p.category]}</p>
+        <div style="display:flex;gap:12px;margin-top:26px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""}>Хайрцагт нэмэх</button>
+          <a class="btn btn-outline" href="${p.url}" target="_blank" rel="noopener">Zochil дэлгүүрээр захиалах →</a>
+        </div>
+        <p style="font-size:12.5px;color:var(--ink-faint);margin-top:14px">Бодит зураг удахгүй шинэчлэгдэнэ. Энэ хооронд яг бараагаа Zochil холбоосоор шалгаарай.</p>
+      </div>
+    </div>`;
+
+  const related = PRODUCTS.filter(x => x.category === p.category && x.id !== p.id).slice(0,4);
+  document.getElementById("related").innerHTML = related.map(productCardHTML).join("");
+}
+</script>
+</body>
+</html>

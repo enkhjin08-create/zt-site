@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бэлэг бэлдэх — Зөвхөн түүнд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header"></header>
+
+<div class="wrap page-head">
+  <p class="crumb"><a href="index.html">Нүүр</a> / Бэлэг бэлдэх</p>
+  <h1>Бэлэг бэлдэх</h1>
+  <p class="lede">Алхам алхмаар сонгоод, баруун талд хайрцаг тань хэрхэн бүрэлдэхийг шууд харна.</p>
+</div>
+
+<div class="wrap section" style="padding-top:18px">
+  <div class="steps-nav" id="steps-nav"></div>
+
+  <div class="builder-layout">
+    <div class="step-panel" id="step-panel"></div>
+
+    <aside class="box-preview" id="box-preview"></aside>
+  </div>
+</div>
+
+<footer class="site-footer"></footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/orders.js"></script>
+<script>
+renderHeader("builder.html");
+renderFooter();
+
+const STEP_LABELS = ["Хэн","Сав","Гол бэлэг","Нэмэлт","Зурвас","Дуусгах"];
+let step = 1;
+let box = loadBox();
+
+const initRecipient = new URLSearchParams(location.search).get("recipient");
+if(initRecipient && RECIPIENTS[initRecipient]){
+  box.recipient = initRecipient;
+  saveBox(box);
+  step = 2;
+}
+
+let recFilterOn = true;
+let orderRegistered = false;
+
+function persist(){ saveBox(box); renderBoxPreview(); }
+
+function renderStepsNav(){
+  document.getElementById("steps-nav").innerHTML = STEP_LABELS.map((label,i) => {
+    const n = i+1;
+    const cls = n===step ? "is-active" : (n<step ? "is-done" : "");
+    return `<div class="step-dot ${cls}"><span class="num">${n}</span>${label}</div>`;
+  }).join("");
+}
+
+function renderBoxPreview(){
+  const el = document.getElementById("box-preview");
+  const recipient = box.recipient ? RECIPIENTS[box.recipient] : null;
+  const container = box.containerId ? getProduct(box.containerId) : null;
+  const items = box.itemIds.map(getProduct).filter(Boolean);
+  const total = boxTotal(box);
+
+  let rows = "";
+  if(container){
+    rows += `<div class="box-item-row"><span>📦 ${container.name}</span><span>${formatPrice(container.price)}</span></div>`;
+  }else if(items.length){
+    rows += `<div class="box-item-row" style="color:var(--ink-faint)"><span>🛍️ Сав сонгоогүй</span><span>бор цаасан уут</span></div>`;
+  }
+  items.forEach((p, idx) => {
+    rows += `<div class="box-item-row"><span>${p.name}</span><span style="display:flex;gap:8px;align-items:center">${formatPrice(p.price)} <button onclick="removeItem(${idx})" title="Хасах">✕</button></span></div>`;
+  });
+
+  el.innerHTML = `
+    <h3>Миний хайрцаг</h3>
+    <div class="recipient-line">${recipient ? recipient.emoji+" "+recipient.label : "Хүлээн авагч сонгоогүй"}</div>
+    <div class="box-art">
+      <svg viewBox="0 0 200 170" fill="none">
+        <rect x="30" y="70" width="140" height="86" rx="8" fill="#FFFFFF" stroke="#15140F" stroke-opacity=".18" stroke-width="2.5"/>
+        <rect x="30" y="70" width="140" height="24" fill="#FFEAF1"/>
+        <rect x="92" y="34" width="16" height="122" fill="#FF6698"/>
+        <path d="M100 34c-10-22-46-19-38-1 4 9 25 8 38 1z" fill="#FF6698"/>
+        <path d="M100 34c10-22 46-19 38-1-4 9-25 8-38 1z" fill="#C75077"/>
+        <circle cx="100" cy="33" r="6" fill="#EFB8C3"/>
+      </svg>
+    </div>
+    ${rows ? `<div class="box-items-list">${rows}</div>` : `<div class="box-empty-note">Хайрцаг хоосон байна. Зүйл нэмж эхлээрэй 🎀</div>`}
+    <div class="box-total"><span>Нийт дүн</span><span class="num">${formatPrice(total)}</span></div>
+  `;
+}
+
+function removeItem(idx){ box = removeFromBoxIndex(idx); renderBoxPreview(); }
+
+function goStep(n){
+  step = Math.max(1, Math.min(6, n));
+  renderStepsNav();
+  renderStepPanel();
+  window.scrollTo({top: document.querySelector(".builder-layout").offsetTop - 100, behavior:"smooth"});
+}
+
+function stepActionsHTML(opts){
+  opts = opts || {};
+  return `<div class="step-actions">
+    <button class="btn btn-ghost" onclick="goStep(${step-1})" ${step===1?"disabled":""}>← Буцах</button>
+    <button class="btn btn-primary" onclick="${opts.onNext || `goStep(${step+1})`}" ${opts.nextDisabled?"disabled":""}>${opts.nextLabel || "Үргэлжлүүлэх →"}</button>
+  </div>`;
+}
+
+function renderStepPanel(){
+  const panel = document.getElementById("step-panel");
+
+  if(step === 1){
+    panel.innerHTML = `
+      <p class="eyebrow">Алхам 1</p>
+      <h2>Энэ хайрцаг хэнд зориулагдсан бэ?</h2>
+      <div class="choice-grid">
+        ${Object.entries(RECIPIENTS).map(([k,r]) => `
+          <div class="choice-card ${box.recipient===k?"is-selected":""}" onclick="selectRecipient('${k}')">
+            <div class="emoji">${r.emoji}</div>
+            <div class="t">${r.label}</div>
+          </div>`).join("")}
+      </div>
+      ${stepActionsHTML({nextDisabled: !box.recipient})}
+    `;
+    return;
+  }
+
+  if(step === 2){
+    const containers = PRODUCTS.filter(p => p.category === "box");
+    panel.innerHTML = `
+      <p class="eyebrow">Алхам 2</p>
+      <h2>Ямар сав/баглаа боодол хэрэгтэй вэ?</h2>
+      <div class="choice-grid">
+        <div class="choice-card ${!box.containerId?"is-selected":""}" onclick="selectContainer(null)">
+          <div class="emoji">🚫</div><div class="t">Сав хэрэггүй</div>
+          <div style="font-size:11px;color:var(--ink-faint);margin-top:4px;line-height:1.3">Дахин боловсруулсан бор цаасан уутанд очно</div>
+        </div>
+        ${containers.map(p => `
+          <div class="choice-card ${box.containerId===p.id?"is-selected":""}" onclick="selectContainer(${p.id})">
+            <div class="emoji">📦</div><div class="t">${p.name}</div>
+            ${p.size ? `<div style="font-size:11px;color:var(--ink-faint);margin-top:2px">${p.size}</div>` : ""}
+            <div style="font-size:12px;color:var(--ribbon-dark);font-weight:700;margin-top:4px">${formatPrice(p.price)}</div>
+          </div>`).join("")}
+      </div>
+      ${stepActionsHTML()}
+    `;
+    return;
+  }
+
+  if(step === 3 || step === 4){
+    const cats = step===3 ? ["cup","giftset","flower"] : ["extra"];
+    const title = step===3 ? "Гол бэлгээ сонгоорой" : "Дагалдах зүйлс нэмэх үү?";
+    let list = PRODUCTS.filter(p => cats.includes(p.category) && !p.soldOut);
+    if(recFilterOn && box.recipient) list = list.filter(p => p.recipients.includes(box.recipient));
+    panel.innerHTML = `
+      <p class="eyebrow">Алхам ${step}</p>
+      <h2>${title}</h2>
+      ${box.recipient ? `<label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-soft);margin-top:10px;cursor:pointer">
+        <input type="checkbox" ${recFilterOn?"checked":""} onchange="toggleRecFilter(this.checked)"> Зөвхөн ${RECIPIENTS[box.recipient].label.toLowerCase()} тохирсон зүйлс
+      </label>` : ""}
+      <div class="item-pick-grid">
+        ${list.map(p => `
+          <div class="pick-card ${box.itemIds.includes(p.id)?"is-selected":""}" onclick="toggleItem(${p.id})">
+            ${productArtHTML(p)}
+            <div class="pname">${p.name}</div>
+            <div class="pprice">${formatPrice(p.price)}</div>
+          </div>`).join("") || `<p class="lede" style="padding:20px 0">Тохирох зүйл олдсонгүй. Шүүлтүүрээ арилгаж үзээрэй.</p>`}
+      </div>
+      ${stepActionsHTML()}
+    `;
+    return;
+  }
+
+  if(step === 5){
+    panel.innerHTML = `
+      <p class="eyebrow">Алхам 5</p>
+      <h2>Тантай хэрхэн холбогдох вэ?</h2>
+      <p class="lede">Захиалгыг баталгаажуулахын тулд нэр, утасны дугаараа үлдээгээрэй.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
+        <div>
+          <label class="field-label">Нэр</label>
+          <input id="cust-name" class="field-input" type="text" value="${escapeHTML(box.customerName || "")}" placeholder="Таны нэр">
+        </div>
+        <div>
+          <label class="field-label">Утасны дугаар</label>
+          <input id="cust-phone" class="field-input" type="tel" value="${escapeHTML(box.customerPhone || "")}" placeholder="9911XXXX">
+        </div>
+      </div>
+      <div class="msg-box" style="margin-top:18px">
+        <label class="field-label" style="font-family:var(--font-body)">Зурвас (сэтгэлийн үг, заавал биш)</label>
+        <textarea id="msg-input" placeholder="Жишээ: Чи бол миний хамгийн ягаан өдрүүд... 💕">${escapeHTML(box.message || "")}</textarea>
+      </div>
+      ${stepActionsHTML({onNext: "saveMessageAndNext()"})}
+    `;
+    return;
+  }
+
+  if(step === 6){
+    panel.innerHTML = renderSummary();
+  }
+}
+
+function selectRecipient(k){ box.recipient = k; persist(); renderStepPanel(); }
+function selectContainer(id){ box.containerId = id; persist(); renderStepPanel(); }
+function toggleRecFilter(v){ recFilterOn = v; renderStepPanel(); }
+function toggleItem(id){
+  const i = box.itemIds.indexOf(id);
+  if(i>=0) box.itemIds.splice(i,1); else box.itemIds.push(id);
+  persist(); renderStepPanel();
+}
+function saveMessageAndNext(){
+  const name = document.getElementById("cust-name").value.trim();
+  const phone = document.getElementById("cust-phone").value.trim();
+  if(!name || !phone){ toast("Нэр, утасны дугаараа бөглөнө үү 🙏"); return; }
+  box.customerName = name;
+  box.customerPhone = phone;
+  box.message = document.getElementById("msg-input").value;
+  persist();
+  goStep(6);
+}
+
+const DELIVERY_FEE = 7000;
+const BANK_INFO = { holder: "Энхжин", account: "MN490005005304653256" };
+
+function ensureOrderNumber(){
+  if(!box.orderNumber){
+    box.orderNumber = "ZT" + Date.now().toString().slice(-6);
+    saveBox(box);
+  }
+  return box.orderNumber;
+}
+
+function buildOrderObject(){
+  const container = box.containerId ? getProduct(box.containerId) : null;
+  const items = box.itemIds.map(getProduct).filter(Boolean);
+  const subtotal = boxTotal(box);
+  return {
+    id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("ord_" + Date.now() + "_" + Math.random().toString(36).slice(2)),
+    orderNumber: ensureOrderNumber(),
+    createdAt: new Date().toISOString(),
+    customerName: box.customerName || "",
+    customerPhone: box.customerPhone || "",
+    recipientKey: box.recipient,
+    recipient: box.recipient ? RECIPIENTS[box.recipient].label : "—",
+    container: container ? { id: container.id, name: container.name, price: container.price } : null,
+    items: items.map(p => ({ id: p.id, name: p.name, price: p.price })),
+    message: box.message || "",
+    subtotal: subtotal,
+    deliveryFee: DELIVERY_FEE,
+    total: subtotal + DELIVERY_FEE,
+    status: "new"
+  };
+}
+
+function buildOrderText(){
+  const recipient = box.recipient ? RECIPIENTS[box.recipient].label : "—";
+  const container = box.containerId ? getProduct(box.containerId) : null;
+  const items = box.itemIds.map(getProduct).filter(Boolean);
+  const subtotal = boxTotal(box);
+  const grandTotal = subtotal + DELIVERY_FEE;
+  let lines = [];
+  lines.push("ЗАХИАЛГЫН ХҮСЭЛТ — Зөвхөн түүнд");
+  lines.push("Захиалгын дугаар: " + ensureOrderNumber());
+  lines.push("Захиалагч: " + (box.customerName || "—") + " · " + (box.customerPhone || "—"));
+  lines.push("Хүлээн авагч: " + recipient);
+  if(container) lines.push("Сав: " + container.name + " (" + formatPrice(container.price) + ")");
+  else lines.push("Сав: дахин боловсруулсан бор цаасан уут (үнэгүй)");
+  if(items.length){
+    lines.push("Бараа:");
+    items.forEach(p => lines.push("  • " + p.name + " — " + formatPrice(p.price)));
+  }
+  if(box.message) lines.push("Зурвас: \"" + box.message + "\"");
+  lines.push("Барааны дүн: " + formatPrice(subtotal));
+  lines.push("Хүргэлт: " + formatPrice(DELIVERY_FEE));
+  lines.push("Нийт төлөх дүн: " + formatPrice(grandTotal));
+  lines.push("");
+  lines.push("Данс: " + BANK_INFO.account + " (" + BANK_INFO.holder + ")");
+  lines.push("Гүйлгээний утга: " + ensureOrderNumber());
+  lines.push("");
+  lines.push("(Энэ нь захиалгын урьдчилсан хүсэлт. Эцсийн баталгаажуулалт, төлбөр, хүргэлт Messenger/Zochil-р хийгдэнэ.)");
+  return lines.join("\n");
+}
+
+let agreedToTerms = false;
+
+function renderSummary(){
+  const items = box.itemIds.map(getProduct).filter(Boolean);
+  const hasAnything = items.length || box.containerId;
+  if(!hasAnything){
+    return `
+      <p class="eyebrow">Алхам 6</p>
+      <h2>Хайрцаг хоосон байна</h2>
+      <p class="lede">Буцаж очоод бэлэг сонгоорой.</p>
+      ${stepActionsHTML({onNext:"goStep(3)", nextLabel:"Бэлэг сонгох →"})}
+    `;
+  }
+  const text = buildOrderText();
+  const orderNo = ensureOrderNumber();
+  const subtotal = boxTotal(box);
+  const grandTotal = subtotal + DELIVERY_FEE;
+
+  return `
+    <p class="eyebrow">Алхам 6 · Захиалга №${orderNo}</p>
+    <h2>Хайрцаг бэлэн боллоо 🎀</h2>
+    <p class="lede">Доор хүргэлтийн нөхцөл, төлбөрийн мэдээллийг уншаад зөвшөөрөөрэй — дараа нь дансны мэдээлэл гарч ирнэ.</p>
+
+    <div class="summary-text" id="summary-text" style="margin-top:18px">${text}</div>
+
+    <div class="notice-box">
+      <strong>Хүргэлтийн нөхцөл:</strong> Улаанбаатарын А, Б бүсэд хүргэлт ${formatPrice(DELIVERY_FEE)}.
+      16 цагаас өмнө захиалсан тухайн өдөртөө очно. 16 цагаас хойш захиалсан захиалга маргааш нь очно.
+    </div>
+    <div class="notice-box warn">
+      Та төлбөрөө 100% төлснөөр таны захиалга хүргэлтэнд бэлтгэгдэнэ. Төлбөр баталгаажуулалт автомат биш бөгөөд
+      бид дансаа шалгаад төлвийг нь солих болно. Үүнд хугацаа орох тул та төлбөрөө төлсөн л бол санаа зоволтгүй
+      хүлээж байгаарай.
+    </div>
+
+    <div id="bank-block" style="${agreedToTerms ? "" : "display:none"}">
+      <div class="bank-card">
+        <div class="row"><span class="label">Дүн</span><b>${formatPrice(grandTotal)}</b></div>
+        <div class="row"><span class="label">Эзэмшигч</span><span>${BANK_INFO.holder}</span></div>
+        <div class="row"><span class="label">Данс</span><span>${BANK_INFO.account}</span></div>
+        <div class="row"><span class="label">Гүйлгээний утга</span><b>${orderNo}</b></div>
+      </div>
+      <div class="notice-box warn" style="margin-top:12px">
+        ⚠️ Гүйлгээ хийхдээ <b>гүйлгээний утга дээр заавал захиалгын дугаараа (${orderNo}) бичээд</b> илгээгээрэй —
+        үгүй бол төлбөрийг тань олж тохируулахад хүндрэлтэй болно.
+      </div>
+    </div>
+
+    <div id="agree-row" style="${agreedToTerms ? "display:none" : ""}; margin-top:16px">
+      <button class="btn btn-primary" onclick="agreeAndShowBank()">Дээрхийг зөвшөөрч, дансны мэдээлэл харах →</button>
+    </div>
+
+    <div class="copy-row" id="action-row" style="${agreedToTerms ? "" : "display:none"}; margin-top:16px">
+      <button class="btn btn-primary" id="register-btn" onclick="registerOrder()" ${orderRegistered ? "disabled" : ""}>${orderRegistered ? "Бүртгэгдлээ ✓" : "Захиалгыг бүртгэх ✓"}</button>
+      <button class="btn btn-ghost" onclick="copyOrder()">Хуулах 📋</button>
+      <a class="btn btn-outline" href="https://m.me/619674054827086" target="_blank" rel="noopener">Messenger-р холбогдох →</a>
+    </div>
+    <p id="register-note" style="font-size:12.5px;color:var(--ink-faint);margin-top:10px;display:${agreedToTerms ? "block" : "none"}">
+      Бүртгэх товч дарвал захиалга админ хэсэгт шууд харагдана.
+      эсвэл <a href="mailto:info.zuvhuntuund@gmail.com?subject=${encodeURIComponent('Захиалгын хүсэлт')}&body=${encodeURIComponent(text)}">и-мэйлээр илгээх</a>
+    </p>
+
+    <div class="step-actions">
+      <button class="btn btn-ghost" onclick="goStep(5)">← Засах</button>
+      <button class="btn btn-outline" onclick="clearBox()">Хайрцгийг хоослох</button>
+    </div>
+  `;
+}
+
+function agreeAndShowBank(){
+  agreedToTerms = true;
+  document.getElementById("bank-block").style.display = "";
+  document.getElementById("agree-row").style.display = "none";
+  document.getElementById("action-row").style.display = "";
+  document.getElementById("register-note").style.display = "block";
+}
+
+async function registerOrder(){
+  if(orderRegistered) return;
+  const btn = document.getElementById("register-btn");
+  if(btn){ btn.disabled = true; btn.textContent = "Бүртгэж байна..."; }
+  try{
+    await submitOrder(buildOrderObject());
+    orderRegistered = true;
+    if(btn){ btn.textContent = "Бүртгэгдлээ ✓"; }
+    toast("Захиалга бүртгэгдлээ! Админ хэсэгт харагдана 🎀");
+  }catch(e){
+    if(btn){ btn.disabled = false; btn.textContent = "Захиалгыг бүртгэх ✓"; }
+    toast("Бүртгэхэд алдаа гарлаа. Хуулах/Messenger-р явуулж болно.");
+  }
+}
+
+function copyOrder(){
+  const text = buildOrderText();
+  navigator.clipboard.writeText(text).then(() => toast("Хуулагдлаа! Messenger-р буулгаад илгээгээрэй ✨"));
+}
+function clearBox(){
+  box = emptyBox();
+  saveBox(box);
+  step = 1;
+  orderRegistered = false;
+  agreedToTerms = false;
+  renderStepsNav(); renderStepPanel(); renderBoxPreview();
+}
+
+renderStepsNav();
+renderStepPanel();
+renderBoxPreview();
+</script>
+</body>
+</html>

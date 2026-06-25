@@ -282,6 +282,7 @@ const PRODUCTS = [
   },
   {
     "id": 748641,
+    "image": "https://cdn.zochil.shop/4e874a69-20fb-49b4-9f7a-fa544864f6a1_t1500.jpg",
     "name": "Ширээний календарь 2026",
     "price": 22000,
     "oldPrice": null,
@@ -291,6 +292,7 @@ const PRODUCTS = [
   },
   {
     "id": 726574,
+    "image": "https://cdn.zochil.shop/a1c99302-6b11-40d5-a647-494a2c86689b_t1500.jpg",
     "name": "Pre-order: ME 2026",
     "price": 45000,
     "oldPrice": 60000,
@@ -480,6 +482,7 @@ const PRODUCTS = [
   },
   {
     "id": 554516,
+    "image": "https://cdn.zochil.shop/f9a4ca95-3dc4-434d-bfc7-884fdfdacfed_t1500.jpg",
     "name": "Ширээний календарь",
     "price": 22000,
     "oldPrice": null,
@@ -519,6 +522,7 @@ const PRODUCTS = [
   },
   {
     "id": 434516,
+    "image": "https://cdn.zochil.shop/09fb9e3a-c2ad-4ad5-91b2-2f282d072518_t1500.jpg",
     "name": "\"Банхар\" төлөвлөгч",
     "price": 30000,
     "oldPrice": null,
@@ -528,6 +532,7 @@ const PRODUCTS = [
   },
   {
     "id": 429144,
+    "image": "https://cdn.zochil.shop/beef1768-863a-4a6f-ae6b-9863809e9e91_t1500.jpg",
     "name": "Зүрхэн шилтэй лаа",
     "price": 8000,
     "oldPrice": null,
@@ -567,6 +572,7 @@ const PRODUCTS = [
   },
   {
     "id": 426839,
+    "image": "https://cdn.zochil.shop/adc94ede-20e7-4f4a-902d-af878fcf017f_t1500.jpg",
     "name": "Бэлгийн хайрцаг",
     "price": 6000,
     "oldPrice": null,
@@ -727,6 +733,7 @@ const PRODUCTS = [
   },
   {
     "id": 423064,
+    "image": "https://cdn.zochil.shop/791599ac-64aa-4300-b663-24254d82e36c_t1500.jpg",
     "name": "Хайрын купон цулгай",
     "price": 12000,
     "oldPrice": null,
@@ -736,6 +743,7 @@ const PRODUCTS = [
   },
   {
     "id": 422030,
+    "image": "https://cdn.zochil.shop/ee21343a-05e5-40ed-9488-38a004cf986a_t1500.jpg",
     "name": "Дугтуй",
     "price": 3500,
     "oldPrice": null,
@@ -745,6 +753,7 @@ const PRODUCTS = [
   },
   {
     "id": 419642,
+    "image": "https://cdn.zochil.shop/da2d6123-20d2-477d-8c07-0a8d145894fa_t1500.jpg",
     "name": "Төрсөн өдрийн мэндчилгээ #3",
     "price": 1500,
     "oldPrice": null,
@@ -754,6 +763,7 @@ const PRODUCTS = [
   },
   {
     "id": 419641,
+    "image": "https://cdn.zochil.shop/6c9b143c-8268-4bbb-8290-d0d3ceab0b4a_t1500.jpg",
     "name": "Төрсөн өдрийн мэндчилгээ #2",
     "price": 1500,
     "oldPrice": null,
@@ -763,6 +773,7 @@ const PRODUCTS = [
   },
   {
     "id": 400570,
+    "image": "https://cdn.zochil.shop/b16db5e0-7548-401d-822f-74d2d12f59cd_t1500.png",
     "name": "Гэр sticky note",
     "price": 4000,
     "oldPrice": 4500,
@@ -772,6 +783,7 @@ const PRODUCTS = [
   },
   {
     "id": 400567,
+    "image": "https://cdn.zochil.shop/3b18c9f8-ede1-49e2-94e0-a842a6af7056_t1500.png",
     "name": "Банхар sticky note",
     "price": 4000,
     "oldPrice": 5000,
@@ -781,6 +793,7 @@ const PRODUCTS = [
   },
   {
     "id": 304688,
+    "image": "https://cdn.zochil.shop/ca590695-d9ab-4cf0-9440-ffe17eea1e11_t1500.jpg",
     "name": "Love you #4",
     "price": 52000,
     "oldPrice": null,
@@ -790,6 +803,7 @@ const PRODUCTS = [
   },
   {
     "id": 300844,
+    "image": "https://cdn.zochil.shop/05cdc211-4961-485f-b625-c816d2ee5979_t1500.jpg",
     "name": "Love you #3",
     "price": 75000,
     "oldPrice": null,
@@ -799,6 +813,7 @@ const PRODUCTS = [
   },
   {
     "id": 150174,
+    "image": "https://cdn.zochil.shop/7f967a82-6779-48ee-99db-c52c17257769_t1500.jpg",
     "name": "Хайрын купон",
     "price": 15000,
     "oldPrice": null,
@@ -808,6 +823,7 @@ const PRODUCTS = [
   },
   {
     "id": 148000,
+    "image": "https://cdn.zochil.shop/f684efaa-2a46-465b-bfca-b2535aab8b37_t1500.png",
     "name": "Open when дугтуйны багц",
     "price": 25000,
     "oldPrice": null,

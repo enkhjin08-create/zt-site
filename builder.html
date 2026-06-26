@@ -279,6 +279,9 @@ function buildOrderObject(){
     createdAt: new Date().toISOString(),
     customerName: box.customerName || "",
     customerPhone: box.customerPhone || "",
+    deliveryDistrict: box.deliveryDistrict || "",
+    deliveryKhoroo: box.deliveryKhoroo || "",
+    deliveryAddress: box.deliveryAddress || "",
     recipientKey: box.recipient,
     recipient: box.recipient ? RECIPIENTS[box.recipient].label : "—",
     container: container ? { id: container.id, name: container.name, price: container.price } : null,
@@ -301,6 +304,7 @@ function buildOrderText(){
   lines.push("ЗАХИАЛГЫН ХҮСЭЛТ — Зөвхөн түүнд");
   lines.push("Захиалгын дугаар: " + ensureOrderNumber());
   lines.push("Захиалагч: " + (box.customerName || "—") + " · " + (box.customerPhone || "—"));
+  lines.push("Хүргэлтийн хаяг: " + [box.deliveryDistrict, box.deliveryKhoroo ? box.deliveryKhoroo + "-р хороо" : "", box.deliveryAddress].filter(Boolean).join(", "));
   lines.push("Хүлээн авагч: " + recipient);
   if(container) lines.push("Сав: " + container.name + " (" + formatPrice(container.price) + ")");
   else lines.push("Сав: дахин боловсруулсан бор цаасан уут (үнэгүй)");
@@ -354,6 +358,19 @@ function renderSummary(){
       </div>
     </div>
 
+    <div style="margin-top:14px">
+      <label class="field-label">Хүргэлтийн хаяг</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px">
+        <select id="cust-district" class="field-input" onchange="box.deliveryDistrict=this.value;persist();">
+          <option value="" ${!box.deliveryDistrict?"selected":""}>Дүүрэг сонгох</option>
+          ${["Баянзүрх","Сүхбаатар","Чингэлтэй","Хан-Уул","Баянгол","Сонгинохайрхан","Налайх","Багануур","Багахангай"].map(d =>
+            `<option value="${d}" ${box.deliveryDistrict===d?"selected":""}>${d}</option>`).join("")}
+        </select>
+        <input id="cust-khoroo" class="field-input" type="text" value="${escapeHTML(box.deliveryKhoroo || "")}" placeholder="Хороо (заавал биш)" onchange="box.deliveryKhoroo=this.value.trim();persist();">
+      </div>
+      <textarea id="cust-address" class="field-input" style="margin-top:10px;min-height:70px;resize:vertical" placeholder="Гудамж, байр, тоот, орц, давхар — лавлах зориг (барилгын нэр, ойролцоох газар) бичвэл хүргэлт хялбар олно" onchange="box.deliveryAddress=this.value.trim();persist();">${escapeHTML(box.deliveryAddress || "")}</textarea>
+    </div>
+
     <div class="summary-text" id="summary-text" style="margin-top:18px">${text}</div>
 
     <div class="notice-box">
@@ -403,9 +420,16 @@ function renderSummary(){
 function agreeAndShowBank(){
   const name = document.getElementById("cust-name").value.trim();
   const phone = document.getElementById("cust-phone").value.trim();
+  const district = document.getElementById("cust-district").value;
+  const khoroo = document.getElementById("cust-khoroo").value.trim();
+  const address = document.getElementById("cust-address").value.trim();
   if(!name || !phone){ toast("Нэр, утасны дугаараа бөглөнө үү 🙏"); return; }
+  if(!district || !address){ toast("Хүргэлтийн дүүрэг, дэлгэрэнгүй хаягаа бөглөнө үү 🙏"); return; }
   box.customerName = name;
   box.customerPhone = phone;
+  box.deliveryDistrict = district;
+  box.deliveryKhoroo = khoroo;
+  box.deliveryAddress = address;
   saveBox(box);
   agreedToTerms = true;
   renderStepPanel();

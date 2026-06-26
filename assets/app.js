@@ -7,7 +7,7 @@
 const BOX_KEY = "zt_box_v1";
 
 function emptyBox(){
-  return { recipient: null, containerId: null, itemIds: [], message: "", customerName: "", customerPhone: "", orderNumber: null };
+  return { recipient: null, containerId: null, itemIds: [], message: "", customerName: "", customerPhone: "", deliveryDistrict: "", deliveryKhoroo: "", deliveryAddress: "", orderNumber: null };
 }
 function loadBox(){
   try{

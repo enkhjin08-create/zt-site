@@ -23,6 +23,10 @@
 <div class="wrap section" style="padding-top:18px">
   <div class="steps-nav" id="steps-nav"></div>
 
+  <p style="font-size:13.5px;color:var(--ink-soft);margin:-6px 0 18px">
+    Хэрвээ та бэлгээ сонгож чадахгүй байвал <a href="category.html?cat=giftset" style="color:var(--ribbon-dark);font-weight:700;text-decoration:underline">манай бэлэн бэлгийн багцуудаас үзнэ үү →</a>
+  </p>
+
   <div class="builder-layout">
     <div class="step-panel" id="step-panel"></div>
 
@@ -40,7 +44,7 @@
 renderHeader("builder.html");
 renderFooter();
 
-const STEP_LABELS = ["Хэн","Сав","Гол бэлэг","Нэмэлт","Зурвас","Дуусгах"];
+const STEP_LABELS = ["Хэн","Сав","Гол бэлэг","Нэмэлт","Зурвас","Цэцэг","Дуусгах"];
 let step = 1;
 let box = loadBox();
 
@@ -102,7 +106,7 @@ function renderBoxPreview(){
 function removeItem(idx){ box = removeFromBoxIndex(idx); renderBoxPreview(); }
 
 function goStep(n){
-  step = Math.max(1, Math.min(6, n));
+  step = Math.max(1, Math.min(7, n));
   renderStepsNav();
   renderStepPanel();
   window.scrollTo({top: document.querySelector(".builder-layout").offsetTop - 100, behavior:"smooth"});
@@ -130,9 +134,6 @@ function renderStepPanel(){
             <div class="t">${r.label}</div>
           </div>`).join("")}
       </div>
-      <p style="font-size:13.5px;color:var(--ink-soft);margin-top:18px">
-        Хэрвээ та бэлгээ сонгож чадахгүй байвал <a href="category.html?cat=giftset" style="color:var(--ribbon-dark);font-weight:700;text-decoration:underline">манай бэлэн бэлгийн багцуудаас үзнэ үү →</a>
-      </p>
       ${stepActionsHTML({nextDisabled: !box.recipient})}
     `;
     return;
@@ -164,6 +165,7 @@ function renderStepPanel(){
     const wantRole = step===3 ? "main" : "extra";
     const title = step===3 ? "Гол бэлгээ сонгоорой" : "Дагалдах зүйлс нэмэх үү?";
     let list = PRODUCTS.filter(p => (p.role || defaultRoleForCategory(p.category)) === wantRole && !p.soldOut);
+    if(step === 3) list = list.filter(p => p.category !== "flower" && p.category !== "giftset");
     if(recFilterOn && box.recipient) list = list.filter(p => p.recipients.includes(box.recipient));
     panel.innerHTML = `
       <p class="eyebrow">Алхам ${step}</p>
@@ -209,6 +211,25 @@ function renderStepPanel(){
   }
 
   if(step === 6){
+    let flowers = PRODUCTS.filter(p => p.category === "flower" && !p.soldOut);
+    panel.innerHTML = `
+      <p class="eyebrow">Алхам 6</p>
+      <h2>Цэцэг авах уу?</h2>
+      <p class="lede">Хайрцагтайгаа хослуулж цэцгийн баглаа нэмж болно — заавал биш.</p>
+      <div class="item-pick-grid">
+        ${flowers.map(p => `
+          <div class="pick-card ${box.itemIds.includes(p.id)?"is-selected":""}" onclick="toggleItem(${p.id})">
+            ${productArtHTML(p)}
+            <div class="pname">${p.name}</div>
+            <div class="pprice">${formatPrice(p.price)}</div>
+          </div>`).join("") || `<p class="lede" style="padding:20px 0">Одоогоор цэцэг алга байна.</p>`}
+      </div>
+      ${stepActionsHTML()}
+    `;
+    return;
+  }
+
+  if(step === 7){
     panel.innerHTML = renderSummary();
   }
 }
@@ -301,7 +322,7 @@ function renderSummary(){
   const hasAnything = items.length || box.containerId;
   if(!hasAnything){
     return `
-      <p class="eyebrow">Алхам 6</p>
+      <p class="eyebrow">Алхам 7</p>
       <h2>Хайрцаг хоосон байна</h2>
       <p class="lede">Буцаж очоод бэлэг сонгоорой.</p>
       ${stepActionsHTML({onNext:"goStep(3)", nextLabel:"Бэлэг сонгох →"})}
@@ -313,7 +334,7 @@ function renderSummary(){
   const grandTotal = subtotal + DELIVERY_FEE;
 
   return `
-    <p class="eyebrow">Алхам 6 · Захиалга №${orderNo}</p>
+    <p class="eyebrow">Алхам 7 · Захиалга №${orderNo}</p>
     <h2>Хайрцаг бэлэн боллоо 🎀</h2>
     <p class="lede">Доор хүргэлтийн нөхцөл, төлбөрийн мэдээллийг уншаад зөвшөөрөөрэй — дараа нь дансны мэдээлэл гарч ирнэ.</p>
 
@@ -357,7 +378,7 @@ function renderSummary(){
     </p>
 
     <div class="step-actions">
-      <button class="btn btn-ghost" onclick="goStep(5)">← Засах</button>
+      <button class="btn btn-ghost" onclick="goStep(6)">← Засах</button>
       <button class="btn btn-outline" onclick="clearBox()">Хайрцгийг хоослох</button>
     </div>
   `;

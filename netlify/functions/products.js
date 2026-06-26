@@ -1,23 +1,29 @@
 /* ============================================================
    Зөвхөн түүнд — Бараа удирдах Netlify Function (серверийн код)
 
-   Энэ нь 2 зүйлийг хадгална:
-   1. "products"  — Админ хэсгээс ШИНЭЭР нэмсэн бараанууд
-   2. "overrides" — zuvhuntuund.com-ийн 103 бэлэн барааны (assets/data.js доторх)
-      аль нэгэнд админ хийсэн ЗАСВАР (үнэ, role, ангилал, Дууссан төлөв г.м.),
-      id-аар холбогддог. assets/data.js файл өөрөө хэвээр үлдэнэ — зүгээр
-      сайт ачаалах үед эдгээр засвар дээр нь "наалддаг" (overlay).
+   Энэ нь 3 зүйлийг хадгална:
+   1. "products"   — Админ хэсгээс ШИНЭЭР нэмсэн бараанууд
+   2. "overrides"  — zuvhuntuund.com-ийн 103 бэлэн барааны (assets/data.js доторх)
+      аль нэгэнд админ хийсэн ЗАСВАР, id-аар холбогддог.
+   3. "categories" — Админ хэсгээс шинээр нэмсэн АНГИЛАЛ (Нэр, Өнгө, Дүрс).
+      assets/data.js-ийн 6 үндсэн ангилал хэвээр кодод байна; эндээс зөвхөн
+      НЭМЭЛТ ангилалууд хадгалагдана.
+
+   assets/data.js файл өөрөө хэвээр үлдэнэ — зүгээр сайт ачаалах үед эдгээр
+   засвар/нэмэлт дээр нь "наалддаг" (overlay).
 
    Захиалгын Function-тэй ИЖИЛ JSONBin bin-ийг ашигладаг тул бичих
    үед нөгөөгийнхөө мэдээллийг устгахгүйн тулд бүтэн баримтыг уншиж бичнэ.
 
-   6 үйлдэл дэмжинэ:
-   - action="list"           → нийтэд нээлттэй — нэмсэн бараа + бүх засвар буцаана
+   8 үйлдэл дэмжинэ:
+   - action="list"           → нийтэд нээлттэй — нэмсэн бараа + бүх засвар + ангилал буцаана
    - action="add"            → зөв PIN-тэй бол шинэ бараа нэмнэ
    - action="update"         → зөв PIN-тэй бол НЭМСЭН барааг засна
    - action="delete"         → зөв PIN-тэй бол НЭМСЭН барааг устгана
    - action="setOverride"    → зөв PIN-тэй бол ҮНДСЭН 103 барааны нэгэнд засвар хийнэ
    - action="clearOverride"  → зөв PIN-тэй бол засврыг арилгаж, анхны байдалд оруулна
+   - action="addCategory"    → зөв PIN-тэй бол шинэ ангилал нэмнэ
+   - action="deleteCategory" → зөв PIN-тэй бол нэмсэн ангилал устгана
    ============================================================ */
 
 const JSONBIN_BASE = "https://api.jsonbin.io/v3/b/";
@@ -40,7 +46,8 @@ async function readDoc(){
   return {
     orders: Array.isArray(record.orders) ? record.orders : [],
     products: Array.isArray(record.products) ? record.products : [],
-    overrides: (record.overrides && typeof record.overrides === "object") ? record.overrides : {}
+    overrides: (record.overrides && typeof record.overrides === "object") ? record.overrides : {},
+    categories: (record.categories && typeof record.categories === "object") ? record.categories : {}
   };
 }
 
@@ -58,16 +65,23 @@ function checkPin(pin){
   return typeof real === "string" && real.length > 0 && pin === real;
 }
 
-const VALID_CATEGORIES = ["cup", "giftset", "flower", "extra", "box"];
+const BUILTIN_CATEGORIES = ["cup", "giftset", "flower", "extra", "box", "greeting"];
 const VALID_ROLES = ["main", "extra", "container"];
+const COLOR_PRESETS = {
+  pink:  { color: "#FF6698", tint: "#FFEAF1" },
+  green: { color: "#0F4B42", tint: "#E7EDEC" },
+  black: { color: "#15140F", tint: "#F3F3F3" },
+  blush: { color: "#FF6698", tint: "#EFB8C3" }
+};
+const ICON_REFS = ["cup", "giftset", "flower", "extra", "greeting"];
 
-function sanitizeProduct(input, existing){
+function sanitizeProduct(input, existing, validCategories){
   input = input || {};
   existing = existing || {};
   const str = (v, max) => String(v == null ? "" : v).slice(0, max);
   const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
-  const category = VALID_CATEGORIES.includes(input.category) ? input.category : (existing.category || "extra");
+  const category = validCategories.includes(input.category) ? input.category : (existing.category || "extra");
   const role = VALID_ROLES.includes(input.role) ? input.role : (existing.role || "extra");
 
   return {
@@ -85,7 +99,7 @@ function sanitizeProduct(input, existing){
   };
 }
 
-function sanitizeOverride(input, existing){
+function sanitizeOverride(input, existing, validCategories){
   input = input || {};
   existing = existing || {};
   const patch = Object.assign({}, existing);
@@ -95,12 +109,29 @@ function sanitizeOverride(input, existing){
   if(input.name != null) patch.name = str(input.name, 120);
   if(input.price != null) patch.price = num(input.price);
   if("oldPrice" in input) patch.oldPrice = (input.oldPrice === "" || input.oldPrice == null) ? null : num(input.oldPrice);
-  if(input.category != null && VALID_CATEGORIES.includes(input.category)) patch.category = input.category;
+  if(input.category != null && validCategories.includes(input.category)) patch.category = input.category;
   if(input.role != null && VALID_ROLES.includes(input.role)) patch.role = input.role;
   if(typeof input.soldOut === "boolean") patch.soldOut = input.soldOut;
   if(input.image != null) patch.image = str(input.image, 500);
   if(input.url != null) patch.url = str(input.url, 500);
   return patch;
+}
+
+function sanitizeCategory(input){
+  input = input || {};
+  const str = (v, max) => String(v == null ? "" : v).slice(0, max);
+  const label = str(input.label, 40).trim();
+  const colorKey = Object.keys(COLOR_PRESETS).includes(input.colorKey) ? input.colorKey : "pink";
+  const iconRef = ICON_REFS.includes(input.iconRef) ? input.iconRef : "extra";
+  const preset = COLOR_PRESETS[colorKey];
+  return {
+    key: "cat" + Date.now(),
+    label: label || "Нэргүй ангилал",
+    color: preset.color,
+    tint: preset.tint,
+    iconRef: iconRef,
+    custom: true
+  };
 }
 
 exports.handler = async (event) => {
@@ -118,13 +149,14 @@ exports.handler = async (event) => {
   try{
     if(body.action === "list"){
       const doc = await readDoc();
-      return json(200, { ok: true, products: doc.products, overrides: doc.overrides });
+      return json(200, { ok: true, products: doc.products, overrides: doc.overrides, categories: doc.categories });
     }
 
     if(body.action === "add"){
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
       const doc = await readDoc();
-      const product = sanitizeProduct(body.product, null);
+      const validCategories = BUILTIN_CATEGORIES.concat(Object.keys(doc.categories));
+      const product = sanitizeProduct(body.product, null, validCategories);
       doc.products.push(product);
       await writeDoc(doc);
       return json(200, { ok: true, product });
@@ -133,9 +165,10 @@ exports.handler = async (event) => {
     if(body.action === "update"){
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
       const doc = await readDoc();
+      const validCategories = BUILTIN_CATEGORIES.concat(Object.keys(doc.categories));
       const idx = doc.products.findIndex(p => p.id === body.id);
       if(idx < 0) return json(404, { error: "Product not found" });
-      doc.products[idx] = sanitizeProduct(body.product, doc.products[idx]);
+      doc.products[idx] = sanitizeProduct(body.product, doc.products[idx], validCategories);
       await writeDoc(doc);
       return json(200, { ok: true, product: doc.products[idx] });
     }
@@ -152,8 +185,9 @@ exports.handler = async (event) => {
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
       if(body.id == null) return json(400, { error: "Missing id" });
       const doc = await readDoc();
+      const validCategories = BUILTIN_CATEGORIES.concat(Object.keys(doc.categories));
       const key = String(body.id);
-      doc.overrides[key] = sanitizeOverride(body.patch, doc.overrides[key]);
+      doc.overrides[key] = sanitizeOverride(body.patch, doc.overrides[key], validCategories);
       await writeDoc(doc);
       return json(200, { ok: true, override: doc.overrides[key] });
     }
@@ -163,6 +197,24 @@ exports.handler = async (event) => {
       if(body.id == null) return json(400, { error: "Missing id" });
       const doc = await readDoc();
       delete doc.overrides[String(body.id)];
+      await writeDoc(doc);
+      return json(200, { ok: true });
+    }
+
+    if(body.action === "addCategory"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      const doc = await readDoc();
+      const cat = sanitizeCategory(body.category);
+      doc.categories[cat.key] = cat;
+      await writeDoc(doc);
+      return json(200, { ok: true, category: cat });
+    }
+
+    if(body.action === "deleteCategory"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(!body.key) return json(400, { error: "Missing key" });
+      const doc = await readDoc();
+      delete doc.categories[body.key];
       await writeDoc(doc);
       return json(200, { ok: true });
     }

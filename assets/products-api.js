@@ -22,14 +22,18 @@ async function callProductsApi(payload){
 }
 
 // Нийтэд нээлттэй — Админ хэсгээс нэмсэн бараа + үндсэн 103 барааны засваруудыг
-// нэг дор авна. Бүх хуудас ачаалах үед дуудна.
+// + нэмсэн ангилалуудыг нэг дор авна. Бүх хуудас ачаалах үед дуудна.
 async function fetchProductsData(){
   try{
     const data = await callProductsApi({ action: "list" });
-    return { products: (data && data.products) || [], overrides: (data && data.overrides) || {} };
+    return {
+      products: (data && data.products) || [],
+      overrides: (data && data.overrides) || {},
+      categories: (data && data.categories) || {}
+    };
   }catch(e){
     console.warn("Custom products failed to load:", e);
-    return { products: [], overrides: {} };
+    return { products: [], overrides: {}, categories: {} };
   }
 }
 
@@ -55,14 +59,20 @@ async function adminSetOverride(pin, id, patch){
 async function adminClearOverride(pin, id){
   return callProductsApi({ action: "clearOverride", pin, id });
 }
+async function adminAddCategory(pin, category){
+  return callProductsApi({ action: "addCategory", pin, category });
+}
+async function adminDeleteCategory(pin, key){
+  return callProductsApi({ action: "deleteCategory", pin, key });
+}
 
 // assets/data.js-ийн статик 103 бараан дээр Админ хэсгийн засвар (overrides)
-// болон шинээр нэмсэн (custom) бараануудыг нэгтгэж, PRODUCTS массивыг бүрэн
-// болгоно. Бүх хуудас render хийхээсээ ӨМНӦ үүнийг await хийнэ.
-// Анхны 103 барааны "цэвэр" хувийг хадгалж байна (overrides ороогүй) — Админ
-// засвараа арилгахад (revert) яг чухал нь, эс бөгөөс хуучин утга PRODUCTS
-// массивт "наалдсан" хэвээр үлдэх эрсдэлтэй.
+// болон шинээр нэмсэн (custom) бараа/ангилалуудыг нэгтгэж, PRODUCTS, CATEGORIES
+// массивуудыг бүрэн болгоно. Бүх хуудас render хийхээсээ ӨМНӦ үүнийг await хийнэ.
+// Анхны байдлын "цэвэр" хувийг хадгалж байна — Админ засвар/ангилалаа арилгахад
+// (revert/delete) яг чухал нь, эс бөгөөс хуучин утга наалдсан хэвээр үлдэх эрсдэлтэй.
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(PRODUCTS));
+const BASE_CATEGORIES = JSON.parse(JSON.stringify(CATEGORIES));
 
 let LAST_OVERRIDES = {};
 
@@ -70,7 +80,12 @@ async function initProducts(){
   const data = await fetchProductsData();
   LAST_OVERRIDES = data.overrides;
 
-  // PRODUCTS-ийг BASE_PRODUCTS-аас ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн
+  // CATEGORIES-ийг ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн нэмсэн ангилалуудыг тавина.
+  Object.keys(CATEGORIES).forEach(k => delete CATEGORIES[k]);
+  Object.assign(CATEGORIES, BASE_CATEGORIES);
+  Object.values(data.categories).forEach(c => { CATEGORIES[c.key] = c; });
+
+  // PRODUCTS-ийг БАЗА-аас ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн
   // overrides-ыг л давхар тавина — өмнөх дуудлагуудын хуучин утга үлдэхгүй.
   PRODUCTS.length = 0;
   BASE_PRODUCTS.forEach(bp => {

@@ -113,6 +113,14 @@ const ICONS = {
         <path d="M38 64c4 6 20 6 24 0" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>`
 };
 
+// Ангилал бүрийн дүрс — built-in ангилал бол шууд key-ээрээ, custom (Админ
+// нэмсэн) ангилал бол category.iconRef-ээр одоо байгаа дүрс зээлнэ.
+function categoryIconSvg(catKey){
+  const cat = CATEGORIES[catKey];
+  const ref = (cat && cat.iconRef) || catKey;
+  return ICONS[ref] || ICONS.extra;
+}
+
 function productArtHTML(p, opts){
   opts = opts || {};
   const cat = CATEGORIES[p.category];
@@ -128,7 +136,7 @@ function productArtHTML(p, opts){
   }
   return `<div class="product-art" style="${heightRule}background:${cat.tint};color:${cat.color}">
       ${badge}
-      <svg viewBox="0 0 100 100">${ICONS[p.category] || ICONS.extra}</svg>
+      <svg viewBox="0 0 100 100">${categoryIconSvg(p.category)}</svg>
     </div>`;
 }
 

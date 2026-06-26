@@ -133,7 +133,7 @@
       const n = PRODUCTS.filter(p => p.category===key).length;
       return `<a class="cat-card" href="category.html?cat=${key}" style="display:block">
         <div class="cat-icon" style="background:${c.tint};color:${c.color}">
-          <svg viewBox="0 0 100 100" width="24" height="24">${ICONS[key]}</svg>
+          <svg viewBox="0 0 100 100" width="24" height="24">${categoryIconSvg(key)}</svg>
         </div>
         <h3>${c.label}</h3>
         <div class="count">${n} бараа</div>

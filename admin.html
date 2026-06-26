@@ -39,6 +39,7 @@
   <div class="filter-pills" style="margin-top:24px">
     <button class="pill is-active" data-tab="orders" onclick="switchTab('orders')">Захиалгууд</button>
     <button class="pill" data-tab="products" onclick="switchTab('products')">Бараа удирдах</button>
+    <button class="pill" data-tab="categories" onclick="switchTab('categories')">Ангилал</button>
   </div>
 
   <div id="orders-tab">
@@ -142,6 +143,44 @@
 
     <div id="all-product-list" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
     <div class="empty-state" id="product-empty" style="display:none">Илэрц алга байна.</div>
+  </div>
+
+  <div id="categories-tab" style="display:none;margin-top:22px">
+    <div class="step-panel" style="margin-bottom:24px;padding:26px">
+      <h3 style="font-size:18px;margin-bottom:4px">Шинэ ангилал нэмэх</h3>
+      <p class="lede" style="font-size:13px;margin-bottom:16px">Нэмсэн ангилал шууд бараа нэмэх/засах хэсэгт болон сайтын Бүтээгдэхүүн, Нүүр хуудсанд харагдана.</p>
+      <form id="category-form" onsubmit="submitCategoryForm(event)">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px">
+          <div>
+            <label class="field-label">Нэр</label>
+            <input name="label" class="field-input" type="text" placeholder="Жишээ: Лаа, шарж" required>
+          </div>
+          <div>
+            <label class="field-label">Өнгө</label>
+            <select name="colorKey" class="field-input">
+              <option value="pink">Ягаан</option>
+              <option value="green">Ногоон</option>
+              <option value="black">Хар</option>
+              <option value="blush">Бор ягаан</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Дүрс</label>
+            <select name="iconRef" class="field-input">
+              <option value="extra">Дугтуй</option>
+              <option value="cup">Аяга</option>
+              <option value="giftset">Хайрцаг</option>
+              <option value="flower">Цэцэг</option>
+              <option value="greeting">Карт</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top:18px">Ангилал нэмэх</button>
+      </form>
+    </div>
+
+    <h3 style="font-size:16px;margin-bottom:12px">Бүх ангилал</h3>
+    <div id="category-list" style="display:flex;flex-direction:column;gap:10px"></div>
   </div>
 </div>
 
@@ -312,7 +351,9 @@ function switchTab(tab){
   document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("is-active", b.dataset.tab === tab));
   document.getElementById("orders-tab").style.display = tab === "orders" ? "" : "none";
   document.getElementById("products-tab").style.display = tab === "products" ? "" : "none";
+  document.getElementById("categories-tab").style.display = tab === "categories" ? "" : "none";
   if(tab === "products" && !productsLoaded) loadAllProducts();
+  if(tab === "categories") loadCategoriesTab();
 }
 
 /* ---------------- Product management (base catalog + custom) ---------------- */
@@ -330,8 +371,10 @@ async function loadAllProducts(){
   try{
     await initProducts();
     productsLoaded = true;
+    categoriesLoaded = true;
     renderAdminCatPills();
     renderAllProductsList();
+    populateCategorySelects();
   }catch(e){
     list.innerHTML = `<p class="lede">Уншихад алдаа гарлаа.</p>`;
   }
@@ -452,7 +495,7 @@ function adminProductRowHTML(p){
     <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
       <input type="checkbox" onchange="toggleRowSelect(${p.id}, this.checked)" ${selectedIds.has(p.id)?"checked":""} style="width:18px;height:18px;flex-shrink:0">
       <div style="width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${cat.tint};display:flex;align-items:center;justify-content:center;color:${cat.color}">
-        ${p.image ? `<img src="${safeImage}" style="width:100%;height:100%;object-fit:cover" alt="">` : `<svg viewBox="0 0 100 100" width="24" height="24">${ICONS[p.category] || ICONS.extra}</svg>`}
+        ${p.image ? `<img src="${safeImage}" style="width:100%;height:100%;object-fit:cover" alt="">` : `<svg viewBox="0 0 100 100" width="24" height="24">${categoryIconSvg(p.category)}</svg>`}
       </div>
       <div style="flex:1;min-width:140px">
         <div style="font-weight:700;font-size:14px">${escapeHTML(p.name)}
@@ -609,6 +652,82 @@ async function submitProductForm(e){
     toast("Алдаа гарлаа. Дахин оролдоорой.");
   }
   btn.disabled = false; btn.textContent = "Бараа нэмэх";
+}
+
+/* ---------------- Category management ---------------- */
+const COLOR_KEY_LABELS = { pink: "Ягаан", green: "Ногоон", black: "Хар", blush: "Бор ягаан" };
+const ICON_REF_LABELS = { cup: "Аяга", giftset: "Хайрцаг", flower: "Цэцэг", extra: "Дугтуй", greeting: "Карт" };
+let categoriesLoaded = false;
+
+async function loadCategoriesTab(){
+  if(!categoriesLoaded){
+    await initProducts();
+    categoriesLoaded = true;
+  }
+  renderCategoryList();
+  populateCategorySelects();
+}
+
+function renderCategoryList(){
+  const wrap = document.getElementById("category-list");
+  wrap.innerHTML = Object.entries(CATEGORIES).map(([key, c]) => `
+    <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:center">
+      <div style="width:40px;height:40px;border-radius:10px;flex-shrink:0;background:${c.tint};display:flex;align-items:center;justify-content:center;color:${c.color}">
+        <svg viewBox="0 0 100 100" width="20" height="20">${categoryIconSvg(key)}</svg>
+      </div>
+      <div style="flex:1;font-weight:700;font-size:14px">${escapeHTML(c.label)}</div>
+      ${c.custom
+        ? `<button class="btn btn-outline btn-sm" onclick="deleteCategoryConfirm('${key}')">Устгах</button>`
+        : `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--paper-deep);border:none">Үндсэн</span>`}
+    </div>`).join("");
+}
+
+function populateCategorySelects(){
+  const optionsHTML = Object.entries(CATEGORIES).map(([k,c]) => `<option value="${k}">${escapeHTML(c.label)}</option>`).join("");
+  const addFormSelect = document.querySelector('#product-form select[name="category"]');
+  if(addFormSelect){ const cur = addFormSelect.value; addFormSelect.innerHTML = optionsHTML; if(cur) addFormSelect.value = cur; }
+  const bulkSelect = document.getElementById("bulk-category");
+  if(bulkSelect){
+    bulkSelect.innerHTML = `<option value="">Ангилал (өөрчлөхгүй)</option>` + optionsHTML;
+  }
+}
+
+async function submitCategoryForm(e){
+  e.preventDefault();
+  const f = e.target;
+  const category = {
+    label: f.label.value.trim(),
+    colorKey: f.colorKey.value,
+    iconRef: f.iconRef.value
+  };
+  if(!category.label){ toast("Нэрээ бөглөнө үү 🙏"); return; }
+
+  const btn = f.querySelector("button[type=submit]");
+  btn.disabled = true; btn.textContent = "Нэмэж байна...";
+  try{
+    await adminAddCategory(adminPin, category);
+    toast("Ангилал нэмэгдлээ ✓");
+    f.reset();
+    categoriesLoaded = false;
+    await loadCategoriesTab();
+  }catch(err){
+    if(err.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа. Дахин оролдоорой.");
+  }
+  btn.disabled = false; btn.textContent = "Ангилал нэмэх";
+}
+
+async function deleteCategoryConfirm(key){
+  if(!confirm("Энэ ангиллыг устгах уу? Энэ ангилалтай бараанууд \"Дагалдах зүйлс\" руу шилжихгүй, зөвхөн шошго нь алга болно.")) return;
+  try{
+    await adminDeleteCategory(adminPin, key);
+    toast("Ангилал устгагдлаа");
+    categoriesLoaded = false;
+    await loadCategoriesTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
 }
 </script>
 </body>

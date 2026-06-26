@@ -62,7 +62,7 @@ function renderGrid(){
   empty.style.display = "none";
   grid.innerHTML = list.map(productCardHTML).join("");
 
-  const title = activeCat === "all" ? "Бүтээгдэхүүн" : CATEGORIES[activeCat].label;
+  const title = activeCat === "all" ? "Бүтээгдэхүүн" : (CATEGORIES[activeCat] ? CATEGORIES[activeCat].label : "Бүтээгдэхүүн");
   document.getElementById("page-title").textContent = title;
   document.title = title + " — Зөвхөн түүнд";
 }
@@ -78,6 +78,7 @@ pillsHTML();
 renderGrid();
 (async function(){
   await initProducts();
+  pillsHTML();
   renderGrid();
 })();
 </script>

@@ -22,18 +22,19 @@ async function callProductsApi(payload){
 }
 
 // Нийтэд нээлттэй — Админ хэсгээс нэмсэн бараа + үндсэн 103 барааны засваруудыг
-// + нэмсэн ангилалуудыг нэг дор авна. Бүх хуудас ачаалах үед дуудна.
+// + нэмсэн ангилал/хүлээн авагчдыг нэг дор авна. Бүх хуудас ачаалах үед дуудна.
 async function fetchProductsData(){
   try{
     const data = await callProductsApi({ action: "list" });
     return {
       products: (data && data.products) || [],
       overrides: (data && data.overrides) || {},
-      categories: (data && data.categories) || {}
+      categories: (data && data.categories) || {},
+      recipients: (data && data.recipients) || {}
     };
   }catch(e){
     console.warn("Custom products failed to load:", e);
-    return { products: [], overrides: {}, categories: {} };
+    return { products: [], overrides: {}, categories: {}, recipients: {} };
   }
 }
 
@@ -65,14 +66,22 @@ async function adminAddCategory(pin, category){
 async function adminDeleteCategory(pin, key){
   return callProductsApi({ action: "deleteCategory", pin, key });
 }
+async function adminAddRecipient(pin, recipient){
+  return callProductsApi({ action: "addRecipient", pin, recipient });
+}
+async function adminDeleteRecipient(pin, key){
+  return callProductsApi({ action: "deleteRecipient", pin, key });
+}
 
 // assets/data.js-ийн статик 103 бараан дээр Админ хэсгийн засвар (overrides)
-// болон шинээр нэмсэн (custom) бараа/ангилалуудыг нэгтгэж, PRODUCTS, CATEGORIES
-// массивуудыг бүрэн болгоно. Бүх хуудас render хийхээсээ ӨМНӦ үүнийг await хийнэ.
-// Анхны байдлын "цэвэр" хувийг хадгалж байна — Админ засвар/ангилалаа арилгахад
-// (revert/delete) яг чухал нь, эс бөгөөс хуучин утга наалдсан хэвээр үлдэх эрсдэлтэй.
+// болон шинээр нэмсэн (custom) бараа/ангилал/хүлээн авагчдыг нэгтгэж, PRODUCTS,
+// CATEGORIES, RECIPIENTS массивуудыг бүрэн болгоно. Бүх хуудас render хийхээсээ
+// ӨМНӦ үүнийг await хийнэ. Анхны байдлын "цэвэр" хувийг хадгалж байна — Админ
+// засвар/нэмэлтээ арилгахад (revert/delete) яг чухал нь, эс бөгөөс хуучин утга
+// наалдсан хэвээр үлдэх эрсдэлтэй.
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(PRODUCTS));
 const BASE_CATEGORIES = JSON.parse(JSON.stringify(CATEGORIES));
+const BASE_RECIPIENTS = JSON.parse(JSON.stringify(RECIPIENTS));
 
 let LAST_OVERRIDES = {};
 
@@ -80,10 +89,14 @@ async function initProducts(){
   const data = await fetchProductsData();
   LAST_OVERRIDES = data.overrides;
 
-  // CATEGORIES-ийг ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн нэмсэн ангилалуудыг тавина.
+  // CATEGORIES, RECIPIENTS-ийг ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн нэмэлтийг тавина.
   Object.keys(CATEGORIES).forEach(k => delete CATEGORIES[k]);
   Object.assign(CATEGORIES, BASE_CATEGORIES);
   Object.values(data.categories).forEach(c => { CATEGORIES[c.key] = c; });
+
+  Object.keys(RECIPIENTS).forEach(k => delete RECIPIENTS[k]);
+  Object.assign(RECIPIENTS, BASE_RECIPIENTS);
+  Object.values(data.recipients).forEach(r => { RECIPIENTS[r.key] = r; });
 
   // PRODUCTS-ийг БАЗА-аас ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн
   // overrides-ыг л давхар тавина — өмнөх дуудлагуудын хуучин утга үлдэхгүй.

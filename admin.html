@@ -100,6 +100,10 @@
             <input name="url" class="field-input" type="text" placeholder="https://zuvhuntuund.com/...">
           </div>
         </div>
+        <div style="margin-top:14px">
+          <label class="field-label">Хүлээн авагч (гар аргаар, заавал биш — хоосон орхивол нэрнээс автоматаар тааруулна)</label>
+          <div id="add-recipients-checks" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px"></div>
+        </div>
         <button class="btn btn-primary" type="submit" style="margin-top:18px">Бараа нэмэх</button>
       </form>
     </div>
@@ -180,7 +184,34 @@
     </div>
 
     <h3 style="font-size:16px;margin-bottom:12px">Бүх ангилал</h3>
-    <div id="category-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div id="category-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px"></div>
+
+    <div class="step-panel" style="margin-bottom:24px;padding:26px">
+      <h3 style="font-size:18px;margin-bottom:4px">Шинэ хүлээн авагч нэмэх</h3>
+      <p class="lede" style="font-size:13px;margin-bottom:16px">Энэ нь Нүүр хуудасны "Хэнд бэлэглэх вэ?" хэсэгт, мөн Бэлэг бэлдэх builder-ийн 1-р алхамд харагдана.</p>
+      <form id="recipient-form" onsubmit="submitRecipientForm(event)">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+          <div>
+            <label class="field-label">Нэр</label>
+            <input name="label" class="field-input" type="text" placeholder="Жишээ: Багшдаа" required>
+          </div>
+          <div>
+            <label class="field-label">Emoji</label>
+            <input name="emoji" class="field-input" type="text" placeholder="🎁" maxlength="4">
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top:18px">Хүлээн авагч нэмэх</button>
+      </form>
+    </div>
+
+    <h3 style="font-size:16px;margin-bottom:12px">Бүх хүлээн авагч</h3>
+    <div id="recipient-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <p style="font-size:12px;color:var(--ink-faint);margin-top:12px">
+      ⚠️ Шинэ хүлээн авагчид автоматаар бараа тааруулагдахгүй (энэ heuristic зөвхөн анхны 5
+      хүлээн авагчид зориулагдсан) — "Зөвхөн ... тохирсон зүйлс" шүүлтүүрийг асаавал builder
+      дээр хоосон харагдаж магадгүй. Хэрэгтэй бол хэлээрэй, бараа бүрт гар аргаар хүлээн авагч
+      тааруулдаг болгож болно.
+    </p>
   </div>
 </div>
 
@@ -555,6 +586,15 @@ function adminProductRowHTML(p){
           <input id="url${rowId}" class="field-input" type="text" value="${escapeHTML(p.url || "")}">
         </div>
       </div>
+      <div style="margin-top:12px">
+        <label class="field-label">Хүлээн авагч (гар аргаар)</label>
+        <div id="recip${rowId}" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px">
+          ${Object.entries(RECIPIENTS).map(([k,r]) => `
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer">
+              <input type="checkbox" value="${k}" ${(p.recipients||[]).includes(k)?"checked":""}> ${r.emoji} ${escapeHTML(r.label)}
+            </label>`).join("")}
+        </div>
+      </div>
       <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" onclick="saveProductRow(${p.id}, ${isCustom})">Хадгалах</button>
         ${isCustom
@@ -573,6 +613,8 @@ function toggleRowEdit(id){
 function readRowFields(id){
   const rowId = "row" + id;
   const val = (name) => document.getElementById(name + rowId).value;
+  const recipWrap = document.getElementById("recip" + rowId);
+  const recipients = recipWrap ? Array.from(recipWrap.querySelectorAll('input[type="checkbox"]:checked')).map(el => el.value) : [];
   return {
     name: val("name"),
     price: Number(val("price")),
@@ -581,7 +623,8 @@ function readRowFields(id){
     role: val("role"),
     soldOut: val("soldOut") === "true",
     image: val("image"),
-    url: val("url")
+    url: val("url"),
+    recipients: recipients
   };
 }
 
@@ -628,6 +671,7 @@ async function deleteProductConfirm(id){
 async function submitProductForm(e){
   e.preventDefault();
   const f = e.target;
+  const checkedRecipients = Array.from(f.querySelectorAll('input[name="recipients"]:checked')).map(el => el.value);
   const product = {
     name: f.name.value.trim(),
     price: Number(f.price.value),
@@ -638,6 +682,7 @@ async function submitProductForm(e){
     url: f.url.value.trim(),
     soldOut: false
   };
+  if(checkedRecipients.length) product.recipients = checkedRecipients;
   if(!product.name || !product.price){ toast("Нэр, үнээ бөглөнө үү 🙏"); return; }
 
   const btn = f.querySelector("button[type=submit]");
@@ -665,6 +710,7 @@ async function loadCategoriesTab(){
     categoriesLoaded = true;
   }
   renderCategoryList();
+  renderRecipientList();
   populateCategorySelects();
 }
 
@@ -689,6 +735,14 @@ function populateCategorySelects(){
   const bulkSelect = document.getElementById("bulk-category");
   if(bulkSelect){
     bulkSelect.innerHTML = `<option value="">Ангилал (өөрчлөхгүй)</option>` + optionsHTML;
+  }
+
+  const recWrap = document.getElementById("add-recipients-checks");
+  if(recWrap){
+    recWrap.innerHTML = Object.entries(RECIPIENTS).map(([k,r]) => `
+      <label style="display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer">
+        <input type="checkbox" name="recipients" value="${k}"> ${r.emoji} ${escapeHTML(r.label)}
+      </label>`).join("");
   }
 }
 
@@ -722,6 +776,56 @@ async function deleteCategoryConfirm(key){
   try{
     await adminDeleteCategory(adminPin, key);
     toast("Ангилал устгагдлаа");
+    categoriesLoaded = false;
+    await loadCategoriesTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+/* ---------------- Recipient management ---------------- */
+function renderRecipientList(){
+  const wrap = document.getElementById("recipient-list");
+  wrap.innerHTML = Object.entries(RECIPIENTS).map(([key, r]) => `
+    <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:center">
+      <div style="font-size:22px">${r.emoji}</div>
+      <div style="flex:1;font-weight:700;font-size:14px">${escapeHTML(r.label)}</div>
+      ${r.custom
+        ? `<button class="btn btn-outline btn-sm" onclick="deleteRecipientConfirm('${key}')">Устгах</button>`
+        : `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--paper-deep);border:none">Үндсэн</span>`}
+    </div>`).join("");
+}
+
+async function submitRecipientForm(e){
+  e.preventDefault();
+  const f = e.target;
+  const recipient = {
+    label: f.label.value.trim(),
+    emoji: f.emoji.value.trim() || "🎁"
+  };
+  if(!recipient.label){ toast("Нэрээ бөглөнө үү 🙏"); return; }
+
+  const btn = f.querySelector("button[type=submit]");
+  btn.disabled = true; btn.textContent = "Нэмэж байна...";
+  try{
+    await adminAddRecipient(adminPin, recipient);
+    toast("Хүлээн авагч нэмэгдлээ ✓");
+    f.reset();
+    categoriesLoaded = false;
+    await loadCategoriesTab();
+  }catch(err){
+    if(err.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа. Дахин оролдоорой.");
+  }
+  btn.disabled = false; btn.textContent = "Хүлээн авагч нэмэх";
+}
+
+async function deleteRecipientConfirm(key){
+  if(!confirm("Энэ хүлээн авагчийг устгах уу?")) return;
+  try{
+    await adminDeleteRecipient(adminPin, key);
+    toast("Устгагдлаа");
     categoriesLoaded = false;
     await loadCategoriesTab();
   }catch(e){

@@ -1,13 +1,14 @@
 /* ============================================================
    Зөвхөн түүнд — Бараа удирдах Netlify Function (серверийн код)
 
-   Энэ нь 3 зүйлийг хадгална:
+   Энэ нь 4 зүйлийг хадгална:
    1. "products"   — Админ хэсгээс ШИНЭЭР нэмсэн бараанууд
    2. "overrides"  — zuvhuntuund.com-ийн 103 бэлэн барааны (assets/data.js доторх)
       аль нэгэнд админ хийсэн ЗАСВАР, id-аар холбогддог.
    3. "categories" — Админ хэсгээс шинээр нэмсэн АНГИЛАЛ (Нэр, Өнгө, Дүрс).
-      assets/data.js-ийн 6 үндсэн ангилал хэвээр кодод байна; эндээс зөвхөн
-      НЭМЭЛТ ангилалууд хадгалагдана.
+   4. "recipients" — Админ хэсгээс шинээр нэмсэн ХҦЛЭЭН АВАГЧ ("Хэнд бэлэглэх вэ?").
+      assets/data.js-ийн үндсэн ангилал/хүлээн авагч хэвээр кодод байна; эндээс
+      зөвхөн НЭМЭЛТ зүйлс хадгалагдана.
 
    assets/data.js файл өөрөө хэвээр үлдэнэ — зүгээр сайт ачаалах үед эдгээр
    засвар/нэмэлт дээр нь "наалддаг" (overlay).
@@ -15,15 +16,17 @@
    Захиалгын Function-тэй ИЖИЛ JSONBin bin-ийг ашигладаг тул бичих
    үед нөгөөгийнхөө мэдээллийг устгахгүйн тулд бүтэн баримтыг уншиж бичнэ.
 
-   8 үйлдэл дэмжинэ:
-   - action="list"           → нийтэд нээлттэй — нэмсэн бараа + бүх засвар + ангилал буцаана
-   - action="add"            → зөв PIN-тэй бол шинэ бараа нэмнэ
-   - action="update"         → зөв PIN-тэй бол НЭМСЭН барааг засна
-   - action="delete"         → зөв PIN-тэй бол НЭМСЭН барааг устгана
-   - action="setOverride"    → зөв PIN-тэй бол ҮНДСЭН 103 барааны нэгэнд засвар хийнэ
-   - action="clearOverride"  → зөв PIN-тэй бол засврыг арилгаж, анхны байдалд оруулна
-   - action="addCategory"    → зөв PIN-тэй бол шинэ ангилал нэмнэ
-   - action="deleteCategory" → зөв PIN-тэй бол нэмсэн ангилал устгана
+   10 үйлдэл дэмжинэ:
+   - action="list"            → нийтэд нээлттэй — бараа + засвар + ангилал + хүлээн авагч буцаана
+   - action="add"             → зөв PIN-тэй бол шинэ бараа нэмнэ
+   - action="update"          → зөв PIN-тэй бол НЭМСЭН барааг засна
+   - action="delete"          → зөв PIN-тэй бол НЭМСЭН барааг устгана
+   - action="setOverride"     → зөв PIN-тэй бол ҮНДСЭН 103 барааны нэгэнд засвар хийнэ
+   - action="clearOverride"   → зөв PIN-тэй бол засврыг арилгаж, анхны байдалд оруулна
+   - action="addCategory"     → зөв PIN-тэй бол шинэ ангилал нэмнэ
+   - action="deleteCategory"  → зөв PIN-тэй бол нэмсэн ангилал устгана
+   - action="addRecipient"    → зөв PIN-тэй бол шинэ хүлээн авагч нэмнэ
+   - action="deleteRecipient" → зөв PIN-тэй бол нэмсэн хүлээн авагчийг устгана
    ============================================================ */
 
 const JSONBIN_BASE = "https://api.jsonbin.io/v3/b/";
@@ -47,7 +50,8 @@ async function readDoc(){
     orders: Array.isArray(record.orders) ? record.orders : [],
     products: Array.isArray(record.products) ? record.products : [],
     overrides: (record.overrides && typeof record.overrides === "object") ? record.overrides : {},
-    categories: (record.categories && typeof record.categories === "object") ? record.categories : {}
+    categories: (record.categories && typeof record.categories === "object") ? record.categories : {},
+    recipients: (record.recipients && typeof record.recipients === "object") ? record.recipients : {}
   };
 }
 
@@ -66,6 +70,7 @@ function checkPin(pin){
 }
 
 const BUILTIN_CATEGORIES = ["cup", "giftset", "flower", "extra", "box", "greeting"];
+const BUILTIN_RECIPIENTS = ["mom", "partner", "friend", "self", "kid"];
 const VALID_ROLES = ["main", "extra", "container"];
 const COLOR_PRESETS = {
   pink:  { color: "#FF6698", tint: "#FFEAF1" },
@@ -75,7 +80,13 @@ const COLOR_PRESETS = {
 };
 const ICON_REFS = ["cup", "giftset", "flower", "extra", "greeting"];
 
-function sanitizeProduct(input, existing, validCategories){
+function cleanRecipients(arr, validRecipients){
+  if(!Array.isArray(arr)) return null;
+  const cleaned = arr.filter(r => validRecipients.includes(r)).slice(0, 10);
+  return cleaned;
+}
+
+function sanitizeProduct(input, existing, validCategories, validRecipients){
   input = input || {};
   existing = existing || {};
   const str = (v, max) => String(v == null ? "" : v).slice(0, max);
@@ -83,8 +94,9 @@ function sanitizeProduct(input, existing, validCategories){
 
   const category = validCategories.includes(input.category) ? input.category : (existing.category || "extra");
   const role = VALID_ROLES.includes(input.role) ? input.role : (existing.role || "extra");
+  const recipients = cleanRecipients(input.recipients, validRecipients);
 
-  return {
+  const out = {
     id: existing.id || (9000000000 + Date.now()),
     name: str(input.name, 120) || existing.name || "Нэргүй бараа",
     price: input.price != null ? num(input.price) : (existing.price || 0),
@@ -97,9 +109,12 @@ function sanitizeProduct(input, existing, validCategories){
     custom: true,
     createdAt: existing.createdAt || new Date().toISOString()
   };
+  if(recipients !== null) out.recipients = recipients;
+  else if(existing.recipients) out.recipients = existing.recipients;
+  return out;
 }
 
-function sanitizeOverride(input, existing, validCategories){
+function sanitizeOverride(input, existing, validCategories, validRecipients){
   input = input || {};
   existing = existing || {};
   const patch = Object.assign({}, existing);
@@ -114,6 +129,8 @@ function sanitizeOverride(input, existing, validCategories){
   if(typeof input.soldOut === "boolean") patch.soldOut = input.soldOut;
   if(input.image != null) patch.image = str(input.image, 500);
   if(input.url != null) patch.url = str(input.url, 500);
+  const recipients = cleanRecipients(input.recipients, validRecipients);
+  if(recipients !== null) patch.recipients = recipients;
   return patch;
 }
 
@@ -134,6 +151,19 @@ function sanitizeCategory(input){
   };
 }
 
+function sanitizeRecipient(input){
+  input = input || {};
+  const str = (v, max) => String(v == null ? "" : v).slice(0, max);
+  const label = str(input.label, 30).trim();
+  const emoji = str(input.emoji, 8).trim() || "🎁";
+  return {
+    key: "rec" + Date.now(),
+    label: label || "Нэргүй",
+    emoji: emoji,
+    custom: true
+  };
+}
+
 exports.handler = async (event) => {
   if(event.httpMethod !== "POST"){
     return json(405, { error: "Method not allowed" });
@@ -149,14 +179,15 @@ exports.handler = async (event) => {
   try{
     if(body.action === "list"){
       const doc = await readDoc();
-      return json(200, { ok: true, products: doc.products, overrides: doc.overrides, categories: doc.categories });
+      return json(200, { ok: true, products: doc.products, overrides: doc.overrides, categories: doc.categories, recipients: doc.recipients });
     }
 
     if(body.action === "add"){
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
       const doc = await readDoc();
       const validCategories = BUILTIN_CATEGORIES.concat(Object.keys(doc.categories));
-      const product = sanitizeProduct(body.product, null, validCategories);
+      const validRecipients = BUILTIN_RECIPIENTS.concat(Object.keys(doc.recipients));
+      const product = sanitizeProduct(body.product, null, validCategories, validRecipients);
       doc.products.push(product);
       await writeDoc(doc);
       return json(200, { ok: true, product });
@@ -166,9 +197,10 @@ exports.handler = async (event) => {
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
       const doc = await readDoc();
       const validCategories = BUILTIN_CATEGORIES.concat(Object.keys(doc.categories));
+      const validRecipients = BUILTIN_RECIPIENTS.concat(Object.keys(doc.recipients));
       const idx = doc.products.findIndex(p => p.id === body.id);
       if(idx < 0) return json(404, { error: "Product not found" });
-      doc.products[idx] = sanitizeProduct(body.product, doc.products[idx], validCategories);
+      doc.products[idx] = sanitizeProduct(body.product, doc.products[idx], validCategories, validRecipients);
       await writeDoc(doc);
       return json(200, { ok: true, product: doc.products[idx] });
     }
@@ -186,8 +218,9 @@ exports.handler = async (event) => {
       if(body.id == null) return json(400, { error: "Missing id" });
       const doc = await readDoc();
       const validCategories = BUILTIN_CATEGORIES.concat(Object.keys(doc.categories));
+      const validRecipients = BUILTIN_RECIPIENTS.concat(Object.keys(doc.recipients));
       const key = String(body.id);
-      doc.overrides[key] = sanitizeOverride(body.patch, doc.overrides[key], validCategories);
+      doc.overrides[key] = sanitizeOverride(body.patch, doc.overrides[key], validCategories, validRecipients);
       await writeDoc(doc);
       return json(200, { ok: true, override: doc.overrides[key] });
     }
@@ -215,6 +248,24 @@ exports.handler = async (event) => {
       if(!body.key) return json(400, { error: "Missing key" });
       const doc = await readDoc();
       delete doc.categories[body.key];
+      await writeDoc(doc);
+      return json(200, { ok: true });
+    }
+
+    if(body.action === "addRecipient"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      const doc = await readDoc();
+      const rec = sanitizeRecipient(body.recipient);
+      doc.recipients[rec.key] = rec;
+      await writeDoc(doc);
+      return json(200, { ok: true, recipient: rec });
+    }
+
+    if(body.action === "deleteRecipient"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(!body.key) return json(400, { error: "Missing key" });
+      const doc = await readDoc();
+      delete doc.recipients[body.key];
       await writeDoc(doc);
       return json(200, { ok: true });
     }

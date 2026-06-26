@@ -117,16 +117,20 @@
   renderHeader("index.html");
   renderFooter();
 
-  const recRow = document.getElementById("recipient-row");
-  recRow.innerHTML = Object.entries(RECIPIENTS).map(([key,r]) => `
-    <a class="gift-tag" href="builder.html?recipient=${key}">
-      <span class="emoji">${r.emoji}</span>
-      <span class="label">${r.label}</span>
-      <span class="hint">Бэлэг бэлдэх →</span>
-    </a>`).join("");
+  function renderRecipientRow(){
+    const recRow = document.getElementById("recipient-row");
+    recRow.innerHTML = Object.entries(RECIPIENTS).map(([key,r]) => `
+      <a class="gift-tag" href="builder.html?recipient=${key}">
+        <span class="emoji">${r.emoji}</span>
+        <span class="label">${r.label}</span>
+        <span class="hint">Бэлэг бэлдэх →</span>
+      </a>`).join("");
+  }
+  renderRecipientRow();
 
   (async function(){
     await initProducts();
+    renderRecipientRow();
 
     const catGrid = document.getElementById("cat-grid");
     catGrid.innerHTML = Object.entries(CATEGORIES).map(([key,c]) => {

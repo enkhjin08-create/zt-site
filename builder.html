@@ -44,7 +44,7 @@
 renderHeader("builder.html");
 renderFooter();
 
-const STEP_LABELS = ["Хэн","Сав","Гол бэлэг","Нэмэлт","Зурвас","Цэцэг","Мэндчилгээ","Дуусгах"];
+const STEP_LABELS = ["Хэн","Сав","Гол бэлэг","Нэмэлт","Цэцэг","Мэндчилгээ","Зурвас","Дуусгах"];
 let step = 1;
 let box = loadBox();
 
@@ -187,21 +187,11 @@ function renderStepPanel(){
     return;
   }
 
-  if(step === 5){
+  if(step === 7){
     panel.innerHTML = `
-      <p class="eyebrow">Алхам 5</p>
-      <h2>Тантай хэрхэн холбогдох вэ?</h2>
-      <p class="lede">Захиалгыг баталгаажуулахын тулд нэр, утасны дугаараа үлдээгээрэй.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
-        <div>
-          <label class="field-label">Нэр</label>
-          <input id="cust-name" class="field-input" type="text" value="${escapeHTML(box.customerName || "")}" placeholder="Таны нэр">
-        </div>
-        <div>
-          <label class="field-label">Утасны дугаар</label>
-          <input id="cust-phone" class="field-input" type="tel" value="${escapeHTML(box.customerPhone || "")}" placeholder="9911XXXX">
-        </div>
-      </div>
+      <p class="eyebrow">Алхам 7</p>
+      <h2>Зурвасаа бичээрэй</h2>
+      <p class="lede">Хайрцагтайгаа хамт очих сэтгэлийн үг — заавал биш.</p>
       <div class="msg-box" style="margin-top:18px">
         <label class="field-label" style="font-family:var(--font-body)">Зурвас (сэтгэлийн үг, заавал биш)</label>
         <textarea id="msg-input" placeholder="Жишээ: Чи бол миний хамгийн ягаан өдрүүд... 💕">${escapeHTML(box.message || "")}</textarea>
@@ -211,10 +201,10 @@ function renderStepPanel(){
     return;
   }
 
-  if(step === 6){
+  if(step === 5){
     let flowers = PRODUCTS.filter(p => p.category === "flower" && !p.soldOut);
     panel.innerHTML = `
-      <p class="eyebrow">Алхам 6</p>
+      <p class="eyebrow">Алхам 5</p>
       <h2>Цэцэг авах уу?</h2>
       <p class="lede">Хайрцагтайгаа хослуулж цэцгийн баглаа нэмж болно — заавал биш.</p>
       <div class="item-pick-grid">
@@ -230,10 +220,10 @@ function renderStepPanel(){
     return;
   }
 
-  if(step === 7){
+  if(step === 6){
     let cards = PRODUCTS.filter(p => p.category === "greeting" && !p.soldOut);
     panel.innerHTML = `
-      <p class="eyebrow">Алхам 7</p>
+      <p class="eyebrow">Алхам 6</p>
       <h2>Мэндчилгээний карт авах уу?</h2>
       <p class="lede">Хайрцагтайгаа хамт мэндчилгээний карт нэмж болно — заавал биш.</p>
       <div class="item-pick-grid">
@@ -263,14 +253,9 @@ function toggleItem(id){
   persist(); renderStepPanel();
 }
 function saveMessageAndNext(){
-  const name = document.getElementById("cust-name").value.trim();
-  const phone = document.getElementById("cust-phone").value.trim();
-  if(!name || !phone){ toast("Нэр, утасны дугаараа бөглөнө үү 🙏"); return; }
-  box.customerName = name;
-  box.customerPhone = phone;
   box.message = document.getElementById("msg-input").value;
   persist();
-  goStep(6);
+  goStep(8);
 }
 
 const DELIVERY_FEE = 7000;
@@ -356,7 +341,18 @@ function renderSummary(){
   return `
     <p class="eyebrow">Алхам 8 · Захиалга №${orderNo}</p>
     <h2>Хайрцаг бэлэн боллоо 🎀</h2>
-    <p class="lede">Доор хүргэлтийн нөхцөл, төлбөрийн мэдээллийг уншаад зөвшөөрөөрэй — дараа нь дансны мэдээлэл гарч ирнэ.</p>
+    <p class="lede">Захиалгаа баталгаажуулахын тулд нэр, утасны дугаараа үлдээгээд, доорх мэдээллийг уншаад зөвшөөрөөрэй.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
+      <div>
+        <label class="field-label">Нэр</label>
+        <input id="cust-name" class="field-input" type="text" value="${escapeHTML(box.customerName || "")}" placeholder="Таны нэр" onchange="box.customerName=this.value.trim();persist();">
+      </div>
+      <div>
+        <label class="field-label">Утасны дугаар</label>
+        <input id="cust-phone" class="field-input" type="tel" value="${escapeHTML(box.customerPhone || "")}" placeholder="9911XXXX" onchange="box.customerPhone=this.value.trim();persist();">
+      </div>
+    </div>
 
     <div class="summary-text" id="summary-text" style="margin-top:18px">${text}</div>
 
@@ -405,11 +401,14 @@ function renderSummary(){
 }
 
 function agreeAndShowBank(){
+  const name = document.getElementById("cust-name").value.trim();
+  const phone = document.getElementById("cust-phone").value.trim();
+  if(!name || !phone){ toast("Нэр, утасны дугаараа бөглөнө үү 🙏"); return; }
+  box.customerName = name;
+  box.customerPhone = phone;
+  saveBox(box);
   agreedToTerms = true;
-  document.getElementById("bank-block").style.display = "";
-  document.getElementById("agree-row").style.display = "none";
-  document.getElementById("action-row").style.display = "";
-  document.getElementById("register-note").style.display = "block";
+  renderStepPanel();
 }
 
 async function registerOrder(){

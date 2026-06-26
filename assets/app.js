@@ -103,6 +103,9 @@ const ICONS = {
   extra: `<rect x="18" y="28" width="64" height="46" rx="5" fill="none" stroke="currentColor" stroke-width="5"/>
         <path d="M18 32l32 24 32-24" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
         <path d="M50 56l-4 4 4 4 4-4z" fill="currentColor" stroke="none"/>`,
+  greeting: `<rect x="20" y="18" width="60" height="64" rx="6" fill="none" stroke="currentColor" stroke-width="5"/>
+        <path d="M50 18v64" stroke="currentColor" stroke-width="4"/>
+        <path d="M58 53c-3-6-13-6-13-1 0 4 6 4 13 8 7-4 13-4 13-8 0-5-10-5-13 1z" fill="currentColor" stroke="none"/>`,
   box: `<path d="M30 44c8-16 32-16 40 0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
         <circle cx="30" cy="44" r="7" fill="none" stroke="currentColor" stroke-width="5"/>
         <circle cx="70" cy="44" r="7" fill="none" stroke="currentColor" stroke-width="5"/>

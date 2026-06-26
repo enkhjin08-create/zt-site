@@ -76,6 +76,7 @@
               <option value="flower">Цэцэгс</option>
               <option value="extra">Дагалдах зүйлс</option>
               <option value="box">Сав, баглаа боодол</option>
+              <option value="greeting">Мэндчилгээ</option>
             </select>
           </div>
           <div>
@@ -87,6 +88,7 @@
             </select>
           </div>
         </div>
+        <p style="font-size:12px;color:var(--ink-faint);margin-top:6px">Цэцэг (Алхам 6) болон Мэндчилгээ (Алхам 7) ангиллын бараа автоматаар тухайн тусдаа алхамд харагдана — дээрх "Builder-д хаана харагдах вэ?" сонголт тэдгээрт нөлөөлөхгүй.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
           <div>
             <label class="field-label">Зургийн холбоос (URL, заавал биш)</label>
@@ -106,7 +108,39 @@
       <input id="product-search" class="field-input" type="text" placeholder="Нэрээр хайх..." style="max-width:220px">
     </div>
     <div class="filter-pills" id="admin-cat-pills"></div>
-    <div id="all-product-list" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
+
+    <div id="bulk-bar" style="display:none;background:var(--ink);color:#fff;padding:14px 18px;border-radius:14px;margin:14px 0;gap:12px;align-items:center;flex-wrap:wrap">
+      <span id="bulk-count" style="font-weight:700;font-size:13.5px"></span>
+      <select id="bulk-category" class="field-input" style="max-width:170px;background:#fff">
+        <option value="">Ангилал (өөрчлөхгүй)</option>
+        <option value="cup">CuteCup аяга</option>
+        <option value="giftset">Бэлгийн багц</option>
+        <option value="flower">Цэцэгс</option>
+        <option value="extra">Дагалдах зүйлс</option>
+        <option value="box">Сав, баглаа боодол</option>
+        <option value="greeting">Мэндчилгээ</option>
+      </select>
+      <select id="bulk-role" class="field-input" style="max-width:190px;background:#fff">
+        <option value="">Алхам (өөрчлөхгүй)</option>
+        <option value="main">Гол бэлэг (Алхам 3)</option>
+        <option value="extra">Нэмэлт зүйлс (Алхам 4)</option>
+        <option value="container">Сав, баглаа боодол (Алхам 2)</option>
+      </select>
+      <select id="bulk-soldout" class="field-input" style="max-width:150px;background:#fff">
+        <option value="">Төлөв (өөрчлөхгүй)</option>
+        <option value="false">Бэлэн</option>
+        <option value="true">Дууссан</option>
+      </select>
+      <button class="btn btn-primary btn-sm" id="bulk-apply-btn" onclick="applyBulkEdit()">Хэрэгжүүлэх</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearSelection()">Цуцлах</button>
+    </div>
+
+    <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-soft);margin:10px 0;cursor:pointer">
+      <input type="checkbox" id="select-all-visible" onchange="toggleSelectAllVisible(this.checked)">
+      Жагсаасан бүгдийг сонгох
+    </label>
+
+    <div id="all-product-list" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
     <div class="empty-state" id="product-empty" style="display:none">Илэрц алга байна.</div>
   </div>
 </div>
@@ -283,6 +317,8 @@ function switchTab(tab){
 let productsLoaded = false;
 let adminCatFilter = "all";
 let adminSearch = "";
+let selectedIds = new Set();
+let currentVisibleIds = [];
 const ROLE_LABELS = { main: "Гол бэлэг", extra: "Нэмэлт зүйлс", container: "Сав, баглаа боодол" };
 
 async function loadAllProducts(){
@@ -317,11 +353,90 @@ function renderAllProductsList(){
   if(adminSearch) list = list.filter(p => p.name.toLowerCase().includes(adminSearch));
   list.sort((a,b) => (a.custom === b.custom ? 0 : (a.custom ? -1 : 1)) || (b.id - a.id));
 
+  currentVisibleIds = list.map(p => p.id);
+
   const wrap = document.getElementById("all-product-list");
   const empty = document.getElementById("product-empty");
-  if(!list.length){ wrap.innerHTML = ""; empty.style.display = "block"; return; }
+  const selectAllBox = document.getElementById("select-all-visible");
+  if(!list.length){
+    wrap.innerHTML = "";
+    empty.style.display = "block";
+    selectAllBox.checked = false;
+    renderBulkBar();
+    return;
+  }
   empty.style.display = "none";
   wrap.innerHTML = list.map(adminProductRowHTML).join("");
+  selectAllBox.checked = currentVisibleIds.length > 0 && currentVisibleIds.every(id => selectedIds.has(id));
+  renderBulkBar();
+}
+
+function toggleRowSelect(id, checked){
+  if(checked) selectedIds.add(id); else selectedIds.delete(id);
+  document.getElementById("select-all-visible").checked =
+    currentVisibleIds.length > 0 && currentVisibleIds.every(vid => selectedIds.has(vid));
+  renderBulkBar();
+}
+
+function toggleSelectAllVisible(checked){
+  currentVisibleIds.forEach(id => { if(checked) selectedIds.add(id); else selectedIds.delete(id); });
+  renderAllProductsList();
+}
+
+function clearSelection(){
+  selectedIds.clear();
+  renderAllProductsList();
+}
+
+function renderBulkBar(){
+  const bar = document.getElementById("bulk-bar");
+  if(selectedIds.size === 0){ bar.style.display = "none"; return; }
+  bar.style.display = "flex";
+  document.getElementById("bulk-count").textContent = selectedIds.size + " бараа сонгогдсон";
+}
+
+async function applyBulkEdit(){
+  const category = document.getElementById("bulk-category").value;
+  const role = document.getElementById("bulk-role").value;
+  const soldOutStr = document.getElementById("bulk-soldout").value;
+  if(!category && !role && soldOutStr === ""){ toast("Дор хаяж нэг талбар сонгоно уу 🙏"); return; }
+
+  const patch = {};
+  if(category) patch.category = category;
+  if(role) patch.role = role;
+  if(soldOutStr !== "") patch.soldOut = (soldOutStr === "true");
+
+  const ids = Array.from(selectedIds);
+  const btn = document.getElementById("bulk-apply-btn");
+  btn.disabled = true;
+  let failCount = 0;
+
+  for(let i = 0; i < ids.length; i++){
+    const id = ids[i];
+    btn.textContent = `Шинэчлэж байна... (${i+1}/${ids.length})`;
+    const p = PRODUCTS.find(x => x.id === id);
+    if(!p) continue;
+    try{
+      if(p.custom){
+        await adminUpdateProduct(adminPin, id, Object.assign({}, p, patch));
+      }else{
+        await adminSetOverride(adminPin, id, patch);
+      }
+    }catch(e){
+      if(e.status === 401){ logout(); return; }
+      failCount++;
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = "Хэрэгжүүлэх";
+  selectedIds.clear();
+  document.getElementById("bulk-category").value = "";
+  document.getElementById("bulk-role").value = "";
+  document.getElementById("bulk-soldout").value = "";
+
+  toast(failCount === 0 ? `${ids.length} бараа шинэчлэгдлээ ✓` : `${ids.length - failCount}/${ids.length} амжилттай, ${failCount} алдаатай`);
+  await loadAllProducts();
 }
 
 function adminProductRowHTML(p){
@@ -333,6 +448,7 @@ function adminProductRowHTML(p){
 
   return `<div class="admin-row" id="${rowId}" style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px">
     <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <input type="checkbox" onchange="toggleRowSelect(${p.id}, this.checked)" ${selectedIds.has(p.id)?"checked":""} style="width:18px;height:18px;flex-shrink:0">
       <div style="width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${cat.tint};display:flex;align-items:center;justify-content:center;color:${cat.color}">
         ${p.image ? `<img src="${safeImage}" style="width:100%;height:100%;object-fit:cover" alt="">` : `<svg viewBox="0 0 100 100" width="24" height="24">${ICONS[p.category] || ICONS.extra}</svg>`}
       </div>

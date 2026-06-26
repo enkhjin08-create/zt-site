@@ -757,7 +757,7 @@ const PRODUCTS = [
     "name": "Төрсөн өдрийн мэндчилгээ #3",
     "price": 1500,
     "oldPrice": null,
-    "category": "extra",
+    "category": "greeting",
     "soldOut": false,
     "url": "https://zuvhuntuund.com/products/50890/419642"
   },
@@ -767,7 +767,7 @@ const PRODUCTS = [
     "name": "Төрсөн өдрийн мэндчилгээ #2",
     "price": 1500,
     "oldPrice": null,
-    "category": "extra",
+    "category": "greeting",
     "soldOut": false,
     "url": "https://zuvhuntuund.com/products/50890/419641"
   },
@@ -1038,7 +1038,8 @@ const CATEGORIES = {
   giftset: { label: "Бэлгийн багц",     short: "Багц",   icon: "box",   color: "#0F4B42", tint: "#E7EDEC" },
   flower:  { label: "Цэцэгс",           short: "Цэцэг",  icon: "flower",color: "#FF6698", tint: "#EFB8C3" },
   extra:   { label: "Дагалдах зүйлс",   short: "Дагалдах",icon: "note", color: "#15140F", tint: "#F3F3F3" },
-  box:     { label: "Сав, баглаа боодол",short:"Сав",    icon: "ribbon",color: "#0F4B42", tint: "#E7EDEC" }
+  box:     { label: "Сав, баглаа боодол",short:"Сав",    icon: "ribbon",color: "#0F4B42", tint: "#E7EDEC" },
+  greeting:{ label: "Мэндчилгээ",       short: "Мэндчилгээ",icon: "note", color: "#15140F", tint: "#F3F3F3" }
 };
 
 // Хүлээн авагчаар чиглүүлэх — нэр/ангиллаас heuristic-аар тооцоолно.
@@ -1083,6 +1084,6 @@ PRODUCTS.forEach(p => { p.recipients = tagRecipients(p); });
 // тооцоолно; Админ хэсгээс шинэ бараа нэмэхдээ үүнийг шууд сонгож тохируулна.
 function defaultRoleForCategory(cat){
   if(cat === "box") return "container";
-  if(cat === "extra") return "extra";
+  if(cat === "extra" || cat === "greeting") return "extra";
   return "main"; // cup, giftset, flower
 }

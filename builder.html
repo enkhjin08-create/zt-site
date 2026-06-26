@@ -44,7 +44,7 @@
 renderHeader("builder.html");
 renderFooter();
 
-const STEP_LABELS = ["Хэн","Сав","Гол бэлэг","Нэмэлт","Зурвас","Цэцэг","Дуусгах"];
+const STEP_LABELS = ["Хэн","Сав","Гол бэлэг","Нэмэлт","Зурвас","Цэцэг","Мэндчилгээ","Дуусгах"];
 let step = 1;
 let box = loadBox();
 
@@ -55,7 +55,7 @@ if(initRecipient && RECIPIENTS[initRecipient]){
   step = 2;
 }
 
-let recFilterOn = true;
+let recFilterOn = false;
 let orderRegistered = false;
 
 function persist(){ saveBox(box); renderBoxPreview(); }
@@ -106,7 +106,7 @@ function renderBoxPreview(){
 function removeItem(idx){ box = removeFromBoxIndex(idx); renderBoxPreview(); }
 
 function goStep(n){
-  step = Math.max(1, Math.min(7, n));
+  step = Math.max(1, Math.min(8, n));
   renderStepsNav();
   renderStepPanel();
   window.scrollTo({top: document.querySelector(".builder-layout").offsetTop - 100, behavior:"smooth"});
@@ -166,6 +166,7 @@ function renderStepPanel(){
     const title = step===3 ? "Гол бэлгээ сонгоорой" : "Дагалдах зүйлс нэмэх үү?";
     let list = PRODUCTS.filter(p => (p.role || defaultRoleForCategory(p.category)) === wantRole && !p.soldOut);
     if(step === 3) list = list.filter(p => p.category !== "flower" && p.category !== "giftset");
+    if(step === 4) list = list.filter(p => p.category !== "greeting");
     if(recFilterOn && box.recipient) list = list.filter(p => p.recipients.includes(box.recipient));
     panel.innerHTML = `
       <p class="eyebrow">Алхам ${step}</p>
@@ -230,6 +231,25 @@ function renderStepPanel(){
   }
 
   if(step === 7){
+    let cards = PRODUCTS.filter(p => p.category === "greeting" && !p.soldOut);
+    panel.innerHTML = `
+      <p class="eyebrow">Алхам 7</p>
+      <h2>Мэндчилгээний карт авах уу?</h2>
+      <p class="lede">Хайрцагтайгаа хамт мэндчилгээний карт нэмж болно — заавал биш.</p>
+      <div class="item-pick-grid">
+        ${cards.map(p => `
+          <div class="pick-card ${box.itemIds.includes(p.id)?"is-selected":""}" onclick="toggleItem(${p.id})">
+            ${productArtHTML(p)}
+            <div class="pname">${p.name}</div>
+            <div class="pprice">${formatPrice(p.price)}</div>
+          </div>`).join("") || `<p class="lede" style="padding:20px 0">Одоогоор мэндчилгээний карт алга байна.</p>`}
+      </div>
+      ${stepActionsHTML()}
+    `;
+    return;
+  }
+
+  if(step === 8){
     panel.innerHTML = renderSummary();
   }
 }
@@ -322,7 +342,7 @@ function renderSummary(){
   const hasAnything = items.length || box.containerId;
   if(!hasAnything){
     return `
-      <p class="eyebrow">Алхам 7</p>
+      <p class="eyebrow">Алхам 8</p>
       <h2>Хайрцаг хоосон байна</h2>
       <p class="lede">Буцаж очоод бэлэг сонгоорой.</p>
       ${stepActionsHTML({onNext:"goStep(3)", nextLabel:"Бэлэг сонгох →"})}
@@ -334,7 +354,7 @@ function renderSummary(){
   const grandTotal = subtotal + DELIVERY_FEE;
 
   return `
-    <p class="eyebrow">Алхам 7 · Захиалга №${orderNo}</p>
+    <p class="eyebrow">Алхам 8 · Захиалга №${orderNo}</p>
     <h2>Хайрцаг бэлэн боллоо 🎀</h2>
     <p class="lede">Доор хүргэлтийн нөхцөл, төлбөрийн мэдээллийг уншаад зөвшөөрөөрэй — дараа нь дансны мэдээлэл гарч ирнэ.</p>
 
@@ -378,7 +398,7 @@ function renderSummary(){
     </p>
 
     <div class="step-actions">
-      <button class="btn btn-ghost" onclick="goStep(6)">← Засах</button>
+      <button class="btn btn-ghost" onclick="goStep(7)">← Засах</button>
       <button class="btn btn-outline" onclick="clearBox()">Хайрцгийг хоослох</button>
     </div>
   `;

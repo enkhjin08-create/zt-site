@@ -286,6 +286,7 @@ function buildOrderObject(){
     createdAt: new Date().toISOString(),
     customerName: box.customerName || "",
     customerPhone: box.customerPhone || "",
+    customerEmail: box.customerEmail || "",
     deliveryDistrict: box.deliveryDistrict || "",
     deliveryKhoroo: box.deliveryKhoroo || "",
     deliveryAddress: box.deliveryAddress || "",
@@ -313,7 +314,7 @@ function buildOrderText(){
   let lines = [];
   lines.push("ЗАХИАЛГЫН ХҮСЭЛТ — Зөвхөн түүнд");
   lines.push("Захиалгын дугаар: " + ensureOrderNumber());
-  lines.push("Захиалагч: " + (box.customerName || "—") + " · " + (box.customerPhone || "—"));
+  lines.push("Захиалагч: " + (box.customerName || "—") + " · " + (box.customerPhone || "—") + " · " + (box.customerEmail || "—"));
   lines.push("Хүргэлтийн хаяг: " + [box.deliveryDistrict, box.deliveryKhoroo ? box.deliveryKhoroo + "-р хороо" : "", box.deliveryAddress].filter(Boolean).join(", "));
   lines.push("Хүлээн авагч: " + recipient);
   if(container) lines.push("Сав: " + container.name + " (" + formatPrice(container.price) + ")");
@@ -357,7 +358,7 @@ function renderSummary(){
   return `
     <p class="eyebrow">Алхам 8 · Захиалга №${orderNo}</p>
     <h2>Хайрцаг бэлэн боллоо 🎀</h2>
-    <p class="lede">Захиалгаа баталгаажуулахын тулд нэр, утасны дугаараа үлдээгээд, доорх мэдээллийг уншаад зөвшөөрөөрэй.</p>
+    <p class="lede">Захиалгаа баталгаажуулахын тулд нэр, утасны дугаар, имэйлээ үлдээгээд, доорх мэдээллийг уншаад зөвшөөрөөрэй. Захиалгын төлөв шинэчлэгдэх бүрд имэйл рүү мэдэгдэл явуулна.</p>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
       <div>
@@ -368,6 +369,10 @@ function renderSummary(){
         <label class="field-label">Утасны дугаар</label>
         <input id="cust-phone" class="field-input" type="tel" value="${escapeHTML(box.customerPhone || "")}" placeholder="9911XXXX" onchange="box.customerPhone=this.value.trim();persist();">
       </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="field-label">Имэйл (захиалгын төлөв мэдэгдэл авахын тулд)</label>
+      <input id="cust-email" class="field-input" type="email" value="${escapeHTML(box.customerEmail || "")}" placeholder="таны@имэйл.com" onchange="box.customerEmail=this.value.trim();persist();">
     </div>
 
     <div style="margin-top:14px">
@@ -484,13 +489,16 @@ function removeCoupon(){
 function agreeAndShowBank(){
   const name = document.getElementById("cust-name").value.trim();
   const phone = document.getElementById("cust-phone").value.trim();
+  const email = document.getElementById("cust-email").value.trim();
   const district = document.getElementById("cust-district").value;
   const khoroo = document.getElementById("cust-khoroo").value.trim();
   const address = document.getElementById("cust-address").value.trim();
   if(!name || !phone){ toast("Нэр, утасны дугаараа бөглөнө үү 🙏"); return; }
+  if(!email || !email.includes("@")){ toast("Зөв имэйл хаягаа бөглөнө үү 🙏"); return; }
   if(!district || !address){ toast("Хүргэлтийн дүүрэг, дэлгэрэнгүй хаягаа бөглөнө үү 🙏"); return; }
   box.customerName = name;
   box.customerPhone = phone;
+  box.customerEmail = email;
   box.deliveryDistrict = district;
   box.deliveryKhoroo = khoroo;
   box.deliveryAddress = address;

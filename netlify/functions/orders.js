@@ -11,10 +11,11 @@
    overrides, categories, recipients, coupons) хадгалж байх ЁСТОЙ —
    эс бөгөөс нэг Function-ийн бичилт нөгөөгийнхөө мэдээллийг устгана.
 
-   Шинэ захиалга ирэх бүрд имэйл мэдэгдэл явуулна (Resend.com ашиглана,
-   заавал биш — RESEND_API_KEY тохируулаагүй бол энгийнээр алгасна):
+   Шинэ захиалга ирэх бүрд админ руу, мөн төлөв өөрчлөгдөх бүрд ЗАХИАЛАГЧ руу
+   имэйл мэдэгдэл явуулна (Resend.com ашиглана, заавал биш — RESEND_API_KEY
+   тохируулаагүй бол энгийнээр алгасна):
    - RESEND_API_KEY → resend.com-ийн API key
-   - NOTIFY_EMAIL   → мэдэгдэл хүлээн авах имэйл (заавал биш, анхдагч: info.zuvhuntuund@gmail.com)
+   - NOTIFY_EMAIL   → админ мэдэгдэл хүлээн авах имэйл (заавал биш, анхдагч: info.zuvhuntuund@gmail.com)
    - RESEND_FROM    → илгээгч хаяг (заавал биш, анхдагч: onboarding@resend.dev)
 
    4 үйлдэл дэмжинэ:
@@ -99,6 +100,7 @@ function sanitizeOrder(input){
     createdAt: new Date().toISOString(),
     customerName: str(input.customerName, 100),
     customerPhone: str(input.customerPhone, 30),
+    customerEmail: str(input.customerEmail, 150),
     deliveryDistrict: str(input.deliveryDistrict, 50),
     deliveryKhoroo: str(input.deliveryKhoroo, 20),
     deliveryAddress: str(input.deliveryAddress, 300),
@@ -163,6 +165,51 @@ async function sendOrderNotificationEmail(order){
   }
 }
 
+const STATUS_EMAIL_TEXT = {
+  new:       { subject: "Захиалга хүлээн авлаа", body: "Таны захиалгыг хүлээн авлаа. Удахгүй баталгаажуулаад мэдэгдэх болно." },
+  confirmed: { subject: "Захиалга баталгаажлаа ✓", body: "Таны захиалгыг баталгаажуулсан байна. Бид бэлтгэж, заасан хугацаанд хүргэх болно." },
+  done:      { subject: "Захиалга хийгдсэн 🎀", body: "Таны захиалга бэлэн болж, хүргэгдсэн/хүргэгдэж байна. Худалдан авалт хийсэнд баярлалаа!" },
+  cancelled: { subject: "Захиалга цуцлагдсан", body: "Таны захиалгыг цуцалсан байна. Шалтгаан, дэлгэрэнгүй мэдээллийг мэдэхийг хүсвэл бидэнтэй холбогдоорой." }
+};
+
+// Захиалгын төлөв өөрчлөгдөх бүрд захиалагч руу имэйл мэдэгдэл явуулна.
+// Захиалагч имэйлээ оруулаагүй бол энгийнээр алгасна. Алдаа гарвал ч
+// төлөв шинэчлэлтэд саад болохгүй.
+async function sendStatusUpdateEmail(order, newStatus){
+  if(!process.env.RESEND_API_KEY) return;
+  if(!order.customerEmail || !order.customerEmail.includes("@")) return;
+
+  const info = STATUS_EMAIL_TEXT[newStatus] || STATUS_EMAIL_TEXT.new;
+  const from = process.env.RESEND_FROM || "onboarding@resend.dev";
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#C9536A">🎀 ${escapeHtml(info.subject)}</h2>
+      <p>Сайн байна уу, ${escapeHtml(order.customerName || "")}!</p>
+      <p>${escapeHtml(info.body)}</p>
+      <p style="margin-top:14px;background:#FFEAF1;border-radius:10px;padding:10px 14px">
+        <b>Захиалгын дугаар:</b> ${escapeHtml(order.orderNumber)}<br>
+        <b>Нийт дүн:</b> ${(order.total || 0).toLocaleString()}₮
+      </p>
+      <p style="margin-top:18px;font-size:13px;color:#888">Асуулт байвал бидэнтэй Messenger-р холбогдоорой — Зөвхөн түүнд.</p>
+    </div>`;
+
+  try{
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.RESEND_API_KEY },
+      body: JSON.stringify({
+        from: from,
+        to: order.customerEmail,
+        subject: `🎀 ${info.subject} — №${order.orderNumber}`,
+        html: html
+      })
+    });
+  }catch(e){
+    // Мэйл явуулахад алдаа гарсан ч төлөв шинэчлэлт аль хэдийн хадгалагдсан тул дахин шидэхгүй.
+  }
+}
+
 exports.handler = async (event) => {
   if(event.httpMethod !== "POST"){
     return json(405, { error: "Method not allowed" });
@@ -219,8 +266,10 @@ exports.handler = async (event) => {
       const doc = await readDoc();
       const idx = doc.orders.findIndex(o => o.id === body.id);
       if(idx >= 0){
-        doc.orders[idx].status = String(body.status || "new").slice(0, 20);
+        const newStatus = String(body.status || "new").slice(0, 20);
+        doc.orders[idx].status = newStatus;
         await writeDoc(doc);
+        await sendStatusUpdateEmail(doc.orders[idx], newStatus);
       }
       return json(200, { ok: true });
     }

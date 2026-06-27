@@ -429,12 +429,12 @@ function renderSummary(){
     </div>
 
     <div class="copy-row" id="action-row" style="${agreedToTerms ? "" : "display:none"}; margin-top:16px">
-      <button class="btn btn-primary" id="register-btn" onclick="registerOrder()" ${orderRegistered ? "disabled" : ""}>${orderRegistered ? "Бүртгэгдлээ ✓" : "Захиалгыг бүртгэх ✓"}</button>
+      <button class="btn btn-primary" id="register-btn" onclick="registerOrder()" ${orderRegistered ? "disabled" : ""}>${orderRegistered ? "Илгээгдлээ ✓" : "Төлбөр илгээсэн ✓"}</button>
       <button class="btn btn-ghost" onclick="copyOrder()">Хуулах 📋</button>
       <a class="btn btn-outline" href="https://m.me/619674054827086" target="_blank" rel="noopener">Messenger-р холбогдох →</a>
     </div>
     <p id="register-note" style="font-size:12.5px;color:var(--ink-faint);margin-top:10px;display:${agreedToTerms ? "block" : "none"}">
-      Бүртгэх товч дарвал захиалга админ хэсэгт шууд харагдана.
+      Дээрх товч дарвал захиалга админ хэсэгт шууд харагдана.
       эсвэл <a href="mailto:info.zuvhuntuund@gmail.com?subject=${encodeURIComponent('Захиалгын хүсэлт')}&body=${encodeURIComponent(text)}">и-мэйлээр илгээх</a>
     </p>
 
@@ -502,15 +502,15 @@ function agreeAndShowBank(){
 async function registerOrder(){
   if(orderRegistered) return;
   const btn = document.getElementById("register-btn");
-  if(btn){ btn.disabled = true; btn.textContent = "Бүртгэж байна..."; }
+  if(btn){ btn.disabled = true; btn.textContent = "Илгээж байна..."; }
   try{
     await submitOrder(buildOrderObject());
     orderRegistered = true;
-    if(btn){ btn.textContent = "Бүртгэгдлээ ✓"; }
-    toast("Захиалга бүртгэгдлээ! Админ хэсэгт харагдана 🎀");
+    if(btn){ btn.textContent = "Илгээгдлээ ✓"; }
+    toast("Таны захиалга амжилттай илгээгдлээ! 🎀");
   }catch(e){
-    if(btn){ btn.disabled = false; btn.textContent = "Захиалгыг бүртгэх ✓"; }
-    toast("Бүртгэхэд алдаа гарлаа. Хуулах/Messenger-р явуулж болно.");
+    if(btn){ btn.disabled = false; btn.textContent = "Төлбөр илгээсэн ✓"; }
+    toast("Илгээхэд алдаа гарлаа. Хуулах/Messenger-р явуулж болно.");
   }
 }
 

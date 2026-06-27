@@ -155,7 +155,7 @@ function productCardHTML(p){
       <a href="product.html?id=${p.id}"><div class="name">${p.name}</div></a>
       ${priceRowHTML(p)}
       <div class="product-actions">
-        <button class="btn btn-ghost btn-sm" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""}>Хайрцагт нэмэх</button>
+        <button class="btn btn-ghost btn-sm" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""}>Нэмэх</button>
         <a class="btn btn-outline btn-sm" href="product.html?id=${p.id}">Дэлгэрэнгүй</a>
       </div>
     </div>

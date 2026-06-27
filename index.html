@@ -63,6 +63,18 @@
   </div>
 </section>
 
+<section class="section" id="bestseller-section" style="padding-top:0;display:none">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Хамгийн эрэлттэй</p>
+        <h2>Бестселлер</h2>
+      </div>
+    </div>
+    <div class="product-grid" id="bestseller-grid"></div>
+  </div>
+</section>
+
 <section class="section" style="padding-top:0">
   <div class="wrap">
     <div class="section-head">
@@ -73,6 +85,24 @@
       <a href="category.html" class="btn btn-ghost btn-sm">Бүгдийг үзэх →</a>
     </div>
     <div class="cat-grid" id="cat-grid"></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Төсөвдөө тааруулж хайх</p>
+        <h2>Таны бэлгэнд зориулах төсөв хэдэн төгрөг вэ?</h2>
+      </div>
+    </div>
+    <div class="filter-pills">
+      <a class="pill" href="category.html?budget=0-20000">20,000₮ хүртэл</a>
+      <a class="pill" href="category.html?budget=20000-40000">20,000–40,000₮</a>
+      <a class="pill" href="category.html?budget=40000-60000">40,000–60,000₮</a>
+      <a class="pill" href="category.html?budget=60000-100000">60,000–100,000₮</a>
+      <a class="pill" href="category.html?budget=100000-99999999">100,000₮+</a>
+    </div>
   </div>
 </section>
 
@@ -146,6 +176,12 @@
 
     const giftsetPreview = document.getElementById("giftset-preview");
     giftsetPreview.innerHTML = PRODUCTS.filter(p => p.category === "giftset" && !p.soldOut).slice(0,4).map(productCardHTML).join("");
+
+    const bestSellers = PRODUCTS.filter(p => p.bestSeller && !p.soldOut);
+    if(bestSellers.length){
+      document.getElementById("bestseller-section").style.display = "";
+      document.getElementById("bestseller-grid").innerHTML = bestSellers.slice(0,8).map(productCardHTML).join("");
+    }
   })();
 </script>
 </body>

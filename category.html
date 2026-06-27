@@ -23,6 +23,16 @@
 <div class="wrap section" style="padding-top:18px">
   <div class="filter-pills" id="cat-pills"></div>
   <div class="filter-pills" id="rec-pills" style="margin-top:-14px"></div>
+  <div class="filter-pills" id="budget-pills" style="margin-top:-14px"></div>
+
+  <div style="display:flex;justify-content:flex-end;margin:-6px 0 14px">
+    <select id="sort-select" class="field-input" style="max-width:200px">
+      <option value="default">Шинэ нь эхэндээ</option>
+      <option value="price-asc">Үнэ: багаас ихэд</option>
+      <option value="price-desc">Үнэ: ихээс багад</option>
+    </select>
+  </div>
+
   <div class="product-grid" id="grid"></div>
   <div class="empty-state" id="empty" style="display:none">Энэ ангилалд одоогоор бараа алга байна. Өөр шүүлтүүр сонгоод үзээрэй.</div>
 </div>
@@ -39,6 +49,17 @@ renderFooter();
 const params = new URLSearchParams(location.search);
 let activeCat = params.get("cat") || "all";
 let activeRec = params.get("recipient") || "all";
+let activeBudget = params.get("budget") || "all";
+let activeSort = params.get("sort") || "default";
+
+const BUDGET_TIERS = [
+  ["all", "Бүх үнэ"],
+  ["0-20000", "20,000₮ хүртэл"],
+  ["20000-40000", "20,000–40,000₮"],
+  ["40000-60000", "40,000–60,000₮"],
+  ["60000-100000", "60,000–100,000₮"],
+  ["100000-99999999", "100,000₮+"]
+];
 
 function pillsHTML(){
   const catPills = [["all","Бүгд"], ...Object.entries(CATEGORIES).map(([k,c])=>[k,c.label])];
@@ -48,13 +69,29 @@ function pillsHTML(){
   const recPills = [["all","Бүх хүлээн авагч"], ...Object.entries(RECIPIENTS).map(([k,r])=>[k, r.emoji+" "+r.label])];
   document.getElementById("rec-pills").innerHTML = recPills.map(([k,label]) =>
     `<button class="pill ${activeRec===k?"is-active":""}" data-rec="${k}" style="font-size:12.5px;opacity:.85">${label}</button>`).join("");
+
+  document.getElementById("budget-pills").innerHTML = BUDGET_TIERS.map(([k,label]) =>
+    `<button class="pill ${activeBudget===k?"is-active":""}" data-budget="${k}" style="font-size:12.5px;opacity:.85">${label}</button>`).join("");
+
+  document.getElementById("sort-select").value = activeSort;
+}
+
+function updateUrl(){
+  history.replaceState(null, "", `?cat=${activeCat}&recipient=${activeRec}&budget=${activeBudget}&sort=${activeSort}`);
 }
 
 function renderGrid(){
   let list = PRODUCTS.slice();
   if(activeCat !== "all") list = list.filter(p => p.category === activeCat);
   if(activeRec !== "all") list = list.filter(p => p.recipients.includes(activeRec));
-  list.sort((a,b)=> (a.soldOut - b.soldOut) || (b.id - a.id));
+  if(activeBudget !== "all"){
+    const [min,max] = activeBudget.split("-").map(Number);
+    list = list.filter(p => p.price >= min && p.price <= max);
+  }
+
+  if(activeSort === "price-asc") list.sort((a,b) => (a.soldOut - b.soldOut) || (a.price - b.price));
+  else if(activeSort === "price-desc") list.sort((a,b) => (a.soldOut - b.soldOut) || (b.price - a.price));
+  else list.sort((a,b) => (a.soldOut - b.soldOut) || (b.id - a.id));
 
   const grid = document.getElementById("grid");
   const empty = document.getElementById("empty");
@@ -69,9 +106,17 @@ function renderGrid(){
 
 document.addEventListener("click", (e) => {
   const catBtn = e.target.closest("[data-cat]");
-  if(catBtn){ activeCat = catBtn.dataset.cat; pillsHTML(); renderGrid(); history.replaceState(null,"", `?cat=${activeCat}&recipient=${activeRec}`); }
+  if(catBtn){ activeCat = catBtn.dataset.cat; pillsHTML(); renderGrid(); updateUrl(); }
   const recBtn = e.target.closest("[data-rec]");
-  if(recBtn){ activeRec = recBtn.dataset.rec; pillsHTML(); renderGrid(); history.replaceState(null,"", `?cat=${activeCat}&recipient=${activeRec}`); }
+  if(recBtn){ activeRec = recBtn.dataset.rec; pillsHTML(); renderGrid(); updateUrl(); }
+  const budgetBtn = e.target.closest("[data-budget]");
+  if(budgetBtn){ activeBudget = budgetBtn.dataset.budget; pillsHTML(); renderGrid(); updateUrl(); }
+});
+
+document.getElementById("sort-select").addEventListener("change", (e) => {
+  activeSort = e.target.value;
+  renderGrid();
+  updateUrl();
 });
 
 pillsHTML();

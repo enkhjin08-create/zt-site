@@ -269,10 +269,17 @@ function ensureOrderNumber(){
   return box.orderNumber;
 }
 
+function couponDiscountAmount(subtotal){
+  if(!box.couponCode || !box.couponType) return 0;
+  if(box.couponType === "percent") return Math.round(subtotal * box.couponValue / 100);
+  return Math.min(box.couponValue, subtotal);
+}
+
 function buildOrderObject(){
   const container = box.containerId ? getProduct(box.containerId) : null;
   const items = box.itemIds.map(getProduct).filter(Boolean);
   const subtotal = boxTotal(box);
+  const discount = couponDiscountAmount(subtotal);
   return {
     id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("ord_" + Date.now() + "_" + Math.random().toString(36).slice(2)),
     orderNumber: ensureOrderNumber(),
@@ -289,7 +296,9 @@ function buildOrderObject(){
     message: box.message || "",
     subtotal: subtotal,
     deliveryFee: DELIVERY_FEE,
-    total: subtotal + DELIVERY_FEE,
+    couponCode: box.couponCode || "",
+    discount: discount,
+    total: Math.max(0, subtotal + DELIVERY_FEE - discount),
     status: "new"
   };
 }
@@ -299,7 +308,8 @@ function buildOrderText(){
   const container = box.containerId ? getProduct(box.containerId) : null;
   const items = box.itemIds.map(getProduct).filter(Boolean);
   const subtotal = boxTotal(box);
-  const grandTotal = subtotal + DELIVERY_FEE;
+  const discount = couponDiscountAmount(subtotal);
+  const grandTotal = Math.max(0, subtotal + DELIVERY_FEE - discount);
   let lines = [];
   lines.push("ЗАХИАЛГЫН ХҮСЭЛТ — Зөвхөн түүнд");
   lines.push("Захиалгын дугаар: " + ensureOrderNumber());
@@ -315,6 +325,7 @@ function buildOrderText(){
   if(box.message) lines.push("Зурвас: \"" + box.message + "\"");
   lines.push("Барааны дүн: " + formatPrice(subtotal));
   lines.push("Хүргэлт: " + formatPrice(DELIVERY_FEE));
+  if(discount > 0) lines.push("Купон (" + box.couponCode + "): -" + formatPrice(discount));
   lines.push("Нийт төлөх дүн: " + formatPrice(grandTotal));
   lines.push("");
   lines.push("Данс: " + BANK_INFO.account + " (" + BANK_INFO.holder + ")");
@@ -340,7 +351,8 @@ function renderSummary(){
   const text = buildOrderText();
   const orderNo = ensureOrderNumber();
   const subtotal = boxTotal(box);
-  const grandTotal = subtotal + DELIVERY_FEE;
+  const discount = couponDiscountAmount(subtotal);
+  const grandTotal = Math.max(0, subtotal + DELIVERY_FEE - discount);
 
   return `
     <p class="eyebrow">Алхам 8 · Захиалга №${orderNo}</p>
@@ -369,6 +381,22 @@ function renderSummary(){
         <input id="cust-khoroo" class="field-input" type="text" value="${escapeHTML(box.deliveryKhoroo || "")}" placeholder="Хороо (заавал биш)" onchange="box.deliveryKhoroo=this.value.trim();persist();">
       </div>
       <textarea id="cust-address" class="field-input" style="margin-top:10px;min-height:70px;resize:vertical" placeholder="Гудамж, байр, тоот, орц, давхар — лавлах зориг (барилгын нэр, ойролцоох газар) бичвэл хүргэлт хялбар олно" onchange="box.deliveryAddress=this.value.trim();persist();">${escapeHTML(box.deliveryAddress || "")}</textarea>
+    </div>
+
+    <div style="margin-top:14px">
+      <label class="field-label">Хямдралын купон (заавал биш)</label>
+      ${box.couponCode ? `
+        <div style="display:flex;gap:10px;align-items:center;margin-top:6px;background:var(--sage-tint);border-radius:12px;padding:10px 14px">
+          <span style="font-weight:700;flex:1">🎉 ${escapeHTML(box.couponCode)} хэрэглэгдлээ — -${formatPrice(discount)}</span>
+          <button class="btn btn-ghost btn-sm" onclick="removeCoupon()">Хасах</button>
+        </div>
+      ` : `
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <input id="coupon-input" class="field-input" type="text" placeholder="Купон код" style="text-transform:uppercase">
+          <button class="btn btn-outline btn-sm" onclick="applyCoupon()" id="coupon-btn">Шалгах</button>
+        </div>
+        <p id="coupon-msg" style="font-size:12.5px;margin-top:6px"></p>
+      `}
     </div>
 
     <div class="summary-text" id="summary-text" style="margin-top:18px">${text}</div>
@@ -415,6 +443,42 @@ function renderSummary(){
       <button class="btn btn-outline" onclick="clearBox()">Хайрцгийг хоослох</button>
     </div>
   `;
+}
+
+async function applyCoupon(){
+  const input = document.getElementById("coupon-input");
+  const code = input.value.trim().toUpperCase();
+  const msg = document.getElementById("coupon-msg");
+  if(!code){ msg.textContent = "Купон код оруулна уу"; msg.style.color = "var(--ribbon-dark)"; return; }
+
+  const btn = document.getElementById("coupon-btn");
+  btn.disabled = true; btn.textContent = "Шалгаж байна...";
+  try{
+    const res = await validateCoupon(code);
+    if(res && res.ok){
+      box.couponCode = res.code;
+      box.couponType = res.type;
+      box.couponValue = res.value;
+      persist();
+      renderStepPanel();
+      toast("Купон амжилттай хэрэгжлээ 🎉");
+    }else{
+      msg.textContent = (res && res.error) || "Хүчингүй купон";
+      msg.style.color = "var(--ribbon-dark)";
+    }
+  }catch(e){
+    msg.textContent = "Шалгахад алдаа гарлаа";
+    msg.style.color = "var(--ribbon-dark)";
+  }
+  btn.disabled = false; btn.textContent = "Шалгах";
+}
+
+function removeCoupon(){
+  box.couponCode = "";
+  box.couponType = null;
+  box.couponValue = 0;
+  persist();
+  renderStepPanel();
 }
 
 function agreeAndShowBank(){

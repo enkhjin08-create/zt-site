@@ -40,6 +40,7 @@
     <button class="pill is-active" data-tab="orders" onclick="switchTab('orders')">Захиалгууд</button>
     <button class="pill" data-tab="products" onclick="switchTab('products')">Бараа удирдах</button>
     <button class="pill" data-tab="categories" onclick="switchTab('categories')">Ангилал</button>
+    <button class="pill" data-tab="coupons" onclick="switchTab('coupons')">Купон</button>
   </div>
 
   <div id="orders-tab">
@@ -104,6 +105,9 @@
           <label class="field-label">Хүлээн авагч (гар аргаар, заавал биш — хоосон орхивол нэрнээс автоматаар тааруулна)</label>
           <div id="add-recipients-checks" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px"></div>
         </div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:14px;cursor:pointer">
+          <input type="checkbox" name="bestSeller"> ⭐ Бестселлер (Нүүр хуудсанд харагдана)
+        </label>
         <button class="btn btn-primary" type="submit" style="margin-top:18px">Бараа нэмэх</button>
       </form>
     </div>
@@ -207,11 +211,51 @@
     <h3 style="font-size:16px;margin-bottom:12px">Бүх хүлээн авагч</h3>
     <div id="recipient-list" style="display:flex;flex-direction:column;gap:10px"></div>
     <p style="font-size:12px;color:var(--ink-faint);margin-top:12px">
-      ⚠️ Шинэ хүлээн авагчид автоматаар бараа тааруулагдахгүй (энэ heuristic зөвхөн анхны 5
-      хүлээн авагчид зориулагдсан) — "Зөвхөн ... тохирсон зүйлс" шүүлтүүрийг асаавал builder
-      дээр хоосон харагдаж магадгүй. Хэрэгтэй бол хэлээрэй, бараа бүрт гар аргаар хүлээн авагч
-      тааруулдаг болгож болно.
+      💡 Шинэ хүлээн авагчид анхдагч байдлаараа автомат heuristic-аар бараа тааруулагдахгүй
+      (энэ нь зөвхөн анхны 5-д зориулагдсан) — гэхдээ "Бараа удирдах" хэсэгт бараа бүрийг
+      гар аргаар хүлээн авагчтай холбож болно.
     </p>
+  </div>
+
+  <div id="coupons-tab" style="display:none;margin-top:22px">
+    <div class="step-panel" style="margin-bottom:24px;padding:26px">
+      <h3 style="font-size:18px;margin-bottom:4px">Шинэ купон нэмэх</h3>
+      <p class="lede" style="font-size:13px;margin-bottom:16px">Хэрэглэгч Builder-ийн "Дуусгах" алхамд купон код оруулж хямдрал авах боломжтой болно.</p>
+      <form id="coupon-form" onsubmit="submitCouponForm(event)">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px">
+          <div>
+            <label class="field-label">Код</label>
+            <input name="code" class="field-input" type="text" placeholder="Жишээ: ZTLOVE10" style="text-transform:uppercase" required>
+          </div>
+          <div>
+            <label class="field-label">Төрөл</label>
+            <select name="type" class="field-input">
+              <option value="percent">Хувь (%)</option>
+              <option value="fixed">Тогтмол дүн (₮)</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Утга</label>
+            <input name="value" class="field-input" type="number" min="0" step="1" placeholder="10" required>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+          <div>
+            <label class="field-label">Хэрэглэх дээд тоо (заавал биш)</label>
+            <input name="maxUses" class="field-input" type="number" min="1" step="1" placeholder="Хязгааргүй">
+          </div>
+          <div>
+            <label class="field-label">Дуусах огноо (заавал биш)</label>
+            <input name="expiresAt" class="field-input" type="date">
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top:18px">Купон нэмэх</button>
+      </form>
+    </div>
+
+    <h3 style="font-size:16px;margin-bottom:12px">Бүх купон</h3>
+    <div id="coupon-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="empty-state" id="coupon-empty" style="display:none">Купон алга байна.</div>
   </div>
 </div>
 
@@ -383,8 +427,10 @@ function switchTab(tab){
   document.getElementById("orders-tab").style.display = tab === "orders" ? "" : "none";
   document.getElementById("products-tab").style.display = tab === "products" ? "" : "none";
   document.getElementById("categories-tab").style.display = tab === "categories" ? "" : "none";
+  document.getElementById("coupons-tab").style.display = tab === "coupons" ? "" : "none";
   if(tab === "products" && !productsLoaded) loadAllProducts();
   if(tab === "categories") loadCategoriesTab();
+  if(tab === "coupons") loadCouponsTab();
 }
 
 /* ---------------- Product management (base catalog + custom) ---------------- */
@@ -530,6 +576,7 @@ function adminProductRowHTML(p){
       </div>
       <div style="flex:1;min-width:140px">
         <div style="font-weight:700;font-size:14px">${escapeHTML(p.name)}
+          ${p.bestSeller ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--gold-tint);border:none">⭐ Бестселлер</span>` : ""}
           ${isCustom ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--sage-tint);border:none">Нэмсэн</span>` : ""}
           ${isOverridden ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--ribbon-tint);border:none">Засагдсан</span>` : ""}
         </div>
@@ -595,6 +642,9 @@ function adminProductRowHTML(p){
             </label>`).join("")}
         </div>
       </div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:12px;cursor:pointer">
+        <input type="checkbox" id="bestSeller${rowId}" ${p.bestSeller?"checked":""}> ⭐ Бестселлер (Нүүр хуудсанд харагдана)
+      </label>
       <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" onclick="saveProductRow(${p.id}, ${isCustom})">Хадгалах</button>
         ${isCustom
@@ -615,6 +665,7 @@ function readRowFields(id){
   const val = (name) => document.getElementById(name + rowId).value;
   const recipWrap = document.getElementById("recip" + rowId);
   const recipients = recipWrap ? Array.from(recipWrap.querySelectorAll('input[type="checkbox"]:checked')).map(el => el.value) : [];
+  const bestSellerBox = document.getElementById("bestSeller" + rowId);
   return {
     name: val("name"),
     price: Number(val("price")),
@@ -622,6 +673,7 @@ function readRowFields(id){
     category: val("category"),
     role: val("role"),
     soldOut: val("soldOut") === "true",
+    bestSeller: bestSellerBox ? bestSellerBox.checked : false,
     image: val("image"),
     url: val("url"),
     recipients: recipients
@@ -680,7 +732,8 @@ async function submitProductForm(e){
     role: f.role.value,
     image: f.image.value.trim(),
     url: f.url.value.trim(),
-    soldOut: false
+    soldOut: false,
+    bestSeller: f.bestSeller.checked
   };
   if(checkedRecipients.length) product.recipients = checkedRecipients;
   if(!product.name || !product.price){ toast("Нэр, үнээ бөглөнө үү 🙏"); return; }
@@ -828,6 +881,101 @@ async function deleteRecipientConfirm(key){
     toast("Устгагдлаа");
     categoriesLoaded = false;
     await loadCategoriesTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+/* ---------------- Coupon management ---------------- */
+let couponsCache = {};
+
+async function loadCouponsTab(){
+  const list = document.getElementById("coupon-list");
+  list.innerHTML = `<p class="lede">Уншиж байна...</p>`;
+  document.getElementById("coupon-empty").style.display = "none";
+  try{
+    couponsCache = await adminListCoupons(adminPin);
+    renderCouponList();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    list.innerHTML = `<p class="lede">Уншихад алдаа гарлаа.</p>`;
+  }
+}
+
+function renderCouponList(){
+  const wrap = document.getElementById("coupon-list");
+  const empty = document.getElementById("coupon-empty");
+  const codes = Object.keys(couponsCache);
+  if(!codes.length){ wrap.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  wrap.innerHTML = codes.map(code => couponRowHTML(couponsCache[code])).join("");
+}
+
+function couponRowHTML(c){
+  const valueLabel = c.type === "percent" ? c.value + "%" : formatPrice(c.value);
+  const usage = c.maxUses != null ? `${c.usedCount || 0} / ${c.maxUses}` : `${c.usedCount || 0} / ∞`;
+  const expired = c.expiresAt && new Date(c.expiresAt) < new Date();
+  return `<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+    <div style="flex:1;min-width:140px">
+      <div style="font-weight:700;font-size:14px">${escapeHTML(c.code)}
+        ${!c.active ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--paper-deep);border:none">Хаалттай</span>` : ""}
+        ${expired ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--ribbon-tint);border:none">Хугацаа дууссан</span>` : ""}
+      </div>
+      <div style="font-size:12.5px;color:var(--ink-faint);margin-top:2px">
+        ${valueLabel} хямдрал · Хэрэглэсэн: ${usage}${c.expiresAt ? " · Дуусах: " + c.expiresAt : ""}
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="toggleCouponActive('${c.code}', ${!c.active})">${c.active ? "Хаах" : "Нээх"}</button>
+    <button class="btn btn-outline btn-sm" onclick="deleteCouponConfirm('${c.code}')">Устгах</button>
+  </div>`;
+}
+
+async function submitCouponForm(e){
+  e.preventDefault();
+  const f = e.target;
+  const coupon = {
+    code: f.code.value.trim().toUpperCase(),
+    type: f.type.value,
+    value: Number(f.value.value),
+    maxUses: f.maxUses.value ? Number(f.maxUses.value) : null,
+    expiresAt: f.expiresAt.value || null,
+    active: true
+  };
+  if(!coupon.code || !coupon.value){ toast("Код, утгаа бөглөнө үү 🙏"); return; }
+
+  const btn = f.querySelector("button[type=submit]");
+  btn.disabled = true; btn.textContent = "Нэмэж байна...";
+  try{
+    await adminAddCoupon(adminPin, coupon);
+    toast("Купон нэмэгдлээ ✓");
+    f.reset();
+    await loadCouponsTab();
+  }catch(err){
+    if(err.status === 401){ logout(); return; }
+    toast(err.message === "HTTP 409" ? "Энэ код өмнө нь бий байна" : "Алдаа гарлаа. Дахин оролдоорой.");
+  }
+  btn.disabled = false; btn.textContent = "Купон нэмэх";
+}
+
+async function toggleCouponActive(code, val){
+  try{
+    const c = couponsCache[code];
+    await adminUpdateCoupon(adminPin, code, Object.assign({}, c, { active: val }));
+    toast(val ? "Купон нээгдлээ" : "Купон хаагдлаа");
+    await loadCouponsTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+async function deleteCouponConfirm(code){
+  if(!confirm("Энэ купоныг устгах уу?")) return;
+  try{
+    await adminDeleteCoupon(adminPin, code);
+    toast("Купон устгагдлаа");
+    await loadCouponsTab();
   }catch(e){
     if(e.status === 401){ logout(); return; }
     toast("Алдаа гарлаа");

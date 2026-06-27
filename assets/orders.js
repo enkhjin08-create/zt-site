@@ -28,6 +28,11 @@ async function submitOrder(order){
   return callOrdersApi({ action: "submit", order });
 }
 
+// Нийтэд нээлттэй — захиалга баталгаажуулахаас өмнө купоны хямдралыг урьдчилан харуулна.
+async function validateCoupon(code){
+  return callOrdersApi({ action: "validateCoupon", code });
+}
+
 // Зөвхөн зөв PIN-тэй бол ажиллана. admin.html ашигладаг.
 async function adminListOrders(pin){
   const data = await callOrdersApi({ action: "list", pin });

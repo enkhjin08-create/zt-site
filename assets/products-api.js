@@ -72,6 +72,19 @@ async function adminAddRecipient(pin, recipient){
 async function adminDeleteRecipient(pin, key){
   return callProductsApi({ action: "deleteRecipient", pin, key });
 }
+async function adminListCoupons(pin){
+  const data = await callProductsApi({ action: "listCoupons", pin });
+  return (data && data.coupons) || {};
+}
+async function adminAddCoupon(pin, coupon){
+  return callProductsApi({ action: "addCoupon", pin, coupon });
+}
+async function adminUpdateCoupon(pin, code, coupon){
+  return callProductsApi({ action: "updateCoupon", pin, code, coupon });
+}
+async function adminDeleteCoupon(pin, code){
+  return callProductsApi({ action: "deleteCoupon", pin, code });
+}
 
 // assets/data.js-ийн статик 103 бараан дээр Админ хэсгийн засвар (overrides)
 // болон шинээр нэмсэн (custom) бараа/ангилал/хүлээн авагчдыг нэгтгэж, PRODUCTS,

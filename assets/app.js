@@ -7,7 +7,7 @@
 const BOX_KEY = "zt_box_v1";
 
 function emptyBox(){
-  return { recipient: null, containerId: null, itemIds: [], message: "", customerName: "", customerPhone: "", deliveryDistrict: "", deliveryKhoroo: "", deliveryAddress: "", orderNumber: null };
+  return { recipient: null, containerId: null, itemIds: [], message: "", customerName: "", customerPhone: "", deliveryDistrict: "", deliveryKhoroo: "", deliveryAddress: "", couponCode: "", couponType: null, couponValue: 0, orderNumber: null };
 }
 function loadBox(){
   try{
@@ -127,15 +127,16 @@ function productArtHTML(p, opts){
   let badge = "";
   if(p.soldOut){ badge = `<span class="badge sold">Дууссан</span>`; }
   else if(p.oldPrice){ badge = `<span class="badge">-${Math.round(100 - (p.price/p.oldPrice*100))}%</span>`; }
+  const starBadge = p.bestSeller ? `<span class="badge" style="left:auto;right:10px;background:var(--sage)">⭐</span>` : "";
   const heightRule = opts.height ? `height:${opts.height};` : "";
   if(p.image){
     return `<div class="product-art" style="${heightRule}background:${cat.tint}">
-        ${badge}
+        ${badge}${starBadge}
         <img src="${p.image}" alt="${escapeHTML(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
       </div>`;
   }
   return `<div class="product-art" style="${heightRule}background:${cat.tint};color:${cat.color}">
-      ${badge}
+      ${badge}${starBadge}
       <svg viewBox="0 0 100 100">${categoryIconSvg(p.category)}</svg>
     </div>`;
 }

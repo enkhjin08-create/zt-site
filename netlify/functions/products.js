@@ -51,7 +51,8 @@ async function readDoc(){
     products: Array.isArray(record.products) ? record.products : [],
     overrides: (record.overrides && typeof record.overrides === "object") ? record.overrides : {},
     categories: (record.categories && typeof record.categories === "object") ? record.categories : {},
-    recipients: (record.recipients && typeof record.recipients === "object") ? record.recipients : {}
+    recipients: (record.recipients && typeof record.recipients === "object") ? record.recipients : {},
+    coupons: (record.coupons && typeof record.coupons === "object") ? record.coupons : {}
   };
 }
 
@@ -104,6 +105,7 @@ function sanitizeProduct(input, existing, validCategories, validRecipients){
     category: category,
     role: role,
     soldOut: typeof input.soldOut === "boolean" ? input.soldOut : !!existing.soldOut,
+    bestSeller: typeof input.bestSeller === "boolean" ? input.bestSeller : !!existing.bestSeller,
     image: str(input.image != null ? input.image : existing.image, 500),
     url: str(input.url != null ? input.url : existing.url, 500),
     custom: true,
@@ -127,6 +129,7 @@ function sanitizeOverride(input, existing, validCategories, validRecipients){
   if(input.category != null && validCategories.includes(input.category)) patch.category = input.category;
   if(input.role != null && VALID_ROLES.includes(input.role)) patch.role = input.role;
   if(typeof input.soldOut === "boolean") patch.soldOut = input.soldOut;
+  if(typeof input.bestSeller === "boolean") patch.bestSeller = input.bestSeller;
   if(input.image != null) patch.image = str(input.image, 500);
   if(input.url != null) patch.url = str(input.url, 500);
   const recipients = cleanRecipients(input.recipients, validRecipients);
@@ -161,6 +164,32 @@ function sanitizeRecipient(input){
     label: label || "Нэргүй",
     emoji: emoji,
     custom: true
+  };
+}
+
+const COUPON_TYPES = ["percent", "fixed"];
+
+function sanitizeCoupon(input, existing){
+  input = input || {};
+  existing = existing || {};
+  const str = (v, max) => String(v == null ? "" : v).slice(0, max);
+  const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+
+  const code = str(input.code, 30).trim().toUpperCase() || existing.code;
+  const type = COUPON_TYPES.includes(input.type) ? input.type : (existing.type || "percent");
+  let value = input.value != null ? num(input.value) : (existing.value != null ? existing.value : 0);
+  if(type === "percent") value = Math.max(0, Math.min(100, value));
+  else value = Math.max(0, value);
+
+  return {
+    code: code,
+    type: type,
+    value: value,
+    active: typeof input.active === "boolean" ? input.active : (existing.active != null ? existing.active : true),
+    maxUses: (input.maxUses === "" || input.maxUses == null) ? (existing.maxUses != null ? existing.maxUses : null) : num(input.maxUses),
+    usedCount: existing.usedCount || 0,
+    expiresAt: (input.expiresAt != null) ? (str(input.expiresAt, 10) || null) : (existing.expiresAt || null),
+    createdAt: existing.createdAt || new Date().toISOString()
   };
 }
 
@@ -266,6 +295,42 @@ exports.handler = async (event) => {
       if(!body.key) return json(400, { error: "Missing key" });
       const doc = await readDoc();
       delete doc.recipients[body.key];
+      await writeDoc(doc);
+      return json(200, { ok: true });
+    }
+
+    if(body.action === "listCoupons"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      const doc = await readDoc();
+      return json(200, { ok: true, coupons: doc.coupons });
+    }
+
+    if(body.action === "addCoupon"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      const doc = await readDoc();
+      const coupon = sanitizeCoupon(body.coupon, null);
+      if(!coupon.code) return json(400, { error: "Code required" });
+      if(doc.coupons[coupon.code]) return json(409, { error: "Энэ код өмнө нь бий" });
+      doc.coupons[coupon.code] = coupon;
+      await writeDoc(doc);
+      return json(200, { ok: true, coupon });
+    }
+
+    if(body.action === "updateCoupon"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      const doc = await readDoc();
+      const existing = doc.coupons[body.code];
+      if(!existing) return json(404, { error: "Coupon not found" });
+      doc.coupons[body.code] = sanitizeCoupon(body.coupon, existing);
+      await writeDoc(doc);
+      return json(200, { ok: true, coupon: doc.coupons[body.code] });
+    }
+
+    if(body.action === "deleteCoupon"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(!body.code) return json(400, { error: "Missing code" });
+      const doc = await readDoc();
+      delete doc.coupons[body.code];
       await writeDoc(doc);
       return json(200, { ok: true });
     }

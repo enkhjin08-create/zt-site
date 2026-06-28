@@ -61,7 +61,7 @@ function descriptionFor(p){
   content.innerHTML = `
     <p class="crumb"><a href="index.html">Нүүр</a> / <a href="category.html?cat=${p.category}">${cat.label}</a> / ${p.name}</p>
     <div class="product-detail-grid">
-      <div>${productArtHTML(p, {height:"420px"})}</div>
+      <div>${productArtHTML(p, {detail: true})}</div>
       <div>
         <p class="eyebrow">${cat.label}</p>
         <h1 style="font-size:32px">${p.name}</h1>

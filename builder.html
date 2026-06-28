@@ -48,11 +48,18 @@ const STEP_LABELS = ["Хэн","Сав","Гол бэлэг","Нэмэлт","Цэ�
 let step = 1;
 let box = loadBox();
 
-const initRecipient = new URLSearchParams(location.search).get("recipient");
+const urlParams = new URLSearchParams(location.search);
+const initRecipient = urlParams.get("recipient");
 if(initRecipient && RECIPIENTS[initRecipient]){
   box.recipient = initRecipient;
   saveBox(box);
   step = 2;
+}
+
+// "Сагс" товчоор орж ирвэл, хайрцагт юм байгаа бол шууд Дуусгах (Алхам 8) руу
+// шилжинэ — дахин эхнээс алхах шаардлагагүй.
+if(urlParams.get("view") === "cart" && (box.itemIds.length || box.containerId)){
+  step = 8;
 }
 
 let recFilterOn = false;
@@ -507,6 +514,8 @@ function agreeAndShowBank(){
   renderStepPanel();
 }
 
+let lastOrderText = null;
+
 async function registerOrder(){
   if(orderRegistered) return;
   const btn = document.getElementById("register-btn");
@@ -514,8 +523,14 @@ async function registerOrder(){
   try{
     await submitOrder(buildOrderObject());
     orderRegistered = true;
+    lastOrderText = buildOrderText();
     if(btn){ btn.textContent = "Илгээгдлээ ✓"; }
     toast("Таны захиалга амжилттай илгээгдлээ! 🎀");
+    // Төлбөрөө илгээсэн тул хайрцгийг автоматаар хоослоно — дараагийн удаа
+    // "Сагс" дарахад шинэ, хоосон хайрцагнаас эхэлнэ. Одоо харж буй дэлгэц
+    // (захиалгын хураангуй, дансны мэдээлэл) өөрчлөгдөхгүй хэвээрээ үлдэнэ.
+    box = emptyBox();
+    saveBox(box);
   }catch(e){
     if(btn){ btn.disabled = false; btn.textContent = "Төлбөр илгээсэн ✓"; }
     toast("Илгээхэд алдаа гарлаа. Хуулах/Messenger-р явуулж болно.");
@@ -523,7 +538,7 @@ async function registerOrder(){
 }
 
 function copyOrder(){
-  const text = buildOrderText();
+  const text = lastOrderText || buildOrderText();
   navigator.clipboard.writeText(text).then(() => toast("Хуулагдлаа! Messenger-р буулгаад илгээгээрэй ✨"));
 }
 function clearBox(){

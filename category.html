@@ -17,10 +17,12 @@
 <div class="wrap page-head">
   <p class="crumb"><a href="index.html">Нүүр</a> / Бүтээгдэхүүн</p>
   <h1 id="page-title">Бүтээгдэхүүн</h1>
-  <p class="lede" id="page-sub">zuvhuntuund.com дэлгүүрийн агуулахаас. Захиалга баталгаажуулалт, хүргэлт — Zochil дэлгүүрээр.</p>
+  <p class="lede" id="page-sub">Дэлгүүрийн бүх бүтээгдэхүүнүүд</p>
 </div>
 
 <div class="wrap section" style="padding-top:18px">
+  <input id="search-input" class="field-input" type="text" placeholder="🔍 Бүтээгдэхүүний нэрээр хайх..." style="margin-bottom:18px;max-width:360px">
+
   <div class="filter-pills" id="cat-pills"></div>
   <div class="filter-pills" id="rec-pills" style="margin-top:-14px"></div>
   <div class="filter-pills" id="budget-pills" style="margin-top:-14px"></div>
@@ -34,7 +36,7 @@
   </div>
 
   <div class="product-grid" id="grid"></div>
-  <div class="empty-state" id="empty" style="display:none">Энэ ангилалд одоогоор бараа алга байна. Өөр шүүлтүүр сонгоод үзээрэй.</div>
+  <div class="empty-state" id="empty" style="display:none">Тохирох бараа олдсонгүй. Хайлт/шүүлтүүрээ өөрчилж үзээрэй.</div>
 </div>
 
 <footer class="site-footer"></footer>
@@ -51,6 +53,9 @@ let activeCat = params.get("cat") || "all";
 let activeRec = params.get("recipient") || "all";
 let activeBudget = params.get("budget") || "all";
 let activeSort = params.get("sort") || "default";
+let activeSearch = params.get("q") || "";
+
+document.getElementById("search-input").value = activeSearch;
 
 const BUDGET_TIERS = [
   ["all", "Бүх үнэ"],
@@ -77,11 +82,12 @@ function pillsHTML(){
 }
 
 function updateUrl(){
-  history.replaceState(null, "", `?cat=${activeCat}&recipient=${activeRec}&budget=${activeBudget}&sort=${activeSort}`);
+  history.replaceState(null, "", `?cat=${activeCat}&recipient=${activeRec}&budget=${activeBudget}&sort=${activeSort}&q=${encodeURIComponent(activeSearch)}`);
 }
 
 function renderGrid(){
   let list = PRODUCTS.slice();
+  if(activeSearch) list = list.filter(p => p.name.toLowerCase().includes(activeSearch.toLowerCase()));
   if(activeCat !== "all") list = list.filter(p => p.category === activeCat);
   if(activeRec !== "all") list = list.filter(p => p.recipients.includes(activeRec));
   if(activeBudget !== "all"){
@@ -117,6 +123,16 @@ document.getElementById("sort-select").addEventListener("change", (e) => {
   activeSort = e.target.value;
   renderGrid();
   updateUrl();
+});
+
+let searchDebounce = null;
+document.getElementById("search-input").addEventListener("input", (e) => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    activeSearch = e.target.value.trim();
+    renderGrid();
+    updateUrl();
+  }, 250);
 });
 
 pillsHTML();

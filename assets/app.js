@@ -128,14 +128,14 @@ function productArtHTML(p, opts){
   if(p.soldOut){ badge = `<span class="badge sold">Дууссан</span>`; }
   else if(p.oldPrice){ badge = `<span class="badge">-${Math.round(100 - (p.price/p.oldPrice*100))}%</span>`; }
   const starBadge = p.bestSeller ? `<span class="badge" style="left:auto;right:10px;background:var(--sage)">⭐</span>` : "";
-  const heightRule = opts.height ? `height:${opts.height};` : "";
+  const artClass = opts.detail ? "product-art is-detail" : "product-art";
   if(p.image){
-    return `<div class="product-art" style="${heightRule}background:${cat.tint}">
+    return `<div class="${artClass}" style="background:${cat.tint}">
         ${badge}${starBadge}
         <img src="${p.image}" alt="${escapeHTML(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
       </div>`;
   }
-  return `<div class="product-art" style="${heightRule}background:${cat.tint};color:${cat.color}">
+  return `<div class="${artClass}" style="background:${cat.tint};color:${cat.color}">
       ${badge}${starBadge}
       <svg viewBox="0 0 100 100">${categoryIconSvg(p.category)}</svg>
     </div>`;

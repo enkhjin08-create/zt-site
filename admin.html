@@ -441,7 +441,6 @@ let adminCatFilter = "all";
 let adminSearch = "";
 let selectedIds = new Set();
 let currentVisibleIds = [];
-const ROLE_LABELS = { main: "Гол бэлэг", extra: "Нэмэлт зүйлс", container: "Сав, баглаа боодол" };
 
 async function loadAllProducts(){
   const list = document.getElementById("all-product-list");
@@ -755,8 +754,6 @@ async function submitProductForm(e){
 }
 
 /* ---------------- Category management ---------------- */
-const COLOR_KEY_LABELS = { pink: "Ягаан", green: "Ногоон", black: "Хар", blush: "Бор ягаан" };
-const ICON_REF_LABELS = { cup: "Аяга", giftset: "Хайрцаг", flower: "Цэцэг", extra: "Дугтуй", greeting: "Карт" };
 let categoriesLoaded = false;
 
 async function loadCategoriesTab(){
@@ -955,7 +952,7 @@ async function submitCouponForm(e){
     await loadCouponsTab();
   }catch(err){
     if(err.status === 401){ logout(); return; }
-    toast(err.message === "HTTP 409" ? "Энэ код өмнө нь бий байна" : "Алдаа гарлаа. Дахин оролдоорой.");
+    toast(err.message || "Алдаа гарлаа. Дахин оролдоорой.");
   }
   btn.disabled = false; btn.textContent = "Купон нэмэх";
 }

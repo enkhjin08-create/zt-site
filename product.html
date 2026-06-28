@@ -37,8 +37,12 @@ const DESCRIPTIONS = {
   giftset: "Хэд хэдэн зүйл нэг дор уядаг бэлгийн багц. Өөрөө хайрцаглаж дахин уях шаардлагагүй — шууд бэлэг болгон өргөж болно.",
   flower: "Шинэхэн цэцгийн баглаа. Хайрцагтай хослуулж, эсвэл дан өргөж болно.",
   extra: "Хайрцагаа өнгөлөх жижиг мэдрэмж — захидал, лаа, нэг хуудас сэтгэл хөдлөл.",
-  box: "Бэлгээ сайхан өргөхөд хэрэгтэй сав, баглаа боодлын суурь хэсэг."
+  box: "Бэлгээ сайхан өргөхөд хэрэгтэй сав, баглаа боодлын суурь хэсэг.",
+  greeting: "Хайрцагтайгаа хамт очих дулаан мэндчилгээ — хэдхэн үгээр сэтгэлээ илэрхийлээрэй."
 };
+function descriptionFor(p){
+  return DESCRIPTIONS[p.category] || "Зөвхөн түүнд тань зориулсан онцгой бэлэг.";
+}
 
 (async function(){
   await initProducts();
@@ -66,7 +70,7 @@ const DESCRIPTIONS = {
           ${p.oldPrice ? `<span class="price-old">${formatPrice(p.oldPrice)}</span>` : ""}
           ${p.soldOut ? `<span class="badge sold" style="position:static">Дууссан</span>` : ""}
         </div>
-        <p class="lede">${DESCRIPTIONS[p.category]}</p>
+        <p class="lede">${descriptionFor(p)}</p>
         <div style="display:flex;gap:12px;margin-top:26px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""}>Хайрцагт нэмэх</button>
           ${p.url ? `<a class="btn btn-outline" href="${p.url}" target="_blank" rel="noopener">Zochil дэлгүүрээр захиалах →</a>` : ""}

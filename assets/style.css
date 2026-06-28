@@ -259,10 +259,7 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight: 700; letter-spacing:
 
 /* ---------------- Builder ---------------- */
 .builder-layout{ display:grid; grid-template-columns: 1fr 380px; gap: 40px; align-items:flex-start; }
-@media (max-width: 940px){
-  .builder-layout{ grid-template-columns: 1fr; }
-  .box-preview{ order: -1; position: static; }
-}
+@media (max-width: 940px){ .builder-layout{ grid-template-columns: 1fr; } }
 
 .steps-nav{ display:flex; gap:6px; margin-bottom: 32px; flex-wrap:wrap; }
 .step-dot{
@@ -323,6 +320,9 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight: 700; letter-spacing:
 .box-item-row{ display:flex; justify-content:space-between; gap:8px; font-size: 13px; padding: 8px 10px; background:#fff; border-radius:10px; border:1px solid var(--line); }
 .box-item-row button{ background:none; border:none; color: var(--ink-faint); cursor:pointer; font-size:15px; line-height:1; }
 .box-total{ display:flex; justify-content:space-between; align-items:baseline; border-top: 1.5px dashed var(--line); padding-top:14px; margin-top: 10px; }
+@media (max-width: 940px){
+  .box-preview{ order: -1; position: static; top: auto; }
+}
 .box-total .num{ font-family: var(--font-display); font-size: 24px; font-weight:700; color: var(--ribbon-dark); }
 .box-empty-note{ font-size: 13px; color: var(--ink-faint); text-align:center; padding: 18px 4px; }
 

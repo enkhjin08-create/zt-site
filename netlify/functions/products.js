@@ -87,6 +87,11 @@ function cleanRecipients(arr, validRecipients){
   return cleaned;
 }
 
+function cleanImages(arr){
+  if(!Array.isArray(arr)) return null;
+  return arr.filter(u => typeof u === "string" && u.trim()).map(u => u.trim().slice(0, 500)).slice(0, 8);
+}
+
 function sanitizeProduct(input, existing, validCategories, validRecipients){
   input = input || {};
   existing = existing || {};
@@ -96,6 +101,7 @@ function sanitizeProduct(input, existing, validCategories, validRecipients){
   const category = validCategories.includes(input.category) ? input.category : (existing.category || "extra");
   const role = VALID_ROLES.includes(input.role) ? input.role : (existing.role || "extra");
   const recipients = cleanRecipients(input.recipients, validRecipients);
+  const images = cleanImages(input.images) || (existing.images || (existing.image ? [existing.image] : []));
 
   const out = {
     id: existing.id || (9000000000 + Date.now()),
@@ -106,7 +112,8 @@ function sanitizeProduct(input, existing, validCategories, validRecipients){
     role: role,
     soldOut: typeof input.soldOut === "boolean" ? input.soldOut : !!existing.soldOut,
     bestSeller: typeof input.bestSeller === "boolean" ? input.bestSeller : !!existing.bestSeller,
-    image: str(input.image != null ? input.image : existing.image, 500),
+    images: images,
+    image: images[0] || str(input.image != null ? input.image : existing.image, 500),
     url: str(input.url != null ? input.url : existing.url, 500),
     custom: true,
     createdAt: existing.createdAt || new Date().toISOString()
@@ -130,7 +137,13 @@ function sanitizeOverride(input, existing, validCategories, validRecipients){
   if(input.role != null && VALID_ROLES.includes(input.role)) patch.role = input.role;
   if(typeof input.soldOut === "boolean") patch.soldOut = input.soldOut;
   if(typeof input.bestSeller === "boolean") patch.bestSeller = input.bestSeller;
-  if(input.image != null) patch.image = str(input.image, 500);
+  const images = cleanImages(input.images);
+  if(images !== null){
+    patch.images = images;
+    patch.image = images[0] || "";
+  }else if(input.image != null){
+    patch.image = str(input.image, 500);
+  }
   if(input.url != null) patch.url = str(input.url, 500);
   const recipients = cleanRecipients(input.recipients, validRecipients);
   if(recipients !== null) patch.recipients = recipients;

@@ -93,10 +93,10 @@
         <p style="font-size:12px;color:var(--ink-faint);margin-top:6px">Цэцэг (Алхам 6) болон Мэндчилгээ (Алхам 7) ангиллын бараа автоматаар тухайн тусдаа алхамд харагдана — дээрх "Builder-д хаана харагдах вэ?" сонголт тэдгээрт нөлөөлөхгүй.</p>
         <div class="grid-2" style="margin-top:14px">
           <div>
-            <label class="field-label">Зураг</label>
-            <input name="image" id="add-image-url" class="field-input" type="text" placeholder="https://... (эсвэл доороос upload хийнэ)">
-            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-              <input type="file" accept="image/*" id="add-image-file" style="font-size:12px;flex:1" onchange="handleImageUpload(this, 'add-image-url', 'add-image-status')">
+            <label class="field-label">Зургууд (хэд хэдийг нэмж болно)</label>
+            <div id="add-images-list" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"></div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+              <input type="file" accept="image/*" id="add-image-file" style="font-size:12px;flex:1" onchange="handleAddImageUpload(this)">
               <span id="add-image-status" style="font-size:12px;color:var(--ink-faint);white-space:nowrap"></span>
             </div>
           </div>
@@ -288,36 +288,89 @@ let adminPin = "";
 const CLOUDINARY_CLOUD_NAME = "dvpcihtou";
 const CLOUDINARY_UPLOAD_PRESET = "htjrjmre";
 
-async function handleImageUpload(fileInput, targetInputId, statusId){
-  const file = fileInput.files[0];
-  const statusEl = document.getElementById(statusId);
-  if(!file) return;
-
+async function uploadToCloudinary(file){
   if(CLOUDINARY_CLOUD_NAME === "ОРУУЛНА_УУ"){
-    statusEl.textContent = "⚠️ Тохиргоо дутуу — README-г үзээрэй";
-    statusEl.style.color = "var(--ribbon-dark)";
-    return;
+    throw new Error("CONFIG_MISSING");
   }
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+  if(!res.ok) throw new Error("Upload failed");
+  const data = await res.json();
+  return data.secure_url;
+}
 
-  statusEl.textContent = "Илгээж байна...";
-  statusEl.style.color = "var(--ink-faint)";
+function imageThumbHTML(url, removeHandlerJs){
+  return `<div style="position:relative;width:56px;height:56px;border-radius:10px;overflow:hidden;border:1px solid var(--line);flex-shrink:0">
+    <img src="${escapeHTML(url)}" style="width:100%;height:100%;object-fit:cover" alt="">
+    <button type="button" onclick="${removeHandlerJs}" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1">✕</button>
+  </div>`;
+}
+
+/* ---- Add-product form: multi-image state ---- */
+let addFormImages = [];
+
+function renderAddImagesList(){
+  document.getElementById("add-images-list").innerHTML =
+    addFormImages.map((url, i) => imageThumbHTML(url, `removeAddImage(${i})`)).join("");
+}
+function removeAddImage(i){
+  addFormImages.splice(i, 1);
+  renderAddImagesList();
+}
+async function handleAddImageUpload(fileInput){
+  const file = fileInput.files[0];
+  const statusEl = document.getElementById("add-image-status");
+  if(!file) return;
+  statusEl.textContent = "Илгээж байна..."; statusEl.style.color = "var(--ink-faint)";
   try{
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-      method: "POST",
-      body: formData
-    });
-    if(!res.ok) throw new Error("Upload failed");
-    const data = await res.json();
-    document.getElementById(targetInputId).value = data.secure_url;
-    statusEl.textContent = "Амжилттай ✓";
-    statusEl.style.color = "var(--sage)";
+    const url = await uploadToCloudinary(file);
+    addFormImages.push(url);
+    renderAddImagesList();
+    statusEl.textContent = "Амжилттай ✓"; statusEl.style.color = "var(--sage)";
   }catch(e){
-    statusEl.textContent = "Алдаа гарлаа, дахин оролдоорой";
+    statusEl.textContent = e.message === "CONFIG_MISSING" ? "⚠️ Тохиргоо дутуу — README-г үзээрэй" : "Алдаа гарлаа, дахин оролдоорой";
     statusEl.style.color = "var(--ribbon-dark)";
   }
+  fileInput.value = "";
+}
+
+/* ---- Per-product edit row: multi-image state ---- */
+let rowImagesState = {};
+
+function initRowImages(p){
+  rowImagesState[p.id] = (p.images && p.images.length) ? p.images.slice() : (p.image ? [p.image] : []);
+}
+function renderRowImagesList(id){
+  const el = document.getElementById("imageslist" + "row" + id);
+  if(!el) return;
+  const imgs = rowImagesState[id] || [];
+  el.innerHTML = imgs.map((url, i) => imageThumbHTML(url, `removeRowImage(${id}, ${i})`)).join("");
+}
+function removeRowImage(id, i){
+  rowImagesState[id].splice(i, 1);
+  renderRowImagesList(id);
+}
+async function handleRowImageUpload(fileInput, id){
+  const file = fileInput.files[0];
+  const statusEl = document.getElementById("imagestatus" + "row" + id);
+  if(!file) return;
+  statusEl.textContent = "Илгээж байна..."; statusEl.style.color = "var(--ink-faint)";
+  try{
+    const url = await uploadToCloudinary(file);
+    if(!rowImagesState[id]) rowImagesState[id] = [];
+    rowImagesState[id].push(url);
+    renderRowImagesList(id);
+    statusEl.textContent = "Амжилттай ✓"; statusEl.style.color = "var(--sage)";
+  }catch(e){
+    statusEl.textContent = e.message === "CONFIG_MISSING" ? "⚠️ Тохиргоо дутуу" : "Алдаа гарлаа";
+    statusEl.style.color = "var(--ribbon-dark)";
+  }
+  fileInput.value = "";
 }
 
 async function tryLogin(){
@@ -534,7 +587,9 @@ function renderAllProductsList(){
     return;
   }
   empty.style.display = "none";
+  list.forEach(initRowImages);
   wrap.innerHTML = list.map(adminProductRowHTML).join("");
+  list.forEach(p => renderRowImagesList(p.id));
   selectAllBox.checked = currentVisibleIds.length > 0 && currentVisibleIds.every(id => selectedIds.has(id));
   renderBulkBar();
 }
@@ -671,10 +726,10 @@ function adminProductRowHTML(p){
       </div>
       <div class="grid-2" style="margin-top:12px">
         <div>
-          <label class="field-label">Зураг</label>
-          <input id="image${rowId}" class="field-input" type="text" value="${safeImage}">
-          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-            <input type="file" accept="image/*" id="imagefile${rowId}" style="font-size:12px;flex:1" onchange="handleImageUpload(this, 'image${rowId}', 'imagestatus${rowId}')">
+          <label class="field-label">Зургууд (хэд хэдийг нэмж болно)</label>
+          <div id="imageslist${rowId}" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <input type="file" accept="image/*" id="imagefile${rowId}" style="font-size:12px;flex:1" onchange="handleRowImageUpload(this, ${p.id})">
             <span id="imagestatus${rowId}" style="font-size:12px;color:var(--ink-faint);white-space:nowrap"></span>
           </div>
         </div>
@@ -724,7 +779,7 @@ function readRowFields(id){
     role: val("role"),
     soldOut: val("soldOut") === "true",
     bestSeller: bestSellerBox ? bestSellerBox.checked : false,
-    image: val("image"),
+    images: rowImagesState[id] || [],
     url: val("url"),
     recipients: recipients
   };
@@ -780,7 +835,7 @@ async function submitProductForm(e){
     oldPrice: f.oldPrice.value ? Number(f.oldPrice.value) : null,
     category: f.category.value,
     role: f.role.value,
-    image: f.image.value.trim(),
+    images: addFormImages.slice(),
     url: f.url.value.trim(),
     soldOut: false,
     bestSeller: f.bestSeller.checked
@@ -794,6 +849,8 @@ async function submitProductForm(e){
     await adminAddProduct(adminPin, product);
     toast("Бараа нэмэгдлээ ✓");
     f.reset();
+    addFormImages = [];
+    renderAddImagesList();
     await loadAllProducts();
   }catch(err){
     if(err.status === 401){ logout(); return; }

@@ -44,6 +44,13 @@ function descriptionFor(p){
   return DESCRIPTIONS[p.category] || "Зөвхөн түүнд тань зориулсан онцгой бэлэг.";
 }
 
+function switchMainImage(url, btn){
+  const mainImg = document.getElementById("main-art-img");
+  if(mainImg) mainImg.src = url;
+  document.querySelectorAll("#thumb-strip button").forEach(b => b.style.borderColor = "var(--line)");
+  btn.style.borderColor = "var(--ribbon)";
+}
+
 (async function(){
   await initProducts();
 
@@ -58,10 +65,25 @@ function descriptionFor(p){
 
   document.title = p.name + " — Зөвхөн түүнд";
   const cat = CATEGORIES[p.category];
+  const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+
+  const galleryHTML = images.length > 1 ? `
+    <div class="product-art is-detail" style="background:${cat.tint}">
+      ${p.soldOut ? `<span class="badge sold">Дууссан</span>` : (p.oldPrice ? `<span class="badge">-${Math.round(100 - (p.price/p.oldPrice*100))}%</span>` : "")}
+      <img id="main-art-img" src="${images[0]}" alt="${escapeHTML(p.name)}" style="width:100%;height:100%;object-fit:cover;object-position:center 25%">
+    </div>
+    <div id="thumb-strip" style="display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:4px">
+      ${images.map((url,i) => `
+        <button type="button" onclick="switchMainImage('${url}', this)" style="width:64px;height:64px;border-radius:10px;overflow:hidden;border:2px solid ${i===0?"var(--ribbon)":"var(--line)"};padding:0;cursor:pointer;flex-shrink:0;background:none">
+          <img src="${url}" style="width:100%;height:100%;object-fit:cover" alt="">
+        </button>`).join("")}
+    </div>
+  ` : productArtHTML(p, {detail: true});
+
   content.innerHTML = `
     <p class="crumb"><a href="index.html">Нүүр</a> / <a href="category.html?cat=${p.category}">${cat.label}</a> / ${p.name}</p>
     <div class="product-detail-grid">
-      <div>${productArtHTML(p, {detail: true})}</div>
+      <div>${galleryHTML}</div>
       <div>
         <p class="eyebrow">${cat.label}</p>
         <h1 style="font-size:32px">${p.name}</h1>

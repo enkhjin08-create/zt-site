@@ -206,7 +206,7 @@ function renderFooter(){
   </div>
   <div class="wrap foot-bottom">
     <span>© 2026 Зөвхөн түүнд</span>
-    <span>Захиалга баталгаажуулалт, төлбөр, хүргэлт — zuvhuntuund.com дэлгүүрээр дамжина</span>
+    <span>Бэлэг бэлдэх захиалга шууд энэ сайтаар баталгаажина · Zochil дэлгүүрээр аль ч барааг шууд захиалж болно</span>
   </div>`;
   document.querySelectorAll(".site-footer").forEach(el => el.innerHTML = html);
 }

@@ -259,7 +259,10 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight: 700; letter-spacing:
 
 /* ---------------- Builder ---------------- */
 .builder-layout{ display:grid; grid-template-columns: 1fr 380px; gap: 40px; align-items:flex-start; }
-@media (max-width: 940px){ .builder-layout{ grid-template-columns: 1fr; } }
+@media (max-width: 940px){
+  .builder-layout{ grid-template-columns: 1fr; }
+  .box-preview{ order: -1; position: static; }
+}
 
 .steps-nav{ display:flex; gap:6px; margin-bottom: 32px; flex-wrap:wrap; }
 .step-dot{

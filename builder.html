@@ -68,11 +68,14 @@ let orderRegistered = false;
 function persist(){ saveBox(box); renderBoxPreview(); }
 
 function renderStepsNav(){
-  document.getElementById("steps-nav").innerHTML = STEP_LABELS.map((label,i) => {
+  const nav = document.getElementById("steps-nav");
+  nav.innerHTML = STEP_LABELS.map((label,i) => {
     const n = i+1;
     const cls = n===step ? "is-active" : (n<step ? "is-done" : "");
     return `<div class="step-dot ${cls}"><span class="num">${n}</span>${label}</div>`;
   }).join("");
+  const activeDot = nav.querySelector(".is-active");
+  if(activeDot) activeDot.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
 }
 
 function renderBoxPreview(){
@@ -367,7 +370,7 @@ function renderSummary(){
     <h2>Хайрцаг бэлэн боллоо 🎀</h2>
     <p class="lede">Захиалгаа баталгаажуулахын тулд нэр, утасны дугаар, имэйлээ үлдээгээд, доорх мэдээллийг уншаад зөвшөөрөөрэй. Захиалгын төлөв шинэчлэгдэх бүрд имэйл рүү мэдэгдэл явуулна.</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
+    <div class="grid-2" style="margin-top:18px">
       <div>
         <label class="field-label">Нэр</label>
         <input id="cust-name" class="field-input" type="text" value="${escapeHTML(box.customerName || "")}" placeholder="Таны нэр" onchange="box.customerName=this.value.trim();persist();">
@@ -384,7 +387,7 @@ function renderSummary(){
 
     <div style="margin-top:14px">
       <label class="field-label">Хүргэлтийн хаяг</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px">
+      <div class="grid-2" style="margin-top:6px">
         <select id="cust-district" class="field-input" onchange="box.deliveryDistrict=this.value;persist();">
           <option value="" ${!box.deliveryDistrict?"selected":""}>Дүүрэг сонгох</option>
           ${["Баянзүрх","Сүхбаатар","Чингэлтэй","Хан-Уул","Баянгол","Сонгинохайрхан","Налайх","Багануур","Багахангай"].map(d =>

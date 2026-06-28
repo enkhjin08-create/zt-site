@@ -55,7 +55,7 @@
       <h3 style="font-size:18px;margin-bottom:4px">Шинэ бараа нэмэх</h3>
       <p class="lede" style="font-size:13px;margin-bottom:16px">Энд нэмсэн бараа шууд сайт дээр (Бүтээгдэхүүн хуудас, Бэлэг бэлдэх хэсэг) харагдана.</p>
       <form id="product-form" onsubmit="submitProductForm(event)">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px">
+        <div class="grid-3">
           <div>
             <label class="field-label">Нэр</label>
             <input name="name" class="field-input" type="text" placeholder="Жишээ: Зул сарын аяга" required>
@@ -69,7 +69,7 @@
             <input name="oldPrice" class="field-input" type="number" min="0" step="100">
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+        <div class="grid-2" style="margin-top:14px">
           <div>
             <label class="field-label">Ангилал</label>
             <select name="category" class="field-input">
@@ -91,10 +91,14 @@
           </div>
         </div>
         <p style="font-size:12px;color:var(--ink-faint);margin-top:6px">Цэцэг (Алхам 6) болон Мэндчилгээ (Алхам 7) ангиллын бараа автоматаар тухайн тусдаа алхамд харагдана — дээрх "Builder-д хаана харагдах вэ?" сонголт тэдгээрт нөлөөлөхгүй.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+        <div class="grid-2" style="margin-top:14px">
           <div>
-            <label class="field-label">Зургийн холбоос (URL, заавал биш)</label>
-            <input name="image" class="field-input" type="text" placeholder="https://...">
+            <label class="field-label">Зураг</label>
+            <input name="image" id="add-image-url" class="field-input" type="text" placeholder="https://... (эсвэл доороос upload хийнэ)">
+            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+              <input type="file" accept="image/*" id="add-image-file" style="font-size:12px;flex:1" onchange="handleImageUpload(this, 'add-image-url', 'add-image-status')">
+              <span id="add-image-status" style="font-size:12px;color:var(--ink-faint);white-space:nowrap"></span>
+            </div>
           </div>
           <div>
             <label class="field-label">Дэлгүүрийн холбоос (заавал биш)</label>
@@ -158,7 +162,7 @@
       <h3 style="font-size:18px;margin-bottom:4px">Шинэ ангилал нэмэх</h3>
       <p class="lede" style="font-size:13px;margin-bottom:16px">Нэмсэн ангилал шууд бараа нэмэх/засах хэсэгт болон сайтын Бүтээгдэхүүн, Нүүр хуудсанд харагдана.</p>
       <form id="category-form" onsubmit="submitCategoryForm(event)">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px">
+        <div class="grid-3">
           <div>
             <label class="field-label">Нэр</label>
             <input name="label" class="field-input" type="text" placeholder="Жишээ: Лаа, шарж" required>
@@ -194,7 +198,7 @@
       <h3 style="font-size:18px;margin-bottom:4px">Шинэ хүлээн авагч нэмэх</h3>
       <p class="lede" style="font-size:13px;margin-bottom:16px">Энэ нь Нүүр хуудасны "Хэнд бэлэглэх вэ?" хэсэгт, мөн Бэлэг бэлдэх builder-ийн 1-р алхамд харагдана.</p>
       <form id="recipient-form" onsubmit="submitRecipientForm(event)">
-        <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+        <div class="grid-2-wide">
           <div>
             <label class="field-label">Нэр</label>
             <input name="label" class="field-input" type="text" placeholder="Жишээ: Багшдаа" required>
@@ -222,7 +226,7 @@
       <h3 style="font-size:18px;margin-bottom:4px">Шинэ купон нэмэх</h3>
       <p class="lede" style="font-size:13px;margin-bottom:16px">Хэрэглэгч Builder-ийн "Дуусгах" алхамд купон код оруулж хямдрал авах боломжтой болно.</p>
       <form id="coupon-form" onsubmit="submitCouponForm(event)">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px">
+        <div class="grid-3">
           <div>
             <label class="field-label">Код</label>
             <input name="code" class="field-input" type="text" placeholder="Жишээ: ZTLOVE10" style="text-transform:uppercase" required>
@@ -239,7 +243,7 @@
             <input name="value" class="field-input" type="number" min="0" step="1" placeholder="10" required>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+        <div class="grid-2" style="margin-top:14px">
           <div>
             <label class="field-label">Хэрэглэх дээд тоо (заавал биш)</label>
             <input name="maxUses" class="field-input" type="number" min="1" step="1" placeholder="Хязгааргүй">
@@ -274,6 +278,47 @@ const STATUSES = {
 let ordersCache = [];
 let activeStatus = "all";
 let adminPin = "";
+
+/* ---------------- Image upload (Cloudinary) ----------------
+   Зураг upload хийхийн тулд cloudinary.com дээр ҺНЭГЭН ҮНЭГҮЙ account үүсгэж,
+   "unsigned upload preset" үүсгэнэ (README.md-ийн "Зураг upload хийх" хэсгийг
+   үзээрэй) — дараа нь доорх 2 утгыг бөглөнө. Нууц түлхүүр (API Secret) ХЭЗЭЭ Ч
+   энд бичихгүй — зөвхөн Cloud name, Upload preset нэр хэрэгтэй (эдгээр нь
+   "нийтэд зориулагдсан" утга, нууц биш). */
+const CLOUDINARY_CLOUD_NAME = "dvpcihtou";
+const CLOUDINARY_UPLOAD_PRESET = "htjrjmre";
+
+async function handleImageUpload(fileInput, targetInputId, statusId){
+  const file = fileInput.files[0];
+  const statusEl = document.getElementById(statusId);
+  if(!file) return;
+
+  if(CLOUDINARY_CLOUD_NAME === "ОРУУЛНА_УУ"){
+    statusEl.textContent = "⚠️ Тохиргоо дутуу — README-г үзээрэй";
+    statusEl.style.color = "var(--ribbon-dark)";
+    return;
+  }
+
+  statusEl.textContent = "Илгээж байна...";
+  statusEl.style.color = "var(--ink-faint)";
+  try{
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+      method: "POST",
+      body: formData
+    });
+    if(!res.ok) throw new Error("Upload failed");
+    const data = await res.json();
+    document.getElementById(targetInputId).value = data.secure_url;
+    statusEl.textContent = "Амжилттай ✓";
+    statusEl.style.color = "var(--sage)";
+  }catch(e){
+    statusEl.textContent = "Алдаа гарлаа, дахин оролдоорой";
+    statusEl.style.color = "var(--ribbon-dark)";
+  }
+}
 
 async function tryLogin(){
   const v = document.getElementById("pin-input").value.trim();
@@ -587,7 +632,7 @@ function adminProductRowHTML(p){
     </div>
 
     <div id="edit${rowId}" style="display:none;margin-top:14px;border-top:1px dashed var(--line);padding-top:14px">
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px">
+      <div class="grid-3">
         <div>
           <label class="field-label">Нэр</label>
           <input id="name${rowId}" class="field-input" type="text" value="${escapeHTML(p.name)}" ${isCustom ? "" : "disabled"}>
@@ -601,7 +646,7 @@ function adminProductRowHTML(p){
           <input id="oldPrice${rowId}" class="field-input" type="number" min="0" step="100" value="${p.oldPrice || ""}">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
+      <div class="grid-3-even" style="margin-top:12px">
         <div>
           <label class="field-label">Ангилал</label>
           <select id="category${rowId}" class="field-input">
@@ -624,10 +669,14 @@ function adminProductRowHTML(p){
           </select>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+      <div class="grid-2" style="margin-top:12px">
         <div>
-          <label class="field-label">Зургийн холбоос</label>
+          <label class="field-label">Зураг</label>
           <input id="image${rowId}" class="field-input" type="text" value="${safeImage}">
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+            <input type="file" accept="image/*" id="imagefile${rowId}" style="font-size:12px;flex:1" onchange="handleImageUpload(this, 'image${rowId}', 'imagestatus${rowId}')">
+            <span id="imagestatus${rowId}" style="font-size:12px;color:var(--ink-faint);white-space:nowrap"></span>
+          </div>
         </div>
         <div>
           <label class="field-label">Дэлгүүрийн холбоос</label>

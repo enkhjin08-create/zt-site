@@ -60,7 +60,7 @@ function descriptionFor(p){
   const cat = CATEGORIES[p.category];
   content.innerHTML = `
     <p class="crumb"><a href="index.html">Нүүр</a> / <a href="category.html?cat=${p.category}">${cat.label}</a> / ${p.name}</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;padding:24px 0 10px">
+    <div class="product-detail-grid">
       <div>${productArtHTML(p, {height:"420px"})}</div>
       <div>
         <p class="eyebrow">${cat.label}</p>

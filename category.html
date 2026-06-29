@@ -21,18 +21,24 @@
 </div>
 
 <div class="wrap section" style="padding-top:18px">
-  <input id="search-input" class="field-input" type="text" placeholder="🔍 Бүтээгдэхүүний нэрээр хайх..." style="margin-bottom:18px;max-width:360px">
+  <button id="filters-toggle" class="btn btn-outline btn-sm" onclick="toggleFilters()" style="margin-bottom:16px">
+    🔍 Хайх, шүүх<span id="filters-badge"></span> <span id="filters-chevron">▾</span>
+  </button>
 
-  <div class="filter-pills" id="cat-pills"></div>
-  <div class="filter-pills" id="rec-pills" style="margin-top:-14px"></div>
-  <div class="filter-pills" id="budget-pills" style="margin-top:-14px"></div>
+  <div id="filters-panel" style="display:none">
+    <input id="search-input" class="field-input" type="text" placeholder="🔍 Бүтээгдэхүүний нэрээр хайх..." style="margin-bottom:18px;max-width:360px">
 
-  <div class="sort-row">
-    <select id="sort-select" class="field-input">
-      <option value="default">Шинэ нь эхэндээ</option>
-      <option value="price-asc">Үнэ: багаас ихэд</option>
-      <option value="price-desc">Үнэ: ихээс багад</option>
-    </select>
+    <div class="filter-pills" id="cat-pills"></div>
+    <div class="filter-pills" id="rec-pills" style="margin-top:-14px"></div>
+    <div class="filter-pills" id="budget-pills" style="margin-top:-14px"></div>
+
+    <div class="sort-row">
+      <select id="sort-select" class="field-input">
+        <option value="default">Шинэ нь эхэндээ</option>
+        <option value="price-asc">Үнэ: багаас ихэд</option>
+        <option value="price-desc">Үнэ: ихээс багад</option>
+      </select>
+    </div>
   </div>
 
   <div class="product-grid" id="grid"></div>
@@ -79,6 +85,30 @@ function pillsHTML(){
     `<button class="pill ${activeBudget===k?"is-active":""}" data-budget="${k}" style="font-size:12.5px;opacity:.85">${label}</button>`).join("");
 
   document.getElementById("sort-select").value = activeSort;
+  updateFiltersBadge();
+}
+
+function activeFilterCount(){
+  let n = 0;
+  if(activeSearch) n++;
+  if(activeCat !== "all") n++;
+  if(activeRec !== "all") n++;
+  if(activeBudget !== "all") n++;
+  if(activeSort !== "default") n++;
+  return n;
+}
+
+function updateFiltersBadge(){
+  const n = activeFilterCount();
+  document.getElementById("filters-badge").textContent = n ? ` (${n})` : "";
+}
+
+function toggleFilters(){
+  const panel = document.getElementById("filters-panel");
+  const chevron = document.getElementById("filters-chevron");
+  const isOpen = panel.style.display !== "none";
+  panel.style.display = isOpen ? "none" : "";
+  chevron.textContent = isOpen ? "▾" : "▴";
 }
 
 function updateUrl(){
@@ -123,6 +153,7 @@ document.getElementById("sort-select").addEventListener("change", (e) => {
   activeSort = e.target.value;
   renderGrid();
   updateUrl();
+  updateFiltersBadge();
 });
 
 let searchDebounce = null;
@@ -132,11 +163,13 @@ document.getElementById("search-input").addEventListener("input", (e) => {
     activeSearch = e.target.value.trim();
     renderGrid();
     updateUrl();
+    updateFiltersBadge();
   }, 250);
 });
 
 pillsHTML();
 renderGrid();
+if(activeFilterCount() > 0) toggleFilters();
 (async function(){
   await initProducts();
   pillsHTML();

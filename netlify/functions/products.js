@@ -52,6 +52,7 @@ async function readDoc(){
     overrides: (record.overrides && typeof record.overrides === "object") ? record.overrides : {},
     categories: (record.categories && typeof record.categories === "object") ? record.categories : {},
     recipients: (record.recipients && typeof record.recipients === "object") ? record.recipients : {},
+    recipientOverrides: (record.recipientOverrides && typeof record.recipientOverrides === "object") ? record.recipientOverrides : {},
     coupons: (record.coupons && typeof record.coupons === "object") ? record.coupons : {}
   };
 }
@@ -167,17 +168,28 @@ function sanitizeCategory(input){
   };
 }
 
-function sanitizeRecipient(input){
+function sanitizeRecipient(input, existing){
   input = input || {};
+  existing = existing || {};
   const str = (v, max) => String(v == null ? "" : v).slice(0, max);
   const label = str(input.label, 30).trim();
-  const emoji = str(input.emoji, 8).trim() || "🎁";
+  const emoji = str(input.emoji, 8).trim() || existing.emoji || "🎁";
   return {
-    key: "rec" + Date.now(),
-    label: label || "Нэргүй",
+    key: existing.key || ("rec" + Date.now()),
+    label: label || existing.label || "Нэргүй",
     emoji: emoji,
     custom: true
   };
+}
+
+function sanitizeRecipientOverride(input, existing){
+  input = input || {};
+  existing = existing || {};
+  const str = (v, max) => String(v == null ? "" : v).slice(0, max);
+  const patch = Object.assign({}, existing);
+  if(input.label != null){ const l = str(input.label, 30).trim(); if(l) patch.label = l; }
+  if(input.emoji != null){ const e = str(input.emoji, 8).trim(); if(e) patch.emoji = e; }
+  return patch;
 }
 
 const COUPON_TYPES = ["percent", "fixed"];
@@ -221,7 +233,7 @@ exports.handler = async (event) => {
   try{
     if(body.action === "list"){
       const doc = await readDoc();
-      return json(200, { ok: true, products: doc.products, overrides: doc.overrides, categories: doc.categories, recipients: doc.recipients });
+      return json(200, { ok: true, products: doc.products, overrides: doc.overrides, categories: doc.categories, recipients: doc.recipients, recipientOverrides: doc.recipientOverrides });
     }
 
     if(body.action === "add"){
@@ -297,10 +309,21 @@ exports.handler = async (event) => {
     if(body.action === "addRecipient"){
       if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
       const doc = await readDoc();
-      const rec = sanitizeRecipient(body.recipient);
+      const rec = sanitizeRecipient(body.recipient, null);
       doc.recipients[rec.key] = rec;
       await writeDoc(doc);
       return json(200, { ok: true, recipient: rec });
+    }
+
+    if(body.action === "updateRecipient"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(!body.key) return json(400, { error: "Missing key" });
+      const doc = await readDoc();
+      const existing = doc.recipients[body.key];
+      if(!existing) return json(404, { error: "Recipient not found" });
+      doc.recipients[body.key] = sanitizeRecipient(body.recipient, existing);
+      await writeDoc(doc);
+      return json(200, { ok: true, recipient: doc.recipients[body.key] });
     }
 
     if(body.action === "deleteRecipient"){
@@ -308,6 +331,24 @@ exports.handler = async (event) => {
       if(!body.key) return json(400, { error: "Missing key" });
       const doc = await readDoc();
       delete doc.recipients[body.key];
+      await writeDoc(doc);
+      return json(200, { ok: true });
+    }
+
+    if(body.action === "setRecipientOverride"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(!body.key) return json(400, { error: "Missing key" });
+      const doc = await readDoc();
+      doc.recipientOverrides[body.key] = sanitizeRecipientOverride(body.patch, doc.recipientOverrides[body.key]);
+      await writeDoc(doc);
+      return json(200, { ok: true, override: doc.recipientOverrides[body.key] });
+    }
+
+    if(body.action === "clearRecipientOverride"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(!body.key) return json(400, { error: "Missing key" });
+      const doc = await readDoc();
+      delete doc.recipientOverrides[body.key];
       await writeDoc(doc);
       return json(200, { ok: true });
     }

@@ -945,14 +945,73 @@ async function deleteCategoryConfirm(key){
 /* ---------------- Recipient management ---------------- */
 function renderRecipientList(){
   const wrap = document.getElementById("recipient-list");
-  wrap.innerHTML = Object.entries(RECIPIENTS).map(([key, r]) => `
-    <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:center">
-      <div style="font-size:22px">${r.emoji}</div>
-      <div style="flex:1;font-weight:700;font-size:14px">${escapeHTML(r.label)}</div>
-      ${r.custom
-        ? `<button class="btn btn-outline btn-sm" onclick="deleteRecipientConfirm('${key}')">Устгах</button>`
-        : `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--paper-deep);border:none">Үндсэн</span>`}
-    </div>`).join("");
+  wrap.innerHTML = Object.entries(RECIPIENTS).map(([key, r]) => {
+    const isOverridden = !r.custom && !!LAST_RECIPIENT_OVERRIDES[key];
+    return `<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px">
+      <div style="display:flex;gap:14px;align-items:center">
+        <div style="font-size:22px">${r.emoji}</div>
+        <div style="flex:1;font-weight:700;font-size:14px">${escapeHTML(r.label)}
+          ${r.custom ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--sage-tint);border:none">Нэмсэн</span>` : `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--paper-deep);border:none">Үндсэн</span>`}
+          ${isOverridden ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--ribbon-tint);border:none">Засагдсан</span>` : ""}
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleRecipientEdit('${key}')">Засах</button>
+        ${r.custom ? `<button class="btn btn-outline btn-sm" onclick="deleteRecipientConfirm('${key}')">Устгах</button>` : ""}
+      </div>
+      <div id="recedit-${key}" style="display:none;margin-top:12px;border-top:1px dashed var(--line);padding-top:12px">
+        <div class="grid-2-wide">
+          <div>
+            <label class="field-label">Нэр</label>
+            <input id="reclabel-${key}" class="field-input" type="text" value="${escapeHTML(r.label)}">
+          </div>
+          <div>
+            <label class="field-label">Emoji</label>
+            <input id="recemoji-${key}" class="field-input" type="text" value="${escapeHTML(r.emoji)}" maxlength="4">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn btn-primary btn-sm" onclick="saveRecipientEdit('${key}', ${r.custom ? "true" : "false"})">Хадгалах</button>
+          ${isOverridden ? `<button class="btn btn-outline btn-sm" onclick="revertRecipientOverride('${key}')">Анхны байдалд оруулах</button>` : ""}
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function toggleRecipientEdit(key){
+  const el = document.getElementById("recedit-" + key);
+  if(el) el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+async function saveRecipientEdit(key, isCustom){
+  const label = document.getElementById("reclabel-" + key).value.trim();
+  const emoji = document.getElementById("recemoji-" + key).value.trim();
+  if(!label){ toast("Нэрээ бөглөнө үү 🙏"); return; }
+  try{
+    if(isCustom){
+      await adminUpdateRecipient(adminPin, key, { label, emoji });
+    }else{
+      await adminSetRecipientOverride(adminPin, key, { label, emoji });
+    }
+    toast("Хадгалагдлаа ✓");
+    categoriesLoaded = false;
+    await loadCategoriesTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+async function revertRecipientOverride(key){
+  if(!confirm("Энэ хүлээн авагчийн засварыг арилгаж, анхны байдалд оруулах уу?")) return;
+  try{
+    await adminClearRecipientOverride(adminPin, key);
+    toast("Анхны байдалд оруулсан");
+    categoriesLoaded = false;
+    await loadCategoriesTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
 }
 
 async function submitRecipientForm(e){

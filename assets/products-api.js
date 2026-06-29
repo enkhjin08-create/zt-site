@@ -22,7 +22,8 @@ async function callProductsApi(payload){
 }
 
 // Нийтэд нээлттэй — Админ хэсгээс нэмсэн бараа + үндсэн 103 барааны засваруудыг
-// + нэмсэн ангилал/хүлээн авагчдыг нэг дор авна. Бүх хуудас ачаалах үед дуудна.
+// + нэмсэн ангилал/хүлээн авагч + үндсэн хүлээн авагчдын засваруудыг нэг дор авна.
+// Бүх хуудас ачаалах үед дуудна.
 async function fetchProductsData(){
   try{
     const data = await callProductsApi({ action: "list" });
@@ -30,11 +31,12 @@ async function fetchProductsData(){
       products: (data && data.products) || [],
       overrides: (data && data.overrides) || {},
       categories: (data && data.categories) || {},
-      recipients: (data && data.recipients) || {}
+      recipients: (data && data.recipients) || {},
+      recipientOverrides: (data && data.recipientOverrides) || {}
     };
   }catch(e){
     console.warn("Custom products failed to load:", e);
-    return { products: [], overrides: {}, categories: {}, recipients: {} };
+    return { products: [], overrides: {}, categories: {}, recipients: {}, recipientOverrides: {} };
   }
 }
 
@@ -69,8 +71,17 @@ async function adminDeleteCategory(pin, key){
 async function adminAddRecipient(pin, recipient){
   return callProductsApi({ action: "addRecipient", pin, recipient });
 }
+async function adminUpdateRecipient(pin, key, recipient){
+  return callProductsApi({ action: "updateRecipient", pin, key, recipient });
+}
 async function adminDeleteRecipient(pin, key){
   return callProductsApi({ action: "deleteRecipient", pin, key });
+}
+async function adminSetRecipientOverride(pin, key, patch){
+  return callProductsApi({ action: "setRecipientOverride", pin, key, patch });
+}
+async function adminClearRecipientOverride(pin, key){
+  return callProductsApi({ action: "clearRecipientOverride", pin, key });
 }
 async function adminListCoupons(pin){
   const data = await callProductsApi({ action: "listCoupons", pin });
@@ -97,10 +108,12 @@ const BASE_CATEGORIES = JSON.parse(JSON.stringify(CATEGORIES));
 const BASE_RECIPIENTS = JSON.parse(JSON.stringify(RECIPIENTS));
 
 let LAST_OVERRIDES = {};
+let LAST_RECIPIENT_OVERRIDES = {};
 
 async function initProducts(){
   const data = await fetchProductsData();
   LAST_OVERRIDES = data.overrides;
+  LAST_RECIPIENT_OVERRIDES = data.recipientOverrides;
 
   // CATEGORIES, RECIPIENTS-ийг ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн нэмэлтийг тавина.
   Object.keys(CATEGORIES).forEach(k => delete CATEGORIES[k]);
@@ -109,6 +122,9 @@ async function initProducts(){
 
   Object.keys(RECIPIENTS).forEach(k => delete RECIPIENTS[k]);
   Object.assign(RECIPIENTS, BASE_RECIPIENTS);
+  Object.entries(data.recipientOverrides).forEach(([key, patch]) => {
+    if(RECIPIENTS[key]) Object.assign(RECIPIENTS[key], patch);
+  });
   Object.values(data.recipients).forEach(r => { RECIPIENTS[r.key] = r; });
 
   // PRODUCTS-ийг БАЗА-аас ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн

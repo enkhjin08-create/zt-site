@@ -569,7 +569,8 @@ document.getElementById("product-search").addEventListener("input", (e) => {
 });
 
 function renderAllProductsList(){
-  let list = PRODUCTS.slice();
+  const source = window._ALL_PRODUCTS_ADMIN || PRODUCTS;
+  let list = source.slice();
   if(adminCatFilter !== "all") list = list.filter(p => p.category === adminCatFilter);
   if(adminSearch) list = list.filter(p => p.name.toLowerCase().includes(adminSearch));
   list.sort((a,b) => (a.custom === b.custom ? 0 : (a.custom ? -1 : 1)) || (b.id - a.id));
@@ -677,12 +678,18 @@ function adminProductRowHTML(p){
       </div>
       <div style="flex:1;min-width:140px">
         <div style="font-weight:700;font-size:14px">${escapeHTML(p.name)}
+          ${p.hidden ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:#eee;border:none;color:#888">🚫 Нуугдсан</span>` : ""}
+          ${p.soldOut ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--ribbon-tint);border:none">Дууссан</span>` : ""}
           ${p.bestSeller ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--gold-tint);border:none">⭐ Бестселлер</span>` : ""}
           ${isCustom ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--sage-tint);border:none">Нэмсэн</span>` : ""}
           ${isOverridden ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--ribbon-tint);border:none">Засагдсан</span>` : ""}
         </div>
-        <div style="font-size:12px;color:var(--ink-faint)">#${p.id}</div>
+        <div style="font-size:12px;color:var(--ink-faint)">#${p.id} · ${formatPrice(p.price)}</div>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="quickToggleSoldOut(${p.id}, ${isCustom}, ${!p.soldOut})" title="${p.soldOut?"Идэвхтэй болгох":"Дууссан болгох"}">${p.soldOut ? "✓ Идэвхтэй" : "Дууссан"}</button>
+      ${isCustom
+        ? `<button class="btn btn-outline btn-sm" onclick="deleteProductConfirm(${p.id})" style="color:var(--ribbon-dark)">Устгах</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="toggleHideProduct(${p.id}, ${!p.hidden})" title="${p.hidden?"Харагдуулах":"Нуух"}">${p.hidden ? "👁" : "🚫"}</button>`}
       <button class="btn btn-ghost btn-sm" onclick="toggleRowEdit(${p.id})" data-toggle-btn>Засах</button>
     </div>
 
@@ -690,7 +697,7 @@ function adminProductRowHTML(p){
       <div class="grid-3">
         <div>
           <label class="field-label">Нэр</label>
-          <input id="name${rowId}" class="field-input" type="text" value="${escapeHTML(p.name)}" ${isCustom ? "" : "disabled"}>
+          <input id="name${rowId}" class="field-input" type="text" value="${escapeHTML(p.name)}">
         </div>
         <div>
           <label class="field-label">Үнэ (₮)</label>
@@ -755,6 +762,7 @@ function adminProductRowHTML(p){
         ${isCustom
           ? `<button class="btn btn-outline btn-sm" onclick="deleteProductConfirm(${p.id})">Устгах</button>`
           : (isOverridden ? `<button class="btn btn-outline btn-sm" onclick="revertOverride(${p.id})">Анхны байдалд оруулах</button>` : "")}
+        ${!isCustom ? `<button class="btn btn-outline btn-sm" onclick="toggleHideProduct(${p.id}, ${!p.hidden})" style="color:${p.hidden?"var(--sage)":"var(--ribbon-dark)"}">${p.hidden ? "👁 Харагдуулах" : "🚫 Нуух"}</button>` : ""}
       </div>
     </div>
   </div>`;
@@ -806,6 +814,34 @@ async function revertOverride(id){
   try{
     await adminClearOverride(adminPin, id);
     toast("Анхны байдалд оруулсан");
+    await loadAllProducts();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+async function quickToggleSoldOut(id, isCustom, soldOut){
+  try{
+    const p = PRODUCTS.find(x => x.id === id);
+    if(!p) return;
+    if(isCustom){
+      await adminUpdateProduct(adminPin, id, Object.assign({}, p, {soldOut}));
+    }else{
+      await adminSetOverride(adminPin, id, {soldOut});
+    }
+    toast(soldOut ? "Дууссан тэмдэглэлгдлээ" : "Идэвхтэй болгогдлоо ✓");
+    await loadAllProducts();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+async function toggleHideProduct(id, hidden){
+  try{
+    await adminSetOverride(adminPin, id, {hidden});
+    toast(hidden ? "Бараа нуугдлаа 🚫" : "Бараа харагдаж байна 👁");
     await loadAllProducts();
   }catch(e){
     if(e.status === 401){ logout(); return; }

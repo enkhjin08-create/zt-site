@@ -130,19 +130,24 @@ async function initProducts(){
   // PRODUCTS-ийг БАЗА-аас ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн
   // overrides-ыг л давхар тавина — өмнөх дуудлагуудын хуучин утга үлдэхгүй.
   PRODUCTS.length = 0;
+  const ALL_PRODUCTS_INCLUDING_HIDDEN = [];
   BASE_PRODUCTS.forEach(bp => {
     const p = Object.assign({}, bp);
     if(!p.role) p.role = defaultRoleForCategory(p.category);
     const ov = data.overrides[String(p.id)];
     if(ov) Object.assign(p, ov);
-    PRODUCTS.push(p);
+    ALL_PRODUCTS_INCLUDING_HIDDEN.push(p);
+    if(!p.hidden) PRODUCTS.push(p);
   });
 
   data.products.forEach(p => {
     if(!p.role) p.role = defaultRoleForCategory(p.category);
     if(!p.recipients) p.recipients = tagRecipients(p);
-    PRODUCTS.push(p);
+    ALL_PRODUCTS_INCLUDING_HIDDEN.push(p);
+    if(!p.hidden) PRODUCTS.push(p);
   });
+
+  window._ALL_PRODUCTS_ADMIN = ALL_PRODUCTS_INCLUDING_HIDDEN;
 
   updateCartBadge();
 }

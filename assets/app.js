@@ -132,7 +132,7 @@ function productArtHTML(p, opts){
   if(p.image){
     return `<div class="${artClass}" style="background:${cat.tint}">
         ${badge}${starBadge}
-        <img src="${p.image}" alt="${escapeHTML(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+        <img src="${p.image}" alt="${escapeHTML(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:center 25%">
       </div>`;
   }
   return `<div class="${artClass}" style="background:${cat.tint};color:${cat.color}">

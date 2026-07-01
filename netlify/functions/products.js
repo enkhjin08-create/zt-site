@@ -138,6 +138,7 @@ function sanitizeOverride(input, existing, validCategories, validRecipients){
   if(input.role != null && VALID_ROLES.includes(input.role)) patch.role = input.role;
   if(typeof input.soldOut === "boolean") patch.soldOut = input.soldOut;
   if(typeof input.bestSeller === "boolean") patch.bestSeller = input.bestSeller;
+  if(typeof input.hidden === "boolean") patch.hidden = input.hidden;
   const images = cleanImages(input.images);
   if(images !== null){
     patch.images = images;

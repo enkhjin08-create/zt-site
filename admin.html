@@ -386,7 +386,7 @@ async function tryLogin(){
     ordersCache = orders;
     showDashboard(true);
   }catch(e){
-    document.getElementById("gate-error").textContent = (e.status === 401) ? "PIN буруу байна." : "Холбогдоход алдаа гарлаа. Дахин оролдоорой.";
+    document.getElementById("gate-error").textContent = (e.status === 401) ? "PIN буруу байна." : "Холбогдоход алдаа гарлаа: " + (e.message || e.status || "unknown");
     document.getElementById("gate-error").style.display = "block";
   }
   if(btn){ btn.disabled = false; btn.textContent = "Нэвтрэх →"; }

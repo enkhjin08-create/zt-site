@@ -152,12 +152,9 @@ function productCardHTML(p){
   return `<div class="product-card" data-id="${p.id}">
     <a href="product.html?id=${p.id}">${productArtHTML(p)}</a>
     <div class="product-body">
-      <a href="product.html?id=${p.id}"><div class="name">${p.name}</div></a>
+      <a href="product.html?id=${p.id}" class="name">${p.name}</a>
       ${priceRowHTML(p)}
-      <div class="product-actions">
-        <button class="btn btn-ghost btn-sm" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""}>Нэмэх</button>
-        <a class="btn btn-outline btn-sm" href="product.html?id=${p.id}">Дэлгэрэнгүй</a>
-      </div>
+      <button class="btn btn-ghost btn-sm product-add-btn" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""} style="width:100%;margin-top:10px">${p.soldOut ? "Дууссан" : "Нэмэх"}</button>
     </div>
   </div>`;
 }
@@ -201,12 +198,11 @@ function renderFooter(){
       <h4>Биднийг дагаарай</h4>
       <p style="margin-top:10px"><a href="https://www.facebook.com/Zuvhuntuund/" target="_blank" rel="noopener">Facebook</a></p>
       <p><a href="https://instagram.com/zuvhuntuund" target="_blank" rel="noopener">Instagram</a></p>
-      <p><a href="https://zuvhuntuund.com" target="_blank" rel="noopener">Дэлгүүр (Zochil) →</a></p>
     </div>
   </div>
   <div class="wrap foot-bottom">
     <span>© 2026 Зөвхөн түүнд</span>
-    <span>Бэлэг бэлдэх захиалга шууд энэ сайтаар баталгаажина · Zochil дэлгүүрээр аль ч барааг шууд захиалж болно</span>
+    <span>Бэлэг бэлдэх захиалга шууд энэ сайтаар баталгаажина</span>
   </div>`;
   document.querySelectorAll(".site-footer").forEach(el => el.innerHTML = html);
 }

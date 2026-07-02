@@ -27,11 +27,8 @@
 
   <div id="filters-panel" style="display:none">
     <input id="search-input" class="field-input" type="text" placeholder="🔍 Бүтээгдэхүүний нэрээр хайх..." style="margin-bottom:18px;max-width:360px">
-
-    <div class="filter-pills" id="cat-pills"></div>
-    <div class="filter-pills" id="rec-pills" style="margin-top:-14px"></div>
+    <div class="filter-pills" id="rec-pills"></div>
     <div class="filter-pills" id="budget-pills" style="margin-top:-14px"></div>
-
     <div class="sort-row">
       <select id="sort-select" class="field-input">
         <option value="default">Шинэ нь эхэндээ</option>
@@ -41,7 +38,7 @@
     </div>
   </div>
 
-  <div class="product-grid" id="grid"></div>
+  <div id="groups-wrap"></div>
   <div class="empty-state" id="empty" style="display:none">Тохирох бараа олдсонгүй. Хайлт/шүүлтүүрээ өөрчилж үзээрэй.</div>
 </div>
 
@@ -55,11 +52,13 @@ renderHeader("category.html");
 renderFooter();
 
 const params = new URLSearchParams(location.search);
-let activeCat = params.get("cat") || "all";
 let activeRec = params.get("recipient") || "all";
 let activeBudget = params.get("budget") || "all";
 let activeSort = params.get("sort") || "default";
 let activeSearch = params.get("q") || "";
+
+// Ямар категори нээлттэй байгааг хадгална
+const openGroups = new Set();
 
 document.getElementById("search-input").value = activeSearch;
 
@@ -73,36 +72,86 @@ const BUDGET_TIERS = [
 ];
 
 function pillsHTML(){
-  const catPills = [["all","Бүгд"], ...Object.entries(CATEGORIES).map(([k,c])=>[k,c.label])];
-  document.getElementById("cat-pills").innerHTML = catPills.map(([k,label]) =>
-    `<button class="pill ${activeCat===k?"is-active":""}" data-cat="${k}">${label}</button>`).join("");
-
   const recPills = [["all","Бүх хүлээн авагч"], ...Object.entries(RECIPIENTS).map(([k,r])=>[k, r.emoji+" "+r.label])];
   document.getElementById("rec-pills").innerHTML = recPills.map(([k,label]) =>
-    `<button class="pill ${activeRec===k?"is-active":""}" data-rec="${k}" style="font-size:12.5px;opacity:.85">${label}</button>`).join("");
+    `<button class="pill ${activeRec===k?"is-active":""}" data-rec="${k}" style="font-size:12.5px">${label}</button>`).join("");
 
   document.getElementById("budget-pills").innerHTML = BUDGET_TIERS.map(([k,label]) =>
-    `<button class="pill ${activeBudget===k?"is-active":""}" data-budget="${k}" style="font-size:12.5px;opacity:.85">${label}</button>`).join("");
+    `<button class="pill ${activeBudget===k?"is-active":""}" data-budget="${k}" style="font-size:12.5px">${label}</button>`).join("");
 
   document.getElementById("sort-select").value = activeSort;
   updateFiltersBadge();
 }
 
+function applyFiltersSort(list){
+  if(activeSearch) list = list.filter(p => p.name.toLowerCase().includes(activeSearch.toLowerCase()));
+  if(activeRec !== "all") list = list.filter(p => (p.recipients||[]).includes(activeRec));
+  if(activeBudget !== "all"){
+    const [min,max] = activeBudget.split("-").map(Number);
+    list = list.filter(p => p.price >= min && p.price <= max);
+  }
+  if(activeSort === "price-asc") list.sort((a,b) => (a.soldOut - b.soldOut)||(a.price - b.price));
+  else if(activeSort === "price-desc") list.sort((a,b) => (a.soldOut - b.soldOut)||(b.price - a.price));
+  else list.sort((a,b) => (a.soldOut - b.soldOut)||(b.id - a.id));
+  return list;
+}
+
+function toggleGroup(catKey){
+  if(openGroups.has(catKey)) openGroups.delete(catKey);
+  else openGroups.add(catKey);
+  renderGroups();
+}
+
+function renderGroups(){
+  const wrap = document.getElementById("groups-wrap");
+  const empty = document.getElementById("empty");
+
+  // Ангилал бүрийн бараануудыг гарга
+  const grouped = [];
+  Object.entries(CATEGORIES).forEach(([key, cat]) => {
+    let list = PRODUCTS.filter(p => p.category === key);
+    list = applyFiltersSort(list);
+    if(list.length) grouped.push({ key, cat, list });
+  });
+
+  if(!grouped.length){ wrap.innerHTML = ""; empty.style.display="block"; return; }
+  empty.style.display = "none";
+
+  wrap.innerHTML = grouped.map(({ key, cat, list }) => {
+    const isOpen = openGroups.has(key);
+    return `
+      <div class="cat-group" style="margin-bottom:8px;border:1px solid var(--line);border-radius:20px;overflow:hidden">
+        <button class="cat-group-header" onclick="toggleGroup('${key}')" style="width:100%;display:flex;align-items:center;gap:14px;padding:18px 20px;background:${isOpen?"var(--paper-deep)":"var(--paper-card)"};border:none;cursor:pointer;text-align:left">
+          <div style="width:40px;height:40px;border-radius:12px;background:${cat.tint};display:flex;align-items:center;justify-content:center;color:${cat.color};flex-shrink:0">
+            <svg viewBox="0 0 100 100" width="20" height="20">${categoryIconSvg(key)}</svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px;color:var(--ink)">${cat.label}</div>
+            <div style="font-size:12.5px;color:var(--ink-faint)">${list.length} бараа</div>
+          </div>
+          <span style="font-size:18px;color:var(--ink-faint);transition:transform .2s;display:inline-block;transform:rotate(${isOpen?"180deg":"0deg"})"
+          >▾</span>
+        </button>
+        ${isOpen ? `
+          <div style="padding:16px 16px 20px">
+            <div class="product-grid">${list.map(productCardHTML).join("")}</div>
+          </div>` : ""}
+      </div>`;
+  }).join("");
+}
+
 function activeFilterCount(){
   let n = 0;
   if(activeSearch) n++;
-  if(activeCat !== "all") n++;
   if(activeRec !== "all") n++;
   if(activeBudget !== "all") n++;
   if(activeSort !== "default") n++;
   return n;
 }
-
 function updateFiltersBadge(){
   const n = activeFilterCount();
   document.getElementById("filters-badge").textContent = n ? ` (${n})` : "";
 }
-
 function toggleFilters(){
   const panel = document.getElementById("filters-panel");
   const chevron = document.getElementById("filters-chevron");
@@ -110,70 +159,40 @@ function toggleFilters(){
   panel.style.display = isOpen ? "none" : "";
   chevron.textContent = isOpen ? "▾" : "▴";
 }
-
 function updateUrl(){
-  history.replaceState(null, "", `?cat=${activeCat}&recipient=${activeRec}&budget=${activeBudget}&sort=${activeSort}&q=${encodeURIComponent(activeSearch)}`);
-}
-
-function renderGrid(){
-  let list = PRODUCTS.slice();
-  if(activeSearch) list = list.filter(p => p.name.toLowerCase().includes(activeSearch.toLowerCase()));
-  if(activeCat !== "all") list = list.filter(p => p.category === activeCat);
-  if(activeRec !== "all") list = list.filter(p => p.recipients.includes(activeRec));
-  if(activeBudget !== "all"){
-    const [min,max] = activeBudget.split("-").map(Number);
-    list = list.filter(p => p.price >= min && p.price <= max);
-  }
-
-  if(activeSort === "price-asc") list.sort((a,b) => (a.soldOut - b.soldOut) || (a.price - b.price));
-  else if(activeSort === "price-desc") list.sort((a,b) => (a.soldOut - b.soldOut) || (b.price - a.price));
-  else list.sort((a,b) => (a.soldOut - b.soldOut) || (b.id - a.id));
-
-  const grid = document.getElementById("grid");
-  const empty = document.getElementById("empty");
-  if(list.length === 0){ grid.innerHTML = ""; empty.style.display="block"; return; }
-  empty.style.display = "none";
-  grid.innerHTML = list.map(productCardHTML).join("");
-
-  const title = activeCat === "all" ? "Бүтээгдэхүүн" : (CATEGORIES[activeCat] ? CATEGORIES[activeCat].label : "Бүтээгдэхүүн");
-  document.getElementById("page-title").textContent = title;
-  document.title = title + " — Зөвхөн түүнд";
+  history.replaceState(null, "", `?recipient=${activeRec}&budget=${activeBudget}&sort=${activeSort}&q=${encodeURIComponent(activeSearch)}`);
 }
 
 document.addEventListener("click", (e) => {
-  const catBtn = e.target.closest("[data-cat]");
-  if(catBtn){ activeCat = catBtn.dataset.cat; pillsHTML(); renderGrid(); updateUrl(); }
   const recBtn = e.target.closest("[data-rec]");
-  if(recBtn){ activeRec = recBtn.dataset.rec; pillsHTML(); renderGrid(); updateUrl(); }
+  if(recBtn){ activeRec = recBtn.dataset.rec; pillsHTML(); renderGroups(); updateUrl(); }
   const budgetBtn = e.target.closest("[data-budget]");
-  if(budgetBtn){ activeBudget = budgetBtn.dataset.budget; pillsHTML(); renderGrid(); updateUrl(); }
+  if(budgetBtn){ activeBudget = budgetBtn.dataset.budget; pillsHTML(); renderGroups(); updateUrl(); }
 });
-
 document.getElementById("sort-select").addEventListener("change", (e) => {
-  activeSort = e.target.value;
-  renderGrid();
-  updateUrl();
-  updateFiltersBadge();
+  activeSort = e.target.value; renderGroups(); updateUrl(); updateFiltersBadge();
 });
-
 let searchDebounce = null;
 document.getElementById("search-input").addEventListener("input", (e) => {
   clearTimeout(searchDebounce);
   searchDebounce = setTimeout(() => {
-    activeSearch = e.target.value.trim();
-    renderGrid();
-    updateUrl();
-    updateFiltersBadge();
+    activeSearch = e.target.value.trim(); renderGroups(); updateUrl(); updateFiltersBadge();
   }, 250);
 });
 
+// Анхлан URL-д тодорхой ангилал байвал тэрийг нээлттэй эхэл
+const initCat = params.get("cat");
+if(initCat && initCat !== "all") openGroups.add(initCat);
+else Object.keys(CATEGORIES).forEach(k => openGroups.add(k)); // бүгдийг нээлттэй эхэл
+
 pillsHTML();
-renderGrid();
+renderGroups();
 if(activeFilterCount() > 0) toggleFilters();
+
 (async function(){
   await initProducts();
   pillsHTML();
-  renderGrid();
+  renderGroups();
 })();
 </script>
 </body>

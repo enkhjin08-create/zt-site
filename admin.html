@@ -37,13 +37,49 @@
   </div>
 
   <div class="filter-pills" style="margin-top:24px">
-    <button class="pill is-active" data-tab="orders" onclick="switchTab('orders')">Захиалгууд</button>
+    <button class="pill is-active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
+    <button class="pill" data-tab="orders" onclick="switchTab('orders')">Захиалгууд</button>
     <button class="pill" data-tab="products" onclick="switchTab('products')">Бараа удирдах</button>
     <button class="pill" data-tab="categories" onclick="switchTab('categories')">Ангилал</button>
+    <button class="pill" data-tab="customers" onclick="switchTab('customers')">👤 Хэрэглэгчид</button>
     <button class="pill" data-tab="coupons" onclick="switchTab('coupons')">Купон</button>
   </div>
 
-  <div id="orders-tab">
+  <div id="dashboard-tab" style="margin-top:22px">
+    <div id="dash-loading" class="lede" style="color:var(--ink-faint)">Уншиж байна...</div>
+
+    <div id="dash-content" style="display:none">
+      <!-- KPI cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:28px" id="dash-kpis"></div>
+
+      <!-- Orders by status -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:28px">
+        <div class="step-panel" style="padding:20px">
+          <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Төлвөөр</h4>
+          <div id="dash-by-status"></div>
+        </div>
+        <div class="step-panel" style="padding:20px">
+          <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Хамгийн их захиалагдсан</h4>
+          <div id="dash-top-products"></div>
+        </div>
+      </div>
+
+      <!-- Last 7 days trend -->
+      <div class="step-panel" style="padding:20px;margin-bottom:28px">
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Сүүлийн 14 хоног — захиалга</h4>
+        <div id="dash-trend" style="display:flex;align-items:flex-end;gap:6px;height:80px"></div>
+        <div id="dash-trend-labels" style="display:flex;gap:6px;margin-top:6px"></div>
+      </div>
+
+      <!-- Recent orders -->
+      <div class="step-panel" style="padding:20px">
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Сүүлийн 5 захиалга</h4>
+        <div id="dash-recent"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="orders-tab" style="display:none">
     <div id="stat-row" style="display:flex;gap:14px;margin:22px 0 22px;flex-wrap:wrap"></div>
     <div class="filter-pills" id="status-pills"></div>
     <div id="order-list" style="display:flex;flex-direction:column;gap:14px;margin-top:6px"></div>
@@ -221,6 +257,15 @@
     </p>
   </div>
 
+  <div id="customers-tab" style="display:none;margin-top:22px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+      <h3 style="font-size:16px;margin:0">Бүх хэрэглэгч</h3>
+      <input id="cust-search" class="field-input" type="text" placeholder="Нэр, утас, имэйлээр хайх..." style="max-width:240px" oninput="filterCustomers(this.value)">
+    </div>
+    <div id="customers-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="empty-state" id="customers-empty" style="display:none">Тохирох хэрэглэгч олдсонгүй.</div>
+  </div>
+
   <div id="coupons-tab" style="display:none;margin-top:22px">
     <div class="step-panel" style="margin-bottom:24px;padding:26px">
       <h3 style="font-size:18px;margin-bottom:4px">Шинэ купон нэмэх</h3>
@@ -385,6 +430,7 @@ async function tryLogin(){
     document.getElementById("gate-error").style.display = "none";
     ordersCache = orders;
     showDashboard(true);
+    switchTab("dashboard");
   }catch(e){
     document.getElementById("gate-error").textContent = (e.status === 401) ? "PIN буруу байна." : "Холбогдоход алдаа гарлаа: " + (e.message || e.status || "unknown");
     document.getElementById("gate-error").style.display = "block";
@@ -404,6 +450,202 @@ function showDashboard(skipLoad){
   }else{
     loadOrders();
   }
+}
+
+/* ---- Customers Tab ---- */
+let customersCache = [];
+
+function buildCustomerList(orders){
+  const map = {};
+  orders.forEach(o => {
+    const phone = (o.customerPhone || "").trim();
+    const key = phone || (o.customerEmail || "").trim() || (o.customerName || "").trim();
+    if(!key) return;
+    if(!map[key]){
+      map[key] = {
+        name: o.customerName || "—",
+        phone: o.customerPhone || "",
+        email: o.customerEmail || "",
+        orders: 0,
+        spent: 0,
+        lastOrder: o.createdAt || ""
+      };
+    }
+    map[key].orders++;
+    if(o.status !== "cancelled") map[key].spent += (o.total || 0);
+    if((o.createdAt || "") > map[key].lastOrder) map[key].lastOrder = o.createdAt;
+  });
+  return Object.values(map).sort((a,b) => b.orders - a.orders);
+}
+
+async function loadCustomersTab(){
+  const wrap = document.getElementById("customers-list");
+  wrap.innerHTML = `<p class="lede">Уншиж байна...</p>`;
+  document.getElementById("customers-empty").style.display = "none";
+  try{
+    if(!ordersCache.length){
+      ordersCache = await adminListOrders(adminPin);
+    }
+    customersCache = buildCustomerList(ordersCache);
+    renderCustomerList(customersCache);
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    wrap.innerHTML = `<p class="lede">Уншихад алдаа гарлаа.</p>`;
+  }
+}
+
+function filterCustomers(q){
+  const filtered = q
+    ? customersCache.filter(c =>
+        c.name.toLowerCase().includes(q.toLowerCase()) ||
+        c.phone.includes(q) ||
+        c.email.toLowerCase().includes(q.toLowerCase()))
+    : customersCache;
+  renderCustomerList(filtered);
+}
+
+function renderCustomerList(list){
+  const wrap = document.getElementById("customers-list");
+  const empty = document.getElementById("customers-empty");
+  if(!list.length){ wrap.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  wrap.innerHTML = list.map(c => {
+    const lastDate = c.lastOrder ? new Date(c.lastOrder).toLocaleDateString("mn-MN") : "—";
+    return `<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--ribbon-tint);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+        ${c.name ? c.name[0] : "?"}
+      </div>
+      <div style="flex:1;min-width:120px">
+        <div style="font-weight:700;font-size:14px">${escapeHTML(c.name)}</div>
+        <div style="font-size:12.5px;color:var(--ink-faint);margin-top:2px">
+          ${c.phone ? `<a href="tel:${escapeHTML(c.phone)}" style="color:var(--ink-faint)">${escapeHTML(c.phone)}</a>` : ""}
+          ${c.phone && c.email ? " · " : ""}
+          ${c.email ? `<a href="mailto:${escapeHTML(c.email)}" style="color:var(--ink-faint)">${escapeHTML(c.email)}</a>` : ""}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-weight:700;color:var(--ribbon-dark)">${formatPrice(c.spent)}</div>
+        <div style="font-size:12px;color:var(--ink-faint)">${c.orders} захиалга · ${lastDate}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ---- Analytics Dashboard ---- */
+async function loadDashboard(){
+  document.getElementById("dash-loading").style.display = "";
+  document.getElementById("dash-content").style.display = "none";
+  try{
+    if(!ordersCache.length){
+      const data = await callOrdersApi({ action: "list", pin: adminPin });
+      ordersCache = (data && data.orders) || [];
+      ordersCache.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    renderDashboard(ordersCache);
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    document.getElementById("dash-loading").textContent = "Уншихад алдаа гарлаа.";
+  }
+}
+
+function renderDashboard(orders){
+  document.getElementById("dash-loading").style.display = "none";
+  document.getElementById("dash-content").style.display = "";
+
+  const total = orders.length;
+  const revenue = orders.filter(o => o.status !== "cancelled")
+    .reduce((s,o) => s + (o.total || 0), 0);
+  const avgOrder = total ? Math.round(revenue / orders.filter(o=>o.status!=="cancelled").length) : 0;
+  const pending = orders.filter(o => o.status === "new" || o.status === "confirmed").length;
+
+  // KPI cards
+  const kpis = [
+    { label: "Нийт захиалга", value: total + " ш", color: "#0F4B42" },
+    { label: "Нийт орлого", value: formatPrice(revenue), color: "#FF6698" },
+    { label: "Дундаж захиалга", value: formatPrice(avgOrder), color: "#FF6698" },
+    { label: "Хүлээгдэж буй", value: pending + " ш", color: pending > 0 ? "#FF6698" : "#0F4B42" }
+  ];
+  document.getElementById("dash-kpis").innerHTML = kpis.map(k => `
+    <div class="step-panel" style="padding:18px 16px;text-align:center">
+      <div style="font-size:22px;font-weight:800;color:${k.color};font-family:var(--font-display)">${k.value}</div>
+      <div style="font-size:12px;color:var(--ink-faint);margin-top:4px">${k.label}</div>
+    </div>`).join("");
+
+  // By status
+  const statusGroups = {};
+  orders.forEach(o => { statusGroups[o.status] = (statusGroups[o.status]||0)+1; });
+  const statusOrder = ["new","confirmed","done","cancelled"];
+  document.getElementById("dash-by-status").innerHTML = statusOrder.map(s => {
+    const n = statusGroups[s] || 0;
+    const st = STATUSES[s] || { label: s, color: "#888" };
+    const pct = total ? Math.round(n/total*100) : 0;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span style="font-weight:600;color:${st.color}">${st.label}</span>
+        <span style="color:var(--ink-faint)">${n} ш</span>
+      </div>
+      <div style="background:var(--paper-deep);border-radius:99px;height:7px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${st.color};border-radius:99px;transition:width .5s"></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  // Top products
+  const prodCount = {};
+  orders.forEach(o => {
+    if(o.status === "cancelled") return;
+    (o.items||[]).forEach(i => { prodCount[i.name] = (prodCount[i.name]||0)+1; });
+    if(o.container) prodCount[o.container.name] = (prodCount[o.container.name]||0)+1;
+  });
+  const topProds = Object.entries(prodCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxCount = topProds[0]?.[1] || 1;
+  document.getElementById("dash-top-products").innerHTML = topProds.length
+    ? topProds.map(([name,n]) => `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px">
+          <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${escapeHTML(name)}</span>
+          <span style="color:var(--ink-faint)">${n} удаа</span>
+        </div>
+        <div style="background:var(--paper-deep);border-radius:99px;height:6px;overflow:hidden">
+          <div style="width:${Math.round(n/maxCount*100)}%;height:100%;background:#FF6698;border-radius:99px"></div>
+        </div>
+      </div>`).join("")
+    : `<p style="font-size:13px;color:var(--ink-faint)">Захиалга байхгүй байна.</p>`;
+
+  // Last 14 days trend
+  const days = [];
+  for(let i = 13; i >= 0; i--){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const label = (d.getMonth()+1) + "/" + d.getDate();
+    const count = orders.filter(o => (o.createdAt||"").startsWith(key)).length;
+    days.push({ key, label, count });
+  }
+  const maxDay = Math.max(...days.map(d=>d.count), 1);
+  document.getElementById("dash-trend").innerHTML = days.map(d => `
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="width:100%;max-width:28px;background:${d.count>0?"#FF6698":"var(--paper-deep)"};border-radius:4px 4px 0 0;
+        height:${Math.max(4,Math.round(d.count/maxDay*72))}px;transition:height .4s"></div>
+      ${d.count > 0 ? `<span style="font-size:10px;color:var(--ink);font-weight:700">${d.count}</span>` : ""}
+    </div>`).join("");
+  document.getElementById("dash-trend-labels").innerHTML = days.map((d,i) =>
+    `<div style="flex:1;text-align:center;font-size:9px;color:var(--ink-faint)">${i%2===0?d.label:""}</div>`).join("");
+
+  // Recent 5 orders
+  document.getElementById("dash-recent").innerHTML = orders.slice(0,5).map(o => {
+    const st = STATUSES[o.status] || { label: o.status, color: "#888" };
+    const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString("mn-MN") : "—";
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)">
+      <div>
+        <div style="font-weight:700;font-size:13.5px">${escapeHTML(o.customerName||"—")} · <span style="color:var(--ink-faint);font-size:12px">№${o.orderNumber||"—"}</span></div>
+        <div style="font-size:12px;color:var(--ink-faint)">${date}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700;color:var(--ribbon-dark)">${formatPrice(o.total||0)}</div>
+        <span style="font-size:11px;color:${st.color};font-weight:700">${st.label}</span>
+      </div>
+    </div>`;
+  }).join("") || `<p style="font-size:13px;color:var(--ink-faint)">Захиалга байхгүй байна.</p>`;
 }
 
 async function loadOrders(){
@@ -524,12 +766,16 @@ if(savedPin){ adminPin = savedPin; showDashboard(false); }
 /* ---------------- Tabs ---------------- */
 function switchTab(tab){
   document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("is-active", b.dataset.tab === tab));
+  document.getElementById("dashboard-tab").style.display = tab === "dashboard" ? "" : "none";
   document.getElementById("orders-tab").style.display = tab === "orders" ? "" : "none";
   document.getElementById("products-tab").style.display = tab === "products" ? "" : "none";
   document.getElementById("categories-tab").style.display = tab === "categories" ? "" : "none";
+  document.getElementById("customers-tab").style.display = tab === "customers" ? "" : "none";
   document.getElementById("coupons-tab").style.display = tab === "coupons" ? "" : "none";
+  if(tab === "dashboard") loadDashboard();
   if(tab === "products" && !productsLoaded) loadAllProducts();
   if(tab === "categories") loadCategoriesTab();
+  if(tab === "customers") loadCustomersTab();
   if(tab === "coupons") loadCouponsTab();
 }
 
@@ -911,15 +1157,68 @@ async function loadCategoriesTab(){
 function renderCategoryList(){
   const wrap = document.getElementById("category-list");
   wrap.innerHTML = Object.entries(CATEGORIES).map(([key, c]) => `
-    <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:center">
-      <div style="width:40px;height:40px;border-radius:10px;flex-shrink:0;background:${c.tint};display:flex;align-items:center;justify-content:center;color:${c.color}">
-        <svg viewBox="0 0 100 100" width="20" height="20">${categoryIconSvg(key)}</svg>
+    <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px">
+      <div style="display:flex;gap:14px;align-items:center">
+        <div style="width:40px;height:40px;border-radius:10px;flex-shrink:0;background:${c.tint};display:flex;align-items:center;justify-content:center;color:${c.color}">
+          <svg viewBox="0 0 100 100" width="20" height="20">${categoryIconSvg(key)}</svg>
+        </div>
+        <div style="flex:1;font-weight:700;font-size:14px">${escapeHTML(c.label)}
+          ${!c.custom ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--paper-deep);border:none">Үндсэн</span>` : ""}
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleCatEdit('${key}')">Засах</button>
+        ${c.custom ? `<button class="btn btn-outline btn-sm" onclick="deleteCategoryConfirm('${key}')">Устгах</button>` : ""}
       </div>
-      <div style="flex:1;font-weight:700;font-size:14px">${escapeHTML(c.label)}</div>
-      ${c.custom
-        ? `<button class="btn btn-outline btn-sm" onclick="deleteCategoryConfirm('${key}')">Устгах</button>`
-        : `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--paper-deep);border:none">Үндсэн</span>`}
+      <div id="catedit-${key}" style="display:none;margin-top:12px;border-top:1px dashed var(--line);padding-top:12px">
+        <div class="grid-2-wide">
+          <div>
+            <label class="field-label">Нэр</label>
+            <input id="catlabel-${key}" class="field-input" type="text" value="${escapeHTML(c.label)}">
+          </div>
+          <div>
+            <label class="field-label">Дүрс</label>
+            <select id="caticonref-${key}" class="field-input">
+              <option value="extra" ${(c.iconRef||key)==='extra'?'selected':''}>Дугтуй</option>
+              <option value="cup" ${(c.iconRef||key)==='cup'?'selected':''}>Аяга</option>
+              <option value="giftset" ${(c.iconRef||key)==='giftset'?'selected':''}>Хайрцаг</option>
+              <option value="flower" ${(c.iconRef||key)==='flower'?'selected':''}>Цэцэг</option>
+              <option value="greeting" ${(c.iconRef||key)==='greeting'?'selected':''}>Карт</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn btn-primary btn-sm" onclick="saveCategoryEdit('${key}', ${c.custom?'true':'false'})">Хадгалах</button>
+        </div>
+      </div>
     </div>`).join("");
+}
+
+function toggleCatEdit(key){
+  const el = document.getElementById("catedit-" + key);
+  if(el) el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+async function saveCategoryEdit(key, isCustom){
+  const label = document.getElementById("catlabel-" + key).value.trim();
+  const iconRef = document.getElementById("caticonref-" + key).value;
+  if(!label){ toast("Нэрээ бөглөнө үү 🙏"); return; }
+  try{
+    if(isCustom){
+      await adminUpdateCategory(adminPin, key, label, iconRef);
+    }else{
+      // Үндсэн ангилал — зөвхөн client-д шинэчилнэ (server дахин ачааллахад анхны нэр буцана)
+      CATEGORIES[key] = Object.assign({}, CATEGORIES[key], { label, iconRef });
+      toast("Хадгалагдлаа ✓");
+      renderCategoryList();
+      populateCategorySelects();
+      return;
+    }
+    toast("Хадгалагдлаа ✓");
+    categoriesLoaded = false;
+    await loadCategoriesTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
 }
 
 function populateCategorySelects(){

@@ -113,6 +113,7 @@ function sanitizeProduct(input, existing, validCategories, validRecipients){
     role: role,
     soldOut: typeof input.soldOut === "boolean" ? input.soldOut : !!existing.soldOut,
     bestSeller: typeof input.bestSeller === "boolean" ? input.bestSeller : !!existing.bestSeller,
+    tag: str(input.tag != null ? input.tag : (existing.tag || ""), 30),
     images: images,
     image: images[0] || str(input.image != null ? input.image : existing.image, 500),
     url: str(input.url != null ? input.url : existing.url, 500),
@@ -139,6 +140,7 @@ function sanitizeOverride(input, existing, validCategories, validRecipients){
   if(typeof input.soldOut === "boolean") patch.soldOut = input.soldOut;
   if(typeof input.bestSeller === "boolean") patch.bestSeller = input.bestSeller;
   if(typeof input.hidden === "boolean") patch.hidden = input.hidden;
+  if(input.tag != null) patch.tag = str(input.tag, 30);
   const images = cleanImages(input.images);
   if(images !== null){
     patch.images = images;
@@ -303,6 +305,20 @@ exports.handler = async (event) => {
       if(!body.key) return json(400, { error: "Missing key" });
       const doc = await readDoc();
       delete doc.categories[body.key];
+      await writeDoc(doc);
+      return json(200, { ok: true });
+    }
+
+    if(body.action === "updateCategory"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(!body.key) return json(400, { error: "Missing key" });
+      const doc = await readDoc();
+      const existing = doc.categories[body.key];
+      if(!existing) return json(404, { error: "Category not found" });
+      const str = (v, max) => String(v == null ? "" : v).slice(0, max);
+      const label = str(body.label, 40).trim();
+      const iconRef = ICON_REFS.includes(body.iconRef) ? body.iconRef : existing.iconRef;
+      if(label) doc.categories[body.key] = Object.assign({}, existing, { label, iconRef });
       await writeDoc(doc);
       return json(200, { ok: true });
     }

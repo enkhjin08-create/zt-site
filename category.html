@@ -119,6 +119,18 @@ function renderGroups(){
 
   wrap.innerHTML = grouped.map(({ key, cat, list }) => {
     const isOpen = openGroups.has(key);
+
+    // Tag sub-filters — бараанд tag байвал харуулна
+    const tags = [...new Set(list.map(p=>p.tag).filter(Boolean))].sort();
+    const activeTag = window._activeTag && window._activeTag[key] || "all";
+    const filteredList = activeTag === "all" ? list : list.filter(p => p.tag === activeTag);
+
+    const tagPills = tags.length > 0 ? `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="pill ${activeTag==="all"?"is-active":""}" style="font-size:12px;padding:6px 14px" onclick="setTagFilter('${key}','all')">Бүгд</button>
+        ${tags.map(t=>`<button class="pill ${activeTag===t?"is-active":""}" style="font-size:12px;padding:6px 14px" onclick="setTagFilter('${key}','${t}')">${t}</button>`).join("")}
+      </div>` : "";
+
     return `
       <div class="cat-group" style="margin-bottom:8px;border:1px solid var(--line);border-radius:20px;overflow:hidden">
         <button class="cat-group-header" onclick="toggleGroup('${key}')" style="width:100%;display:flex;align-items:center;gap:14px;padding:18px 20px;background:${isOpen?"var(--paper-deep)":"var(--paper-card)"};border:none;cursor:pointer;text-align:left">
@@ -129,15 +141,21 @@ function renderGroups(){
             <div style="font-weight:700;font-size:15px;color:var(--ink)">${cat.label}</div>
             <div style="font-size:12.5px;color:var(--ink-faint)">${list.length} бараа</div>
           </div>
-          <span style="font-size:18px;color:var(--ink-faint);transition:transform .2s;display:inline-block;transform:rotate(${isOpen?"180deg":"0deg"})"
-          >▾</span>
+          <span style="font-size:18px;color:var(--ink-faint);transition:transform .2s;display:inline-block;transform:rotate(${isOpen?"180deg":"0deg"})">▾</span>
         </button>
         ${isOpen ? `
           <div style="padding:16px 16px 20px">
-            <div class="product-grid">${list.map(productCardHTML).join("")}</div>
+            ${tagPills}
+            <div class="product-grid" id="taglist-${key}">${filteredList.map(productCardHTML).join("")}</div>
           </div>` : ""}
       </div>`;
   }).join("");
+}
+
+function setTagFilter(catKey, tag){
+  if(!window._activeTag) window._activeTag = {};
+  window._activeTag[catKey] = tag;
+  renderGroups();
 }
 
 function activeFilterCount(){

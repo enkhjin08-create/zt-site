@@ -165,9 +165,15 @@
           <label class="field-label">Хүлээн авагч (гар аргаар, заавал биш — хоосон орхивол нэрнээс автоматаар тааруулна)</label>
           <div id="add-recipients-checks" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px"></div>
         </div>
-        <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:14px;cursor:pointer">
-          <input type="checkbox" name="bestSeller"> ⭐ Бестселлер (Нүүр хуудсанд харагдана)
-        </label>
+        <div class="grid-2" style="margin-top:14px;align-items:center">
+          <div>
+            <label class="field-label">Дэд шошго — tag (заавал биш, жишээ: хос аяга, кактус)</label>
+            <input name="tag" class="field-input" type="text" placeholder="жишээ: хос аяга">
+          </div>
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer;padding-top:20px">
+            <input type="checkbox" name="bestSeller"> ⭐ Бестселлер (Нүүр хуудсанд харагдана)
+          </label>
+        </div>
         <button class="btn btn-primary" type="submit" style="margin-top:18px">Бараа нэмэх</button>
       </form>
     </div>
@@ -1081,6 +1087,10 @@ function adminProductRowHTML(p){
       <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:12px;cursor:pointer">
         <input type="checkbox" id="bestSeller${rowId}" ${p.bestSeller?"checked":""}> ⭐ Бестселлер (Нүүр хуудсанд харагдана)
       </label>
+      <div style="margin-top:10px">
+        <label class="field-label">Дэд шошго — tag (жишээ: хос аяга, кактус, энгийн аяга)</label>
+        <input id="tag${rowId}" class="field-input" type="text" value="${escapeHTML(p.tag||"")}" placeholder="хоосон орхиж болно">
+      </div>
       <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" onclick="saveProductRow(${p.id}, ${isCustom})">Хадгалах</button>
         ${isCustom
@@ -1111,6 +1121,7 @@ function readRowFields(id){
     role: val("role"),
     soldOut: val("soldOut") === "true",
     bestSeller: bestSellerBox ? bestSellerBox.checked : false,
+    tag: document.getElementById("tag" + rowId)?.value.trim() || "",
     images: rowImagesState[id] || [],
     url: val("url"),
     recipients: recipients
@@ -1198,6 +1209,7 @@ async function submitProductForm(e){
     images: addFormImages.slice(),
     url: f.url.value.trim(),
     soldOut: false,
+    tag: f.tag.value.trim(),
     bestSeller: f.bestSeller.checked
   };
   if(checkedRecipients.length) product.recipients = checkedRecipients;

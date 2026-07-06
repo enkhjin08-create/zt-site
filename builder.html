@@ -175,7 +175,7 @@ function renderStepPanel(){
     const wantRole = step===3 ? "main" : "extra";
     const title = step===3 ? "Гол бэлгээ сонгоорой" : "Дагалдах зүйлс нэмэх үү?";
     let list = PRODUCTS.filter(p => (p.role || defaultRoleForCategory(p.category)) === wantRole && !p.soldOut);
-    if(step === 3) list = list.filter(p => p.category !== "flower" && p.category !== "giftset");
+    if(step === 3) list = list.filter(p => p.category !== "flower");
     if(step === 4) list = list.filter(p => p.category !== "greeting");
     if(recFilterOn && box.recipient) list = list.filter(p => p.recipients.includes(box.recipient));
     panel.innerHTML = `
@@ -268,7 +268,16 @@ function saveMessageAndNext(){
   goStep(8);
 }
 
-const DELIVERY_FEE = 7000;
+const DELIVERY_FEE_BASE = 7000;
+const DELIVERY_FEE_FLOWER = 10000;
+
+function getDeliveryFee(){
+  const hasFlower = box.itemIds.some(id => {
+    const p = getProduct(id);
+    return p && p.category === "flower";
+  });
+  return hasFlower ? DELIVERY_FEE_FLOWER : DELIVERY_FEE_BASE;
+}
 const BANK_INFO = { holder: "Энхжин", account: "MN490005005304653256" };
 
 function ensureOrderNumber(){
@@ -306,10 +315,10 @@ function buildOrderObject(){
     items: items.map(p => ({ id: p.id, name: p.name, price: p.price })),
     message: box.message || "",
     subtotal: subtotal,
-    deliveryFee: DELIVERY_FEE,
+    deliveryFee: getDeliveryFee(),
     couponCode: box.couponCode || "",
     discount: discount,
-    total: Math.max(0, subtotal + DELIVERY_FEE - discount),
+    total: Math.max(0, subtotal + getDeliveryFee() - discount),
     status: "new"
   };
 }
@@ -320,7 +329,7 @@ function buildOrderText(){
   const items = box.itemIds.map(getProduct).filter(Boolean);
   const subtotal = boxTotal(box);
   const discount = couponDiscountAmount(subtotal);
-  const grandTotal = Math.max(0, subtotal + DELIVERY_FEE - discount);
+  const grandTotal = Math.max(0, subtotal + getDeliveryFee() - discount);
   let lines = [];
   lines.push("ЗАХИАЛГЫН ХҮСЭЛТ — Зөвхөн түүнд");
   lines.push("Захиалгын дугаар: " + ensureOrderNumber());
@@ -335,7 +344,7 @@ function buildOrderText(){
   }
   if(box.message) lines.push("Зурвас: \"" + box.message + "\"");
   lines.push("Барааны дүн: " + formatPrice(subtotal));
-  lines.push("Хүргэлт: " + formatPrice(DELIVERY_FEE));
+  lines.push("Хүргэлт: " + formatPrice(getDeliveryFee()));
   if(discount > 0) lines.push("Купон (" + box.couponCode + "): -" + formatPrice(discount));
   lines.push("Нийт төлөх дүн: " + formatPrice(grandTotal));
   lines.push("");
@@ -363,7 +372,7 @@ function renderSummary(){
   const orderNo = ensureOrderNumber();
   const subtotal = boxTotal(box);
   const discount = couponDiscountAmount(subtotal);
-  const grandTotal = Math.max(0, subtotal + DELIVERY_FEE - discount);
+  const grandTotal = Math.max(0, subtotal + getDeliveryFee() - discount);
 
   return `
     <p class="eyebrow">Алхам 8 · Захиалга №${orderNo}</p>
@@ -417,7 +426,7 @@ function renderSummary(){
     <div class="summary-text" id="summary-text" style="margin-top:18px">${text}</div>
 
     <div class="notice-box">
-      <strong>Хүргэлтийн нөхцөл:</strong> Улаанбаатарын А, Б бүсэд хүргэлт ${formatPrice(DELIVERY_FEE)}.
+      <strong>Хүргэлтийн нөхцөл:</strong> Улаанбаатарын А, Б бүсэд хүргэлт ${formatPrice(getDeliveryFee())}${box.itemIds.some(id=>{const p=getProduct(id);return p&&p.category==="flower";}) ? " (цэцэг орсон тул +3,000₮)" : ""}.
       16 цагаас өмнө захиалсан тухайн өдөртөө очно. 16 цагаас хойш захиалсан захиалга маргааш нь очно.
     </div>
     <div class="notice-box warn">

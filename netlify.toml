@@ -11,3 +11,8 @@
   from = "/api/products"
   to = "/.netlify/functions/products"
   status = 200
+
+[[redirects]]
+  from = "/api/track"
+  to = "/.netlify/functions/track"
+  status = 200

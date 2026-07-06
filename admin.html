@@ -54,25 +54,45 @@
 
       <!-- Orders by status -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:28px">
-        <div class="step-panel" style="padding:20px">
+        <div class="step-panel" style="padding:20px;min-height:0">
           <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Төлвөөр</h4>
           <div id="dash-by-status"></div>
         </div>
-        <div class="step-panel" style="padding:20px">
+        <div class="step-panel" style="padding:20px;min-height:0">
           <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Хамгийн их захиалагдсан</h4>
           <div id="dash-top-products"></div>
         </div>
       </div>
 
       <!-- Last 7 days trend -->
-      <div class="step-panel" style="padding:20px;margin-bottom:28px">
+      <div class="step-panel" style="padding:20px;margin-bottom:28px;min-height:0">
         <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Сүүлийн 14 хоног — захиалга</h4>
         <div id="dash-trend" style="display:flex;align-items:flex-end;gap:6px;height:80px"></div>
         <div id="dash-trend-labels" style="display:flex;gap:6px;margin-top:6px"></div>
       </div>
 
+      <!-- Traffic chart -->
+      <div class="step-panel" style="padding:20px;margin-bottom:28px;min-height:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin:0">Сүүлийн 14 хоногийн хандалт</h4>
+          <select id="traffic-range" class="field-input" style="max-width:120px;font-size:12px" onchange="renderTrafficChart()">
+            <option value="14">14 хоног</option>
+            <option value="30">30 хоног</option>
+          </select>
+        </div>
+        <div id="traffic-total" style="font-size:22px;font-weight:800;color:#7C3AED;margin-bottom:12px"></div>
+        <div id="traffic-chart-wrap" style="position:relative">
+          <div id="traffic-y-labels" style="position:absolute;left:0;top:0;bottom:20px;display:flex;flex-direction:column;justify-content:space-between;font-size:10px;color:var(--ink-faint);width:32px;text-align:right;padding-right:6px"></div>
+          <div style="margin-left:36px">
+            <svg id="traffic-svg" style="width:100%;overflow:visible" viewBox="0 0 600 120" preserveAspectRatio="none"></svg>
+            <div id="traffic-labels" style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-faint);margin-top:4px"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap" id="traffic-pages"></div>
+      </div>
+
       <!-- Recent orders -->
-      <div class="step-panel" style="padding:20px">
+      <div class="step-panel" style="padding:20px;min-height:0">
         <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Сүүлийн 5 захиалга</h4>
         <div id="dash-recent"></div>
       </div>
@@ -532,6 +552,8 @@ function renderCustomerList(list){
 }
 
 /* ---- Analytics Dashboard ---- */
+let trafficData = {};
+
 async function loadDashboard(){
   document.getElementById("dash-loading").style.display = "";
   document.getElementById("dash-content").style.display = "none";
@@ -541,11 +563,67 @@ async function loadDashboard(){
       ordersCache = (data && data.orders) || [];
       ordersCache.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
+    try{
+      const tRes = await fetch("/api/track?action=stats&pin=" + encodeURIComponent(adminPin));
+      const tData = await tRes.json();
+      trafficData = (tData && tData.pageviews) || {};
+    }catch(e){ trafficData = {}; }
     renderDashboard(ordersCache);
+    renderTrafficChart();
   }catch(e){
     if(e.status === 401){ logout(); return; }
     document.getElementById("dash-loading").textContent = "Уншихад алдаа гарлаа.";
   }
+}
+
+function renderTrafficChart(){
+  const rangeEl = document.getElementById("traffic-range");
+  const days = rangeEl ? parseInt(rangeEl.value) || 14 : 14;
+  const pageLabels = { home:"Нүүр", category:"Бүтээгдэхүүн", builder:"Бэлэг бэлдэх", product:"Бараа дэлгэрэнгүй", other:"Бусад" };
+  const dailyTotals = [];
+  const pageTotals = {};
+  for(let i = days-1; i >= 0; i--){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const label = (d.getMonth()+1) + "/" + d.getDate();
+    let total = 0;
+    Object.entries(trafficData).forEach(([k,v]) => {
+      if(k.startsWith(key)){ total += v; const page = k.split("|")[1] || "other"; pageTotals[page] = (pageTotals[page]||0) + v; }
+    });
+    dailyTotals.push({ label, total });
+  }
+  const grandTotal = dailyTotals.reduce((s,d)=>s+d.total,0);
+  const totalEl = document.getElementById("traffic-total");
+  if(totalEl) totalEl.textContent = grandTotal.toLocaleString() + " хандалт";
+  const W = 600, H = 100, pad = 4;
+  const maxV = Math.max(...dailyTotals.map(d=>d.total), 1);
+  const pts = dailyTotals.map((d,i) => {
+    const x = W * i / (dailyTotals.length-1 || 1);
+    const y = H - pad - (d.total/maxV) * (H - pad*2);
+    return `${x},${y}`;
+  });
+  const polyline = pts.join(" ");
+  const fx = pts[0].split(",")[0], lx = pts[pts.length-1].split(",")[0];
+  const area = `M${fx},${H} L${pts.join(" L")} L${lx},${H} Z`;
+  const svgEl = document.getElementById("traffic-svg");
+  if(svgEl) svgEl.innerHTML = `
+    <defs><linearGradient id="tgrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.04"/>
+    </linearGradient></defs>
+    ${[0,0.5,1].map(t=>`<line x1="0" y1="${pad+(H-pad*2)*t}" x2="${W}" y2="${pad+(H-pad*2)*t}" stroke="#e5e7eb" stroke-width="0.8"/>`).join("")}
+    <path d="${area}" fill="url(#tgrad)"/>
+    <polyline points="${polyline}" fill="none" stroke="#7C3AED" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dailyTotals.map((d,i)=>{ if(!d.total) return ""; const x=W*i/(dailyTotals.length-1||1), y=H-pad-(d.total/maxV)*(H-pad*2); return `<circle cx="${x}" cy="${y}" r="3" fill="#7C3AED"/>`; }).join("")}`;
+  const yEl = document.getElementById("traffic-y-labels");
+  if(yEl) yEl.innerHTML = [maxV, Math.round(maxV/2), 0].map(v=>`<span>${v}</span>`).join("");
+  const xEl = document.getElementById("traffic-labels");
+  if(xEl) xEl.innerHTML = dailyTotals.map((d,i)=>`<span style="flex:1;text-align:center">${i%2===0?d.label:""}</span>`).join("");
+  const pEl = document.getElementById("traffic-pages");
+  if(pEl) pEl.innerHTML = Object.entries(pageTotals).sort((a,b)=>b[1]-a[1]).map(([page,n])=>`
+    <span style="font-size:12px;background:var(--paper-deep);padding:4px 10px;border-radius:99px">
+      ${pageLabels[page]||page} <b style="color:#7C3AED">${n}</b>
+    </span>`).join("");
 }
 
 function renderDashboard(orders){
@@ -566,7 +644,7 @@ function renderDashboard(orders){
     { label: "Хүлээгдэж буй", value: pending + " ш", color: pending > 0 ? "#FF6698" : "#0F4B42" }
   ];
   document.getElementById("dash-kpis").innerHTML = kpis.map(k => `
-    <div class="step-panel" style="padding:18px 16px;text-align:center">
+    <div class="step-panel" style="padding:18px 16px;text-align:center;min-height:0">
       <div style="font-size:22px;font-weight:800;color:${k.color};font-family:var(--font-display)">${k.value}</div>
       <div style="font-size:12px;color:var(--ink-faint);margin-top:4px">${k.label}</div>
     </div>`).join("");

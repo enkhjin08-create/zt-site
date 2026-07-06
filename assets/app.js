@@ -208,3 +208,14 @@ function renderFooter(){
 }
 
 document.addEventListener("DOMContentLoaded", updateCartBadge);
+
+// Хуудас бүрт нэг удаа хандалт бүртгэнэ — ямар хуудас болохыг автоматаар тодорхойлно
+(function(){
+  const path = location.pathname;
+  const page = path.includes("product") ? "product"
+    : path.includes("category") ? "category"
+    : path.includes("builder") ? "builder"
+    : path.includes("admin") ? null  // admin-ыг хэмжихгүй
+    : "home";
+  if(page) fetch("/api/track?page=" + page).catch(()=>{});
+})();

@@ -13,6 +13,6 @@
   status = 200
 
 [[redirects]]
-  from = "/api/track"
-  to = "/.netlify/functions/track"
+  from = "/api/upload"
+  to = "/.netlify/functions/upload"
   status = 200

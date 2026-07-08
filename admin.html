@@ -350,29 +350,30 @@ let ordersCache = [];
 let activeStatus = "all";
 let adminPin = "";
 
-/* ---------------- Image upload (Cloudinary) ----------------
-   Зураг upload хийхийн тулд cloudinary.com дээр ҺНЭГЭН ҮНЭГҮЙ account үүсгэж,
-   "unsigned upload preset" үүсгэнэ (README.md-ийн "Зураг upload хийх" хэсгийг
-   үзээрэй) — дараа нь доорх 2 утгыг бөглөнө. Нууц түлхүүр (API Secret) ХЭЗЭЭ Ч
-   энд бичихгүй — зөвхөн Cloud name, Upload preset нэр хэрэгтэй (эдгээр нь
-   "нийтэд зориулагдсан" утга, нууц биш). */
-const CLOUDINARY_CLOUD_NAME = "dvpcihtou";
-const CLOUDINARY_UPLOAD_PRESET = "htjrjmre";
-
+/* ---------------- Image upload (GitHub) ----------------
+   Зураг upload хийхэд GitHub repo-д хадгалдаг.
+   Netlify env vars: GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH */
 async function uploadToCloudinary(file){
-  if(CLOUDINARY_CLOUD_NAME === "ОРУУЛНА_УУ"){
-    throw new Error("CONFIG_MISSING");
-  }
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-    method: "POST",
-    body: formData
+  // File-г base64 болгоно
+  const base64 = await new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result.split(",")[1]);
+    reader.onerror = () => rej(new Error("Read failed"));
+    reader.readAsDataURL(file);
   });
-  if(!res.ok) throw new Error("Upload failed");
+
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pin: adminPin, filename: file.name, content: base64 })
+  });
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error || "Upload failed");
+  }
   const data = await res.json();
-  return data.secure_url;
+  if(!data.ok || !data.url) throw new Error("URL буцаагүй");
+  return data.url;
 }
 
 function imageThumbHTML(url, removeHandlerJs){

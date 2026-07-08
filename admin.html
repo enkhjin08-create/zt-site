@@ -485,18 +485,23 @@ let customersCache = [];
 function buildCustomerList(orders){
   const map = {};
   orders.forEach(o => {
+    const email = (o.customerEmail || "").trim().toLowerCase();
     const phone = (o.customerPhone || "").trim();
-    const key = phone || (o.customerEmail || "").trim() || (o.customerName || "").trim();
+    const key = email || phone || (o.customerName || "").trim();
     if(!key) return;
     if(!map[key]){
       map[key] = {
         name: o.customerName || "—",
-        phone: o.customerPhone || "",
+        phone: phone,
         email: o.customerEmail || "",
         orders: 0,
         spent: 0,
         lastOrder: o.createdAt || ""
       };
+    }else{
+      if(o.customerName) map[key].name = o.customerName;
+      if(phone) map[key].phone = phone;
+      if(o.customerEmail) map[key].email = o.customerEmail;
     }
     map[key].orders++;
     if(o.status !== "cancelled") map[key].spent += (o.total || 0);

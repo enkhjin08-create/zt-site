@@ -93,7 +93,7 @@
 
       <!-- Recent orders -->
       <div style="background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius-card);padding:20px;box-shadow:var(--shadow-soft)">
-        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Сүүлийн 5 захиалга</h4>
+        <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Баталгаажсан захиалга</h4>
         <div id="dash-recent"></div>
       </div>
     </div>
@@ -722,7 +722,7 @@ function renderDashboard(orders){
     `<div style="flex:1;text-align:center;font-size:9px;color:var(--ink-faint)">${i%2===0?d.label:""}</div>`).join("");
 
   // Recent 5 orders
-  document.getElementById("dash-recent").innerHTML = orders.slice(0,5).map(o => {
+  document.getElementById("dash-recent").innerHTML = orders.filter(o => o.status === "confirmed").slice(0,5).map(o => {
     const st = STATUSES[o.status] || { label: o.status, color: "#888" };
     const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString("mn-MN") : "—";
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)">

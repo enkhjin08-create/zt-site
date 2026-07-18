@@ -54,25 +54,25 @@
 
       <!-- Orders by status -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:28px">
-        <div class="step-panel" style="padding:20px;min-height:0">
+        <div style="background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius-card);padding:20px;box-shadow:var(--shadow-soft)">
           <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Төлвөөр</h4>
           <div id="dash-by-status"></div>
         </div>
-        <div class="step-panel" style="padding:20px;min-height:0">
+        <div style="background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius-card);padding:20px;box-shadow:var(--shadow-soft)">
           <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Хамгийн их захиалагдсан</h4>
           <div id="dash-top-products"></div>
         </div>
       </div>
 
       <!-- Last 7 days trend -->
-      <div class="step-panel" style="padding:20px;margin-bottom:28px;min-height:0">
+      <div style="background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius-card);padding:20px;margin-bottom:28px;box-shadow:var(--shadow-soft)">
         <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Сүүлийн 14 хоног — захиалга</h4>
         <div id="dash-trend" style="display:flex;align-items:flex-end;gap:6px;height:80px"></div>
         <div id="dash-trend-labels" style="display:flex;gap:6px;margin-top:6px"></div>
       </div>
 
       <!-- Traffic chart -->
-      <div class="step-panel" style="padding:20px;margin-bottom:28px;min-height:0">
+      <div style="background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius-card);padding:20px;margin-bottom:28px;box-shadow:var(--shadow-soft)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin:0">Сүүлийн 14 хоногийн хандалт</h4>
           <select id="traffic-range" class="field-input" style="max-width:120px;font-size:12px" onchange="renderTrafficChart()">
@@ -92,7 +92,7 @@
       </div>
 
       <!-- Recent orders -->
-      <div class="step-panel" style="padding:20px;min-height:0">
+      <div style="background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius-card);padding:20px;box-shadow:var(--shadow-soft)">
         <h4 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:16px">Сүүлийн 5 захиалга</h4>
         <div id="dash-recent"></div>
       </div>
@@ -656,7 +656,7 @@ function renderDashboard(orders){
     { label: "Хүлээгдэж буй", value: pending + " ш", color: pending > 0 ? "#FF6698" : "#0F4B42" }
   ];
   document.getElementById("dash-kpis").innerHTML = kpis.map(k => `
-    <div class="step-panel" style="padding:18px 16px;text-align:center;min-height:0">
+    <div style="background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius-card);padding:18px 16px;text-align:center;box-shadow:var(--shadow-soft)">
       <div style="font-size:22px;font-weight:800;color:${k.color};font-family:var(--font-display)">${k.value}</div>
       <div style="font-size:12px;color:var(--ink-faint);margin-top:4px">${k.label}</div>
     </div>`).join("");

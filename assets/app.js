@@ -149,12 +149,16 @@ function priceRowHTML(p){
 }
 
 function productCardHTML(p){
+  const inWishlist = typeof getWishlist === "function" && getWishlist().includes(Number(p.id));
   return `<div class="product-card" data-id="${p.id}">
     <a href="product.html?id=${p.id}">${productArtHTML(p)}</a>
     <div class="product-body">
       <a href="product.html?id=${p.id}" class="name">${p.name}</a>
       ${priceRowHTML(p)}
-      <button class="btn btn-ghost btn-sm product-add-btn" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""} style="width:100%;margin-top:10px">${p.soldOut ? "Дууссан" : "Нэмэх"}</button>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-ghost btn-sm product-add-btn" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""} style="flex:1">${p.soldOut ? "Дууссан" : "Нэмэх"}</button>
+        <button class="btn btn-ghost btn-sm" onclick="handleWishlist(${p.id}, this)" style="padding:8px 10px;font-size:16px" title="Хадгалах">${inWishlist ? "❤️" : "🤍"}</button>
+      </div>
     </div>
   </div>`;
 }
@@ -167,7 +171,8 @@ function renderHeader(active){
     ["builder.html","Бэлэг бэлдэх"],
   ];
   const navLinks = links.map(([href,label]) =>
-    `<a href="${href}" class="${active===href ? "active" : ""}">${label}</a>`).join("");
+    `<a href="${href}" class="${active===href ? "active" : ""}">${label}</a>`).join("")
+    + `<a href="https://kidsbook.zuvhuntuund.com/" target="_blank" rel="noopener">📖 Хүүхдийн ном</a>`;
   const html = `
   <div class="wrap">
     <a href="index.html" class="logo">
@@ -176,6 +181,7 @@ function renderHeader(active){
     </a>
     <nav class="main-nav">${navLinks}</nav>
     <a class="nav-cart" href="builder.html?view=cart"><span>🎁 Сагс</span><span class="count">0</span></a>
+    <a href="profile.html" style="font-size:22px;text-decoration:none" title="Профайл">👤</a>
   </div>`;
   document.querySelectorAll(".site-header").forEach(el => el.innerHTML = html);
   updateCartBadge();
@@ -208,6 +214,22 @@ function renderFooter(){
 }
 
 document.addEventListener("DOMContentLoaded", updateCartBadge);
+
+async function handleWishlist(productId, btn){
+  if(typeof isLoggedIn === "function" && !isLoggedIn()){
+    location.href = "profile.html";
+    return;
+  }
+  try{
+    const data = await toggleWishlist(productId);
+    if(data){
+      const inList = (data.wishlist || []).includes(Number(productId));
+      btn.textContent = inList ? "❤️" : "🤍";
+    }
+  }catch(e){
+    location.href = "profile.html";
+  }
+}
 
 // Хуудас бүрт нэг удаа хандалт бүртгэнэ — ямар хуудас болохыг автоматаар тодорхойлно
 (function(){

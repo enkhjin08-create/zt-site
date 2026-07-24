@@ -1,6 +1,12 @@
 /* ============================================================
    Зөвхөн түүнд — Хандалт хэмжих Function
-   
+
+   ⚠️ Хандалтын өгөгдлийг ТУСДАА JSONBin bin-д хадгална (захиалга/барааны
+   bin-тэй ХОЛИХГҮЙ) — ингэснээр олон хэрэглэгч зэрэг хуудас нээх үед
+   (race condition) захиалга/барааны чухал өгөгдөл дарагдаж устах эрсдэлийг
+   бүрэн арилгана. Шинэ орчны хувьсагч шаардлагатай:
+   - PAGEVIEWS_BIN_ID → шинэ, ХООСОН JSONBin bin (агуулга: {"pageviews":{}})
+
    GET  /api/track?page=home     → нийтэд нээлттэй, нэг хандалт бүртгэнэ
    GET  /api/track?action=stats&pin=... → зөвхөн админ, статистик буцаана
    ============================================================ */
@@ -20,8 +26,16 @@ function checkPin(pin){
   return typeof real === "string" && real.length > 0 && pin === real;
 }
 
+function pageviewsBinId(){
+  // Хэрэв тусдаа bin тохируулаагүй бол л, аюулгүй байдлын үүднээс
+  // fallback-аар үндсэн bin руу орохгүй — тохиргоо дутуу гэдгийг тодорхой алдаагаар мэдэгдэнэ.
+  return process.env.PAGEVIEWS_BIN_ID;
+}
+
 async function readViews(){
-  const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID + "/latest", {
+  const binId = pageviewsBinId();
+  if(!binId) throw new Error("PAGEVIEWS_BIN_ID тохируулаагүй байна");
+  const res = await fetch(JSONBIN_BASE + binId + "/latest", {
     headers: { "X-Master-Key": process.env.JSONBIN_MASTER_KEY }
   });
   if(!res.ok) throw new Error("read failed");
@@ -30,23 +44,15 @@ async function readViews(){
   return record.pageviews || {};
 }
 
-async function writeViews(doc, pageviews){
-  const updated = Object.assign({}, doc, { pageviews });
-  const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID, {
+async function writeViews(pageviews){
+  const binId = pageviewsBinId();
+  if(!binId) throw new Error("PAGEVIEWS_BIN_ID тохируулаагүй байна");
+  const res = await fetch(JSONBIN_BASE + binId, {
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-Master-Key": process.env.JSONBIN_MASTER_KEY },
-    body: JSON.stringify(updated)
+    body: JSON.stringify({ pageviews })
   });
   if(!res.ok) throw new Error("write failed");
-}
-
-async function readFullDoc(){
-  const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID + "/latest", {
-    headers: { "X-Master-Key": process.env.JSONBIN_MASTER_KEY }
-  });
-  if(!res.ok) throw new Error("read failed");
-  const data = await res.json();
-  return data.record || {};
 }
 
 exports.handler = async (event) => {
@@ -59,6 +65,7 @@ exports.handler = async (event) => {
       const pageviews = await readViews();
       return json(200, { ok: true, pageviews });
     }catch(e){
+      console.error("[track stats error]", e.message);
       return json(500, { error: "Server error" });
     }
   }
@@ -69,13 +76,14 @@ exports.handler = async (event) => {
     const page = (params.page || "other").slice(0, 30);
     const key = today + "|" + page;
 
-    // Read-modify-write with simple retry
+    // Read-modify-write with retry — учир нь энэ нь ЗӨВХӨН pageviews bin-д
+    // хамааралтай тул хоцрогдсон бичилт нь хамгийн муугаараа зөвхөн хандалтын
+    // тоог алдагдуулна, захиалга/барааны өгөгдөлд НӨЛӨӨЛӨХГҮЙ.
     for(let attempt = 0; attempt < 3; attempt++){
-      const doc = await readFullDoc();
-      const pageviews = doc.pageviews || {};
-      pageviews[key] = (pageviews[key] || 0) + 1;
       try{
-        await writeViews(doc, pageviews);
+        const pageviews = await readViews();
+        pageviews[key] = (pageviews[key] || 0) + 1;
+        await writeViews(pageviews);
         break;
       }catch(e){
         if(attempt === 2) throw e;
@@ -85,6 +93,7 @@ exports.handler = async (event) => {
     return json(200, { ok: true });
   }catch(e){
     // Tracking failure should never break the site — silently fail
+    console.error("[track error]", e.message);
     return json(200, { ok: true });
   }
 };

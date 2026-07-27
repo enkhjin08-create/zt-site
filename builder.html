@@ -63,6 +63,25 @@ if(urlParams.get("view") === "cart" && (box.itemIds.length || box.containerId)){
   step = 8;
 }
 
+// Хэрэв хэрэглэгч нэвтэрсэн бол, хайрцагт хэрэглэгчийн/хаягийн мэдээлэл
+// байхгүй (хоосон) талбаруудыг л профайлаас автоматаар дүүргэнэ — дахин
+// бичих шаардлагагүй болно.
+if(typeof isLoggedIn === "function" && isLoggedIn()){
+  getProfile().then(data => {
+    const u = data.user;
+    let changed = false;
+    if(!box.customerName && u.name){ box.customerName = u.name; changed = true; }
+    if(!box.customerPhone && u.phone){ box.customerPhone = u.phone; changed = true; }
+    if(!box.customerEmail && u.email){ box.customerEmail = u.email; changed = true; }
+    if(u.address){
+      if(!box.deliveryDistrict && u.address.district){ box.deliveryDistrict = u.address.district; changed = true; }
+      if(!box.deliveryKhoroo && u.address.khoroo){ box.deliveryKhoroo = u.address.khoroo; changed = true; }
+      if(!box.deliveryAddress && u.address.detail){ box.deliveryAddress = u.address.detail; changed = true; }
+    }
+    if(changed){ saveBox(box); renderStepPanel(); }
+  }).catch(()=>{}); // нэвтрэлт хугацаа дууссан бол чимээгүй алгасна
+}
+
 let recFilterOn = false;
 let orderRegistered = false;
 

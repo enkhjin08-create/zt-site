@@ -65,6 +65,9 @@ async function adminClearOverride(pin, id){
 async function adminAddCategory(pin, category){
   return callProductsApi({ action: "addCategory", pin, category });
 }
+async function adminUpdateCategory(pin, key, label, iconRef){
+  return callProductsApi({ action: "updateCategory", pin, key, label, iconRef });
+}
 async function adminDeleteCategory(pin, key){
   return callProductsApi({ action: "deleteCategory", pin, key });
 }

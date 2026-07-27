@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Профайл — Зөвхөн түүнд</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header"></header>
+
+<div class="wrap page-head">
+  <p class="crumb"><a href="index.html">Нүүр</a> / Профайл</p>
+  <h1>Миний профайл</h1>
+</div>
+
+<div class="wrap section" style="padding-top:14px;max-width:640px">
+
+  <!-- Login form -->
+  <div id="login-section" class="step-panel" style="min-height:0;display:none">
+    <h2 style="font-size:20px;margin-bottom:6px">Нэвтрэх</h2>
+    <p class="lede" style="font-size:14px">Имэйл хаягаа оруулвал нэвтрэх холбоос илгээнэ.</p>
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+      <input id="login-email" class="field-input" type="email" placeholder="таны@имэйл.com" style="flex:1;min-width:200px">
+      <button class="btn btn-primary" onclick="doSendMagicLink()" id="login-btn">Холбоос илгээх</button>
+    </div>
+    <p id="login-msg" style="font-size:13px;margin-top:10px;color:var(--ink-faint)"></p>
+  </div>
+
+  <!-- Magic link sent -->
+  <div id="sent-section" class="step-panel" style="min-height:0;display:none;text-align:center">
+    <div style="font-size:36px">📬</div>
+    <h2 style="font-size:20px;margin:10px 0 6px">Имэйл илгээгдлээ!</h2>
+    <p class="lede" style="font-size:14px">Имэйл хайрцагаа шалгаад нэвтрэх холбоос дээр дарна уу.<br>30 минутын дотор нэвтэрнэ үү.</p>
+  </div>
+
+  <!-- Profile -->
+  <div id="profile-section" style="display:none">
+
+    <div class="step-panel" style="min-height:0;margin-bottom:20px;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <h2 style="font-size:18px;margin:0">Хувийн мэдээлэл</h2>
+        <button class="btn btn-ghost btn-sm" onclick="doLogout()">Гарах</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label class="field-label">Нэр</label>
+          <input id="prof-name" class="field-input" type="text" placeholder="Таны нэр">
+        </div>
+        <div>
+          <label class="field-label">Утасны дугаар</label>
+          <input id="prof-phone" class="field-input" type="tel" placeholder="9911XXXX">
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <label class="field-label">Хүргэлтийн хаяг</label>
+        <div class="grid-2" style="margin-top:6px">
+          <select id="prof-district" class="field-input">
+            <option value="">Дүүрэг сонгох</option>
+            <option>Баянзүрх</option><option>Сүхбаатар</option><option>Чингэлтэй</option>
+            <option>Хан-Уул</option><option>Баянгол</option><option>Сонгинохайрхан</option>
+            <option>Налайх</option><option>Багануур</option><option>Багахангай</option>
+          </select>
+          <input id="prof-khoroo" class="field-input" type="text" placeholder="Хороо (заавал биш)">
+        </div>
+        <textarea id="prof-address" class="field-input" style="margin-top:10px;min-height:60px;resize:vertical" placeholder="Гудамж, байр, тоот..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="doUpdateProfile()" id="save-btn" style="margin-top:18px">Хадгалах</button>
+      <span id="save-msg" style="font-size:13px;margin-left:12px;color:var(--ink-faint)"></span>
+    </div>
+
+    <!-- Wishlist -->
+    <div class="step-panel" style="min-height:0;margin-bottom:20px;padding:24px">
+      <h2 style="font-size:18px;margin-bottom:16px">❤️ Хадгалсан бараа</h2>
+      <div class="product-grid" id="wishlist-grid"></div>
+      <div id="wishlist-empty" class="empty-state" style="display:none">Хадгалсан бараа алга байна.</div>
+    </div>
+
+    <!-- Order history -->
+    <div class="step-panel" style="min-height:0;padding:24px">
+      <h2 style="font-size:18px;margin-bottom:16px">📦 Захиалгын түүх</h2>
+      <div id="order-history"></div>
+      <div id="orders-empty" class="empty-state" style="display:none">Захиалга байхгүй байна.</div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer"></footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/products-api.js"></script>
+<script src="assets/auth.js"></script>
+<script>
+renderHeader("profile.html");
+renderFooter();
+
+const STATUSES = {
+  new:       { label: "Шинэ",         color: "#FF6698" },
+  confirmed: { label: "Баталгаажсан", color: "#0F4B42" },
+  done:      { label: "Хийгдсэн",     color: "#0F4B42" },
+  cancelled: { label: "Цуцалсан",     color: "#888" }
+};
+
+// Check for magic link token in URL
+(async function init(){
+  const params = new URLSearchParams(location.search);
+  const token = params.get("token");
+  const email = params.get("email");
+
+  if(token && email){
+    try{
+      await verifyToken(email, token);
+      history.replaceState(null, "", "/profile.html");
+      loadProfile();
+    }catch(e){
+      document.getElementById("login-section").style.display = "";
+      document.getElementById("login-msg").textContent = "Холбоос хүчингүй эсвэл хугацаа дууссан. Дахин нэвтрэх холбоос авна уу.";
+      document.getElementById("login-msg").style.color = "var(--ribbon-dark)";
+    }
+    return;
+  }
+
+  if(isLoggedIn()){
+    loadProfile();
+  }else{
+    document.getElementById("login-section").style.display = "";
+  }
+})();
+
+async function doSendMagicLink(){
+  const email = document.getElementById("login-email").value.trim();
+  if(!email){ return; }
+  const btn = document.getElementById("login-btn");
+  const msg = document.getElementById("login-msg");
+  btn.disabled = true; btn.textContent = "Илгээж байна...";
+  try{
+    await sendMagicLink(email);
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("sent-section").style.display = "";
+  }catch(e){
+    msg.textContent = "Алдаа гарлаа: " + e.message;
+    msg.style.color = "var(--ribbon-dark)";
+    btn.disabled = false; btn.textContent = "Холбоос илгээх";
+  }
+}
+
+async function loadProfile(){
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("profile-section").style.display = "";
+  try{
+    await initProducts();
+    const data = await getProfile();
+    const { user, orders } = data;
+    // Fill profile fields
+    document.getElementById("prof-name").value = user.name || "";
+    document.getElementById("prof-phone").value = user.phone || "";
+    if(user.address){
+      document.getElementById("prof-district").value = user.address.district || "";
+      document.getElementById("prof-khoroo").value = user.address.khoroo || "";
+      document.getElementById("prof-address").value = user.address.detail || "";
+    }
+    // Wishlist
+    renderWishlist(user.wishlist || []);
+    // Orders
+    renderOrderHistory(orders);
+  }catch(e){
+    if(e.status === 401){ doLogout(); return; }
+  }
+}
+
+function renderWishlist(wishlist){
+  const grid = document.getElementById("wishlist-grid");
+  const empty = document.getElementById("wishlist-empty");
+  const items = wishlist.map(id => PRODUCTS.find(p => p.id === Number(id))).filter(Boolean);
+  if(!items.length){ grid.innerHTML = ""; empty.style.display = ""; return; }
+  empty.style.display = "none";
+  grid.innerHTML = items.map(p => productCardHTML(p)).join("");
+}
+
+function renderOrderHistory(orders){
+  const wrap = document.getElementById("order-history");
+  const empty = document.getElementById("orders-empty");
+  if(!orders || !orders.length){ wrap.innerHTML = ""; empty.style.display = ""; return; }
+  empty.style.display = "none";
+  wrap.innerHTML = orders.map(o => {
+    const st = STATUSES[o.status] || { label: o.status, color: "#888" };
+    const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString("mn-MN") : "—";
+    const items = (o.items || []).map(i => i.name).join(", ");
+    return `<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div>
+          <span style="font-weight:700">№${o.orderNumber || "—"}</span>
+          <span style="font-size:12px;color:var(--ink-faint);margin-left:8px">${date}</span>
+        </div>
+        <span style="font-size:12px;font-weight:700;color:${st.color}">${st.label}</span>
+      </div>
+      ${items ? `<div style="font-size:13px;color:var(--ink-soft);margin-top:6px">${escapeHTML(items)}</div>` : ""}
+      <div style="font-weight:700;color:var(--ribbon-dark);margin-top:8px">${formatPrice(o.total || 0)}</div>
+    </div>`;
+  }).join("");
+}
+
+async function doUpdateProfile(){
+  const btn = document.getElementById("save-btn");
+  const msg = document.getElementById("save-msg");
+  btn.disabled = true; btn.textContent = "Хадгалж байна...";
+  try{
+    await updateProfile({
+      name: document.getElementById("prof-name").value.trim(),
+      phone: document.getElementById("prof-phone").value.trim(),
+      address: {
+        district: document.getElementById("prof-district").value,
+        khoroo: document.getElementById("prof-khoroo").value.trim(),
+        detail: document.getElementById("prof-address").value.trim()
+      }
+    });
+    msg.textContent = "Хадгалагдлаа ✓";
+    msg.style.color = "var(--sage)";
+  }catch(e){
+    msg.textContent = "Алдаа: " + e.message;
+    msg.style.color = "var(--ribbon-dark)";
+  }
+  btn.disabled = false; btn.textContent = "Хадгалах";
+  setTimeout(() => { msg.textContent = ""; }, 3000);
+}
+
+function doLogout(){
+  clearSession();
+  location.reload();
+}
+</script>
+</body>
+</html>

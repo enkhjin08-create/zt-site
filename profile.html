@@ -12,6 +12,7 @@
 <div class="wrap page-head">
   <p class="crumb"><a href="index.html">Нүүр</a> / Профайл</p>
   <h1>Миний профайл</h1>
+  <p class="lede" id="profile-hint" style="display:none">Профайлдаа хандахын тулд эхлээд нэвтэрнэ үү 👇</p>
 </div>
 
 <div class="wrap section" style="padding-top:14px;max-width:640px">
@@ -104,27 +105,36 @@ const STATUSES = {
 
 // Check for magic link token in URL
 (async function init(){
-  const params = new URLSearchParams(location.search);
-  const token = params.get("token");
-  const email = params.get("email");
+  try{
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    const email = params.get("email");
 
-  if(token && email){
-    try{
-      await verifyToken(email, token);
-      history.replaceState(null, "", "/profile.html");
-      loadProfile();
-    }catch(e){
-      document.getElementById("login-section").style.display = "";
-      document.getElementById("login-msg").textContent = "Холбоос хүчингүй эсвэл хугацаа дууссан. Дахин нэвтрэх холбоос авна уу.";
-      document.getElementById("login-msg").style.color = "var(--ribbon-dark)";
+    if(token && email){
+      try{
+        await verifyToken(email, token);
+        history.replaceState(null, "", "/profile.html");
+        await loadProfile();
+      }catch(e){
+        document.getElementById("login-section").style.display = "";
+        document.getElementById("login-msg").textContent = "Холбоос хүчингүй эсвэл хугацаа дууссан. Дахин нэвтрэх холбоос авна уу.";
+        document.getElementById("login-msg").style.color = "var(--ribbon-dark)";
+      }
+      return;
     }
-    return;
-  }
 
-  if(isLoggedIn()){
-    loadProfile();
-  }else{
+    if(isLoggedIn()){
+      await loadProfile();
+    }else{
+      document.getElementById("login-section").style.display = "";
+      document.getElementById("profile-hint").style.display = "";
+    }
+  }catch(e){
+    // Ямар нэгэн урьдчилан бодоогүй алдаа гарсан ч хоосон дэлгэц биш,
+    // ядаж л нэвтрэх маягт харагдана.
+    console.error("[profile init error]", e);
     document.getElementById("login-section").style.display = "";
+    document.getElementById("profile-hint").style.display = "";
   }
 })();
 

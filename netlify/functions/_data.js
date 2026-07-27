@@ -6,6 +6,13 @@
    - Netlify Blobs нь Netlify-тай угаас нэгтгэгдсэн, тусдаа бүртгэл/
      API key шаардахгүй, чөлөөтэй хэмжээтэй хадгалалт
 
+   ⚠️ Зарим орчинд Netlify Blobs-ийн context автоматаар тохируулагдахгүй
+   тул (алдаа: "environment has not been configured...") дараах 2 орчны
+   хувьсагчийг ГАРААР тохируулах шаардлагатай:
+   - NETLIFY_SITE_ID    → Site configuration → General → Site details → Site ID
+   - NETLIFY_BLOBS_TOKEN → Personal Access Token (User settings → Applications
+     → New access token, ямар нэгэн тусгай эрх шаардахгүй)
+
    Бүх Function (orders, products, auth) энэ модулийг ашиглаж
    ЯГ ИЖИЛ "main" гэсэн нэг blob-г уншиж/бичдэг — өгөгдлийн бүтэц
    өмнөх JSONBin баримт бичигтэй бүрэн ижил хэвээр байна:
@@ -31,12 +38,23 @@ const EMPTY_DOC = {
   users: {}
 };
 
+// Хэрэв автомат context ажиллахгүй бол (жишээ: "environment has not been
+// configured..." алдаа) siteID/token-ийг гараар дамжуулна.
+function storeConfig(name){
+  const siteID = process.env.NETLIFY_SITE_ID;
+  const token = process.env.NETLIFY_BLOBS_TOKEN;
+  if(siteID && token){
+    return { name, siteID, token };
+  }
+  return name; // автомат context ажиллаж байгаа орчинд зүгээр нэрийг дамжуулна
+}
+
 function mainStore(){
-  return getStore("zt-data");
+  return getStore(storeConfig("zt-data"));
 }
 
 function pageviewsStore(){
-  return getStore("zt-pageviews");
+  return getStore(storeConfig("zt-pageviews"));
 }
 
 async function readDoc(){

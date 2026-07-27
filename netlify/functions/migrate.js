@@ -13,6 +13,15 @@
 
 const { getStore } = require("@netlify/blobs");
 
+function storeConfig(name){
+  const siteID = process.env.NETLIFY_SITE_ID;
+  const token = process.env.NETLIFY_BLOBS_TOKEN;
+  if(siteID && token){
+    return { name, siteID, token };
+  }
+  return name;
+}
+
 function json(status, body){
   return {
     statusCode: status,
@@ -3312,10 +3321,10 @@ exports.handler = async (event) => {
   if(!checkPin(params.pin)) return json(401, { error: "Invalid PIN" });
 
   try{
-    const mainStore = getStore("zt-data");
+    const mainStore = getStore(storeConfig("zt-data"));
     await mainStore.setJSON("main", MAIN_DOC);
 
-    const pvStore = getStore("zt-pageviews");
+    const pvStore = getStore(storeConfig("zt-pageviews"));
     await pvStore.setJSON("views", PAGEVIEWS);
 
     return json(200, {

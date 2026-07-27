@@ -2,14 +2,14 @@
    Зөвхөн түүнд — Захиалгын Netlify Function (серверийн код)
 
    ЭНЭ ФАЙЛ ДОТОР ХАРАГДАХ ЗҮЙЛС ХЭН Ч ХАРАХГҮЙ — браузер руу хэзээ ч
-   илгээгдэхгүй. JSONBIN_MASTER_KEY, ADMIN_PIN хоёулыг Netlify Site
-   Settings → Environment variables дотроос унших ёстой бөгөөд эх
-   кодод бичигдэхгүй (README.md-ийн "Жинхэнэ нууцлал" хэсгийг үзээрэй).
+   илгээгдэхгүй. ADMIN_PIN-г Netlify Site Settings → Environment variables
+   дотроос унших ёстой бөгөөд эх кодод бичигдэхгүй.
 
-   ⚠️ Энэ Function products.js, coupons.js-тэй ИЖИЛ JSONBin bin-ийг хуваан
-   ашигладаг тул readDoc/writeDoc нь БҦХ түлхүүрийг (orders, products,
-   overrides, categories, recipients, coupons) хадгалж байх ЁСТОЙ —
-   эс бөгөөс нэг Function-ийн бичилт нөгөөгийнхөө мэдээллийг устгана.
+   ⚠️ Өгөгдлийн хадгалалт: Netlify Blobs ашиглана (JSONBin.io-с шилжсэн, 2026-07).
+   Энэ Function products.js-тэй ИЖИЛ blob-ийг хуваан ашигладаг тул readDoc/writeDoc
+   нь БҦХ түлхүүрийг (orders, products, overrides, categories, recipients,
+   recipientOverrides, coupons, users) хадгалж байх ЁСТОЙ — эс бөгөөс нэг
+   Function-ийн бичилт нөгөөгийнхөө мэдээллийг устгана (_data.js-г үзнэ үү).
 
    Шинэ захиалга ирэх бүрд админ руу, мөн төлөв өөрчлөгдөх бүрд ЗАХИАЛАГЧ руу
    имэйл мэдэгдэл явуулна (Resend.com ашиглана, заавал биш — RESEND_API_KEY
@@ -25,7 +25,7 @@
    - action="updateStatus"   → зөвхөн зөв PIN-тэй бол төлөв шинэчилнэ
    ============================================================ */
 
-const JSONBIN_BASE = "https://api.jsonbin.io/v3/b/";
+const { readDoc, writeDoc } = require("./_data.js");
 
 function json(status, body){
   return {
@@ -33,33 +33,6 @@ function json(status, body){
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   };
-}
-
-async function readDoc(){
-  const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID + "/latest", {
-    headers: { "X-Master-Key": process.env.JSONBIN_MASTER_KEY }
-  });
-  if(!res.ok) throw new Error("JSONBin read failed: " + res.status);
-  const data = await res.json();
-  const record = data.record || {};
-  return {
-    orders: Array.isArray(record.orders) ? record.orders : [],
-    products: Array.isArray(record.products) ? record.products : [],
-    overrides: (record.overrides && typeof record.overrides === "object") ? record.overrides : {},
-    categories: (record.categories && typeof record.categories === "object") ? record.categories : {},
-    recipients: (record.recipients && typeof record.recipients === "object") ? record.recipients : {},
-    recipientOverrides: (record.recipientOverrides && typeof record.recipientOverrides === "object") ? record.recipientOverrides : {},
-    coupons: (record.coupons && typeof record.coupons === "object") ? record.coupons : {}
-  };
-}
-
-async function writeDoc(doc){
-  const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", "X-Master-Key": process.env.JSONBIN_MASTER_KEY },
-    body: JSON.stringify(doc)
-  });
-  if(!res.ok) throw new Error("JSONBin write failed: " + res.status);
 }
 
 function checkPin(pin){
@@ -151,7 +124,7 @@ async function sendOrderNotificationEmail(order){
     </div>`;
 
   try{
-    await fetch("https://api.resend.com/emails", {
+    const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.RESEND_API_KEY },
       body: JSON.stringify({
@@ -161,8 +134,14 @@ async function sendOrderNotificationEmail(order){
         html: html
       })
     });
+    if(!emailRes.ok){
+      const errText = await emailRes.text();
+      console.error("[Admin email error]", emailRes.status, errText);
+    }else{
+      console.log("[Admin email sent] to:", to, "from:", from);
+    }
   }catch(e){
-    // Мэйл явуулахад алдаа гарсан ч захиалга аль хэдийн хадгалагдсан тул дахин шидэхгүй.
+    console.error("[Admin email exception]", e.message);
   }
 }
 
@@ -196,7 +175,7 @@ async function sendStatusUpdateEmail(order, newStatus){
     </div>`;
 
   try{
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.RESEND_API_KEY },
       body: JSON.stringify({
@@ -206,17 +185,18 @@ async function sendStatusUpdateEmail(order, newStatus){
         html: html
       })
     });
+    if(!res.ok){
+      const errBody = await res.text();
+      console.error("[Resend status email error]", res.status, errBody);
+    }
   }catch(e){
-    // Мэйл явуулахад алдаа гарсан ч төлөв шинэчлэлт аль хэдийн хадгалагдсан тул дахин шидэхгүй.
+    console.error("[Resend status email exception]", e.message);
   }
 }
 
 exports.handler = async (event) => {
   if(event.httpMethod !== "POST"){
     return json(405, { error: "Method not allowed" });
-  }
-  if(!process.env.JSONBIN_BIN_ID || !process.env.JSONBIN_MASTER_KEY){
-    return json(500, { error: "Серверт JSONBIN тохиргоо дутуу байна (Netlify Environment variables)" });
   }
 
   let body;

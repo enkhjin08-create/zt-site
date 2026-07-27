@@ -1,17 +1,15 @@
 /* ============================================================
    Зөвхөн түүнд — Хандалт хэмжих Function
 
-   ⚠️ Хандалтын өгөгдлийг ТУСДАА JSONBin bin-д хадгална (захиалга/барааны
-   bin-тэй ХОЛИХГҮЙ) — ингэснээр олон хэрэглэгч зэрэг хуудас нээх үед
-   (race condition) захиалга/барааны чухал өгөгдөл дарагдаж устах эрсдэлийг
-   бүрэн арилгана. Шинэ орчны хувьсагч шаардлагатай:
-   - PAGEVIEWS_BIN_ID → шинэ, ХООСОН JSONBin bin (агуулга: {"pageviews":{}})
+   ⚠️ Өгөгдлийн хадгалалт: Netlify Blobs ашиглана (JSONBin.io-с шилжсэн, 2026-07),
+   тусдаа "zt-pageviews" store-д хадгалагдана — захиалга/барааны өгөгдөлтэй
+   огт холилдохгүй (_data.js-г үзнэ үү).
 
    GET  /api/track?page=home     → нийтэд нээлттэй, нэг хандалт бүртгэнэ
    GET  /api/track?action=stats&pin=... → зөвхөн админ, статистик буцаана
    ============================================================ */
 
-const JSONBIN_BASE = "https://api.jsonbin.io/v3/b/";
+const { readPageviews, writePageviews } = require("./_data.js");
 
 function json(status, body){
   return {
@@ -26,35 +24,6 @@ function checkPin(pin){
   return typeof real === "string" && real.length > 0 && pin === real;
 }
 
-function pageviewsBinId(){
-  // Хэрэв тусдаа bin тохируулаагүй бол л, аюулгүй байдлын үүднээс
-  // fallback-аар үндсэн bin руу орохгүй — тохиргоо дутуу гэдгийг тодорхой алдаагаар мэдэгдэнэ.
-  return process.env.PAGEVIEWS_BIN_ID;
-}
-
-async function readViews(){
-  const binId = pageviewsBinId();
-  if(!binId) throw new Error("PAGEVIEWS_BIN_ID тохируулаагүй байна");
-  const res = await fetch(JSONBIN_BASE + binId + "/latest", {
-    headers: { "X-Master-Key": process.env.JSONBIN_MASTER_KEY }
-  });
-  if(!res.ok) throw new Error("read failed");
-  const data = await res.json();
-  const record = data.record || {};
-  return record.pageviews || {};
-}
-
-async function writeViews(pageviews){
-  const binId = pageviewsBinId();
-  if(!binId) throw new Error("PAGEVIEWS_BIN_ID тохируулаагүй байна");
-  const res = await fetch(JSONBIN_BASE + binId, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", "X-Master-Key": process.env.JSONBIN_MASTER_KEY },
-    body: JSON.stringify({ pageviews })
-  });
-  if(!res.ok) throw new Error("write failed");
-}
-
 exports.handler = async (event) => {
   const params = event.queryStringParameters || {};
 
@@ -62,7 +31,7 @@ exports.handler = async (event) => {
   if(params.action === "stats"){
     if(!checkPin(params.pin)) return json(401, { error: "Invalid PIN" });
     try{
-      const pageviews = await readViews();
+      const pageviews = await readPageviews();
       return json(200, { ok: true, pageviews });
     }catch(e){
       console.error("[track stats error]", e.message);
@@ -76,14 +45,11 @@ exports.handler = async (event) => {
     const page = (params.page || "other").slice(0, 30);
     const key = today + "|" + page;
 
-    // Read-modify-write with retry — учир нь энэ нь ЗӨВХӨН pageviews bin-д
-    // хамааралтай тул хоцрогдсон бичилт нь хамгийн муугаараа зөвхөн хандалтын
-    // тоог алдагдуулна, захиалга/барааны өгөгдөлд НӨЛӨӨЛӨХГҮЙ.
     for(let attempt = 0; attempt < 3; attempt++){
       try{
-        const pageviews = await readViews();
+        const pageviews = await readPageviews();
         pageviews[key] = (pageviews[key] || 0) + 1;
-        await writeViews(pageviews);
+        await writePageviews(pageviews);
         break;
       }catch(e){
         if(attempt === 2) throw e;

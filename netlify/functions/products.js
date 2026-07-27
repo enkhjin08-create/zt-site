@@ -13,8 +13,9 @@
    assets/data.js файл өөрөө хэвээр үлдэнэ — зүгээр сайт ачаалах үед эдгээр
    засвар/нэмэлт дээр нь "наалддаг" (overlay).
 
-   Захиалгын Function-тэй ИЖИЛ JSONBin bin-ийг ашигладаг тул бичих
-   үед нөгөөгийнхөө мэдээллийг устгахгүйн тулд бүтэн баримтыг уншиж бичнэ.
+   ⚠️ Өгөгдлийн хадгалалт: Netlify Blobs ашиглана (JSONBin.io-с шилжсэн, 2026-07).
+   Захиалгын Function-тэй ИЖИЛ blob-ийг ашигладаг тул бичих үед нөгөөгийнхөө
+   мэдээллийг устгахгүйн тулд бүтэн баримтыг уншиж бичнэ (_data.js-г үзнэ үү).
 
    10 үйлдэл дэмжинэ:
    - action="list"            → нийтэд нээлттэй — бараа + засвар + ангилал + хүлээн авагч буцаана
@@ -29,7 +30,7 @@
    - action="deleteRecipient" → зөв PIN-тэй бол нэмсэн хүлээн авагчийг устгана
    ============================================================ */
 
-const JSONBIN_BASE = "https://api.jsonbin.io/v3/b/";
+const { readDoc, writeDoc } = require("./_data.js");
 
 function json(status, body){
   return {
@@ -37,33 +38,6 @@ function json(status, body){
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   };
-}
-
-async function readDoc(){
-  const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID + "/latest", {
-    headers: { "X-Master-Key": process.env.JSONBIN_MASTER_KEY }
-  });
-  if(!res.ok) throw new Error("JSONBin read failed: " + res.status);
-  const data = await res.json();
-  const record = data.record || {};
-  return {
-    orders: Array.isArray(record.orders) ? record.orders : [],
-    products: Array.isArray(record.products) ? record.products : [],
-    overrides: (record.overrides && typeof record.overrides === "object") ? record.overrides : {},
-    categories: (record.categories && typeof record.categories === "object") ? record.categories : {},
-    recipients: (record.recipients && typeof record.recipients === "object") ? record.recipients : {},
-    recipientOverrides: (record.recipientOverrides && typeof record.recipientOverrides === "object") ? record.recipientOverrides : {},
-    coupons: (record.coupons && typeof record.coupons === "object") ? record.coupons : {}
-  };
-}
-
-async function writeDoc(doc){
-  const res = await fetch(JSONBIN_BASE + process.env.JSONBIN_BIN_ID, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", "X-Master-Key": process.env.JSONBIN_MASTER_KEY },
-    body: JSON.stringify(doc)
-  });
-  if(!res.ok) throw new Error("JSONBin write failed: " + res.status);
 }
 
 function checkPin(pin){
@@ -224,9 +198,6 @@ function sanitizeCoupon(input, existing){
 exports.handler = async (event) => {
   if(event.httpMethod !== "POST"){
     return json(405, { error: "Method not allowed" });
-  }
-  if(!process.env.JSONBIN_BIN_ID || !process.env.JSONBIN_MASTER_KEY){
-    return json(500, { error: "Серверт JSONBIN тохиргоо дутуу байна (Netlify Environment variables)" });
   }
 
   let body;

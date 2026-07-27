@@ -473,7 +473,10 @@ function renderSummary(){
     </div>
 
     <div class="copy-row" id="action-row" style="${agreedToTerms ? "" : "display:none"}; margin-top:16px">
-      <button class="btn btn-primary" id="register-btn" onclick="registerOrder()" ${orderRegistered ? "disabled" : ""}>${orderRegistered ? "Илгээгдлээ ✓" : "Төлбөр илгээсэн ✓"}</button>
+      <div style="width:100%;background:var(--sage-tint);border-radius:12px;padding:12px 16px;margin-bottom:12px;font-weight:700;font-size:14px;color:var(--sage-dark,var(--ink))">
+        💳 Мөнгөө шилжүүлсний дараа ЗААВАЛ доорх товчийг дарж баталгаажуулна уу — эс бөгөөс бид таны төлбөрийг олж харахгүй.
+      </div>
+      <button class="btn btn-primary" id="register-btn" onclick="registerOrder()" ${orderRegistered ? "disabled" : ""} style="width:100%;padding:16px;font-size:16px">${orderRegistered ? "Илгээгдлээ ✓" : "✅ Мөнгөө шилжүүлсэн — Төлбөр илгээсэн"}</button>
       <button class="btn btn-ghost" onclick="copyOrder()">Хуулах 📋</button>
       <a class="btn btn-outline" href="https://m.me/619674054827086" target="_blank" rel="noopener">Messenger-р холбогдох →</a>
     </div>
@@ -544,6 +547,12 @@ function agreeAndShowBank(){
   saveBox(box);
   agreedToTerms = true;
   renderStepPanel();
+  // Дансны мэдээлэл + "Төлбөр илгээсэн" товч руу шууд scroll хийж,
+  // хэрэглэгч уг товчийг олохгүй өнгөрөх эрсдэлийг багасгана.
+  setTimeout(() => {
+    const el = document.getElementById("bank-block");
+    if(el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 50);
 }
 
 let lastOrderText = null;
@@ -564,7 +573,7 @@ async function registerOrder(){
     box = emptyBox();
     saveBox(box);
   }catch(e){
-    if(btn){ btn.disabled = false; btn.textContent = "Төлбөр илгээсэн ✓"; }
+    if(btn){ btn.disabled = false; btn.textContent = "✅ Мөнгөө шилжүүлсэн — Төлбөр илгээсэн"; }
     toast("Илгээхэд алдаа гарлаа. Хуулах/Messenger-р явуулж болно.");
   }
 }

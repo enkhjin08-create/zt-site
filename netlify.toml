@@ -26,3 +26,8 @@
   from = "/api/track"
   to = "/.netlify/functions/track"
   status = 200
+
+[[redirects]]
+  from = "/api/qpay"
+  to = "/.netlify/functions/qpay"
+  status = 200

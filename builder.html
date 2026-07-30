@@ -271,6 +271,7 @@ function renderStepPanel(){
 
   if(step === 8){
     panel.innerHTML = renderSummary();
+    maybeInitQpay();
   }
 }
 
@@ -376,6 +377,10 @@ function buildOrderText(){
 }
 
 let agreedToTerms = false;
+let payMethod = "qpay"; // "qpay" | "bank"
+let qpayOrderId = null;
+let qpayInvoiceId = null;
+let qpayPollTimer = null;
 
 function renderSummary(){
   const items = box.itemIds.map(getProduct).filter(Boolean);
@@ -456,29 +461,58 @@ function renderSummary(){
     </div>
 
     <div id="bank-block" style="${agreedToTerms ? "" : "display:none"}">
-      <div class="bank-card">
-        <div class="row"><span class="label">Дүн</span><b>${formatPrice(grandTotal)}</b></div>
-        <div class="row"><span class="label">Эзэмшигч</span><span>${BANK_INFO.holder}</span></div>
-        <div class="row"><span class="label">Данс</span><span>${BANK_INFO.account}</span></div>
-        <div class="row"><span class="label">Гүйлгээний утга</span><b>${orderNo}</b></div>
+      <div class="filter-pills" style="margin-bottom:14px">
+        <button class="pill ${payMethod==="qpay"?"is-active":""}" onclick="switchPayMethod('qpay')">📱 QPay-ээр төлөх</button>
+        <button class="pill ${payMethod==="bank"?"is-active":""}" onclick="switchPayMethod('bank')">🏦 Дансаар шилжүүлэх</button>
       </div>
-      <div class="notice-box warn" style="margin-top:12px">
-        ⚠️ Гүйлгээ хийхдээ <b>гүйлгээний утга дээр заавал захиалгын дугаараа (${orderNo}) бичээд</b> илгээгээрэй —
-        үгүй бол төлбөрийг тань олж тохируулахад хүндрэлтэй болно.
+
+      <div id="qpay-block" style="${payMethod==="qpay"?"":"display:none"}">
+        <div id="qpay-loading" style="text-align:center;padding:24px">
+          <p class="lede">QR код үүсгэж байна...</p>
+        </div>
+        <div id="qpay-content" style="display:none;text-align:center">
+          <img id="qpay-qr-img" src="" alt="QPay QR" style="width:220px;height:220px;border-radius:16px;border:1px solid var(--line);margin:0 auto">
+          <p style="font-size:13px;color:var(--ink-faint);margin-top:10px">Банкны апп-аараа энэ QR кодыг уншуулаарай, эсвэл доорх апп сонгоод шууд шилжинэ.</p>
+          <div id="qpay-bank-links" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px"></div>
+          <p id="qpay-status" style="margin-top:16px;font-weight:700;color:var(--ink-faint)">⏳ Төлбөр хүлээгдэж байна...</p>
+        </div>
+        <div id="qpay-error" style="display:none" class="notice-box warn">
+          QPay QR үүсгэхэд алдаа гарлаа. Доорх дансаар шилжүүлэх сонголтыг ашиглана уу.
+        </div>
+      </div>
+
+      <div id="bank-transfer-block" style="${payMethod==="bank"?"":"display:none"}">
+        <div class="bank-card">
+          <div class="row"><span class="label">Дүн</span><b>${formatPrice(grandTotal)}</b></div>
+          <div class="row"><span class="label">Эзэмшигч</span><span>${BANK_INFO.holder}</span></div>
+          <div class="row"><span class="label">Данс</span><span>${BANK_INFO.account}</span></div>
+          <div class="row"><span class="label">Гүйлгээний утга</span><b>${orderNo}</b></div>
+        </div>
+        <div class="notice-box warn" style="margin-top:12px">
+          ⚠️ Гүйлгээ хийхдээ <b>гүйлгээний утга дээр заавал захиалгын дугаараа (${orderNo}) бичээд</b> илгээгээрэй —
+          үгүй бол төлбөрийг тань олж тохируулахад хүндрэлтэй болно.
+        </div>
       </div>
     </div>
 
     <div id="agree-row" style="${agreedToTerms ? "display:none" : ""}; margin-top:16px">
-      <button class="btn btn-primary" onclick="agreeAndShowBank()">Дээрхийг зөвшөөрч, дансны мэдээлэл харах →</button>
+      <button class="btn btn-primary" onclick="agreeAndShowBank()">Дээрхийг зөвшөөрч, төлбөрийн мэдээлэл харах →</button>
     </div>
 
-    <div class="copy-row" id="action-row" style="${agreedToTerms ? "" : "display:none"}; margin-top:16px">
+    <div class="copy-row" id="action-row" style="${(agreedToTerms && payMethod==="bank") ? "" : "display:none"}; margin-top:16px">
       <div style="width:100%;background:var(--sage-tint);border-radius:12px;padding:12px 16px;margin-bottom:12px;font-weight:700;font-size:14px;color:var(--sage-dark,var(--ink))">
         💳 Мөнгөө шилжүүлсний дараа ЗААВАЛ доорх товчийг дарж баталгаажуулна уу — эс бөгөөс бид таны төлбөрийг олж харахгүй.
       </div>
       <button class="btn btn-primary" id="register-btn" onclick="registerOrder()" ${orderRegistered ? "disabled" : ""} style="width:100%;padding:16px;font-size:16px">${orderRegistered ? "Илгээгдлээ ✓" : "✅ Мөнгөө шилжүүлсэн — Төлбөр илгээсэн"}</button>
       <button class="btn btn-ghost" onclick="copyOrder()">Хуулах 📋</button>
       <a class="btn btn-outline" href="https://m.me/619674054827086" target="_blank" rel="noopener">Messenger-р холбогдох →</a>
+    </div>
+
+    <div id="qpay-success-row" style="display:none;margin-top:16px;text-align:center">
+      <div class="notice-box" style="background:var(--sage-tint);border:none">
+        <div style="font-size:32px">🎉</div>
+        <b style="font-size:16px">Төлбөр амжилттай орлоо! Захиалга баталгаажлаа.</b>
+      </div>
     </div>
     <p id="register-note" style="font-size:12.5px;color:var(--ink-faint);margin-top:10px;display:${agreedToTerms ? "block" : "none"}">
       Дээрх товч дарвал захиалга админ хэсэгт шууд харагдана.
@@ -528,7 +562,7 @@ function removeCoupon(){
   renderStepPanel();
 }
 
-function agreeAndShowBank(){
+async function agreeAndShowBank(){
   const name = document.getElementById("cust-name").value.trim();
   const phone = document.getElementById("cust-phone").value.trim();
   const email = document.getElementById("cust-email").value.trim();
@@ -553,6 +587,100 @@ function agreeAndShowBank(){
     const el = document.getElementById("bank-block");
     if(el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }, 50);
+}
+
+function switchPayMethod(m){
+  payMethod = m;
+  renderStepPanel();
+}
+
+async function maybeInitQpay(){
+  if(!agreedToTerms || payMethod !== "qpay") return;
+  if(qpayInvoiceId) return; // аль хэдийн QR үүссэн бол дахин үүсгэхгүй
+  const loadingEl = document.getElementById("qpay-loading");
+  const contentEl = document.getElementById("qpay-content");
+  const errorEl = document.getElementById("qpay-error");
+  if(!loadingEl) return; // QPay блок DOM дээр байхгүй бол (жишээ: bank tab идэвхтэй) алгасна
+
+  try{
+    // 1) Захиалгыг шууд бүртгэнэ ("шинэ" төлөвтэйгээр) — QPay төлбөр орж ирмэгц
+    //    статус нь автоматаар "confirmed" болно.
+    if(!qpayOrderId){
+      const orderObj = buildOrderObject();
+      const submitRes = await submitOrder(orderObj);
+      // ⚠️ Сервер тал өөрийн random ID үүсгэдэг тул client-ийн orderObj.id-г БИШ,
+      // харин серверийн хариунд буцаж ирсэн id-г ашиглах ЁСТОЙ.
+      qpayOrderId = submitRes.id;
+      lastOrderText = buildOrderText();
+    }
+
+    const orderNo = ensureOrderNumber();
+    const subtotal = boxTotal(box);
+    const discount = couponDiscountAmount(subtotal);
+    const grandTotal = Math.max(0, subtotal + getDeliveryFee() - discount);
+
+    // 2) QPay invoice үүсгэнэ
+    const res = await fetch("/api/qpay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "createInvoice", orderNumber: orderNo, amount: grandTotal, description: `Захиалга №${orderNo}` })
+    });
+    const data = await res.json();
+    if(!res.ok || !data.ok) throw new Error(data.error || "QPay invoice failed");
+
+    qpayInvoiceId = data.invoiceId;
+    loadingEl.style.display = "none";
+    contentEl.style.display = "";
+    const qrImgEl = document.getElementById("qpay-qr-img");
+    if(qrImgEl && data.qrImage) qrImgEl.src = "data:image/png;base64," + data.qrImage;
+
+    const linksEl = document.getElementById("qpay-bank-links");
+    if(linksEl && Array.isArray(data.urls)){
+      linksEl.innerHTML = data.urls.slice(0, 8).map(u => `
+        <a href="${u.link}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;width:64px">
+          <img src="${u.logo}" alt="${escapeHTML(u.name || "")}" style="width:40px;height:40px;border-radius:10px">
+          <span style="font-size:10px;color:var(--ink-soft);text-align:center">${escapeHTML(u.description || u.name || "")}</span>
+        </a>`).join("");
+    }
+
+    startQpayPolling();
+  }catch(e){
+    console.error("[QPay init error]", e);
+    loadingEl.style.display = "none";
+    if(errorEl) errorEl.style.display = "";
+  }
+}
+
+function startQpayPolling(){
+  if(qpayPollTimer) clearInterval(qpayPollTimer);
+  qpayPollTimer = setInterval(async () => {
+    if(!qpayInvoiceId || !qpayOrderId) return;
+    try{
+      const res = await fetch("/api/qpay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "checkAndConfirm", invoiceId: qpayInvoiceId, orderId: qpayOrderId })
+      });
+      const data = await res.json();
+      if(data.ok && data.paid){
+        clearInterval(qpayPollTimer);
+        qpayPollTimer = null;
+        const statusEl = document.getElementById("qpay-status");
+        if(statusEl) statusEl.textContent = "✅ Төлбөр баталгаажлаа!";
+        const actionRow = document.getElementById("action-row");
+        const qpayBlock = document.getElementById("qpay-block");
+        const successRow = document.getElementById("qpay-success-row");
+        if(actionRow) actionRow.style.display = "none";
+        if(qpayBlock) qpayBlock.style.display = "none";
+        if(successRow) successRow.style.display = "";
+        // Хайрцгийг хоослоно — дараагийн удаа шинээр эхэлнэ
+        box = emptyBox();
+        saveBox(box);
+      }
+    }catch(e){
+      // Сүлжээний түр зуурын алдаа гарвал дараагийн polling-оор дахин оролдоно
+    }
+  }, 3000);
 }
 
 let lastOrderText = null;

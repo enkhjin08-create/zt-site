@@ -596,11 +596,26 @@ function switchPayMethod(m){
 
 async function maybeInitQpay(){
   if(!agreedToTerms || payMethod !== "qpay") return;
-  if(qpayInvoiceId) return; // аль хэдийн QR үүссэн бол дахин үүсгэхгүй
   const loadingEl = document.getElementById("qpay-loading");
   const contentEl = document.getElementById("qpay-content");
   const errorEl = document.getElementById("qpay-error");
   if(!loadingEl) return; // QPay блок DOM дээр байхгүй бол (жишээ: bank tab идэвхтэй) алгасна
+
+  // ⚠️ Хуудсыг дахин ачааллах (reload) үед л дахин invoice ҮҮСГЭХГҮЙ байхын тулд
+  // (үгүй бол ижил захиалгын дугаараар давхар invoice үүсэж, банкны апп
+  // "Давхар гүйлгээ" гэсэн алдаа өгдөг байсан) — өмнө нь амжилттай үүссэн
+  // QR-ийг box дотроос сэргээж ашиглана.
+  if(box.qpayInvoiceId && box.qpayQrImage){
+    qpayInvoiceId = box.qpayInvoiceId;
+    qpayOrderId = box.qpayOrderId;
+    loadingEl.style.display = "none";
+    contentEl.style.display = "";
+    renderQpayQr(box.qpayQrImage, box.qpayUrls || []);
+    startQpayPolling();
+    return;
+  }
+
+  if(qpayInvoiceId) return; // энэ session дотор аль хэдийн үүссэн бол дахин үүсгэхгүй
 
   try{
     // 1) Захиалгыг шууд бүртгэнэ ("шинэ" төлөвтэйгээр) — QPay төлбөр орж ирмэгц
@@ -612,42 +627,55 @@ async function maybeInitQpay(){
       // харин серверийн хариунд буцаж ирсэн id-г ашиглах ЁСТОЙ.
       qpayOrderId = submitRes.id;
       lastOrderText = buildOrderText();
+      box.qpayOrderId = qpayOrderId;
+      saveBox(box);
     }
 
     const orderNo = ensureOrderNumber();
     const subtotal = boxTotal(box);
     const discount = couponDiscountAmount(subtotal);
     const grandTotal = Math.max(0, subtotal + getDeliveryFee() - discount);
+    // QPay/банкны талд "давхар гүйлгээ" гэж танигдахгүйн тулд sender_invoice_no-г
+    // цор ганц утга болгоно (харин захиалагчид харагдах дугаар орчилсоор л үлдэнэ).
+    const uniqueInvoiceNo = orderNo + "-" + Date.now().toString(36);
 
     // 2) QPay invoice үүсгэнэ
     const res = await fetch("/api/qpay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "createInvoice", orderNumber: orderNo, amount: grandTotal, description: `Захиалга №${orderNo}` })
+      body: JSON.stringify({ action: "createInvoice", orderNumber: uniqueInvoiceNo, amount: grandTotal, description: `Захиалга №${orderNo}` })
     });
     const data = await res.json();
     if(!res.ok || !data.ok) throw new Error(data.error || "QPay invoice failed");
 
     qpayInvoiceId = data.invoiceId;
+    box.qpayInvoiceId = data.invoiceId;
+    box.qpayQrImage = data.qrImage;
+    box.qpayUrls = data.urls || [];
+    saveBox(box);
+
     loadingEl.style.display = "none";
     contentEl.style.display = "";
-    const qrImgEl = document.getElementById("qpay-qr-img");
-    if(qrImgEl && data.qrImage) qrImgEl.src = "data:image/png;base64," + data.qrImage;
-
-    const linksEl = document.getElementById("qpay-bank-links");
-    if(linksEl && Array.isArray(data.urls)){
-      linksEl.innerHTML = data.urls.slice(0, 8).map(u => `
-        <a href="${u.link}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;width:64px">
-          <img src="${u.logo}" alt="${escapeHTML(u.name || "")}" style="width:40px;height:40px;border-radius:10px">
-          <span style="font-size:10px;color:var(--ink-soft);text-align:center">${escapeHTML(u.description || u.name || "")}</span>
-        </a>`).join("");
-    }
-
+    renderQpayQr(data.qrImage, data.urls || []);
     startQpayPolling();
   }catch(e){
     console.error("[QPay init error]", e);
     loadingEl.style.display = "none";
     if(errorEl) errorEl.style.display = "";
+  }
+}
+
+function renderQpayQr(qrImage, urls){
+  const qrImgEl = document.getElementById("qpay-qr-img");
+  if(qrImgEl && qrImage) qrImgEl.src = "data:image/png;base64," + qrImage;
+
+  const linksEl = document.getElementById("qpay-bank-links");
+  if(linksEl && Array.isArray(urls)){
+    linksEl.innerHTML = urls.slice(0, 8).map(u => `
+      <a href="${u.link}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;width:64px">
+        <img src="${u.logo}" alt="${escapeHTML(u.name || "")}" style="width:40px;height:40px;border-radius:10px">
+        <span style="font-size:10px;color:var(--ink-soft);text-align:center">${escapeHTML(u.description || u.name || "")}</span>
+      </a>`).join("");
   }
 }
 

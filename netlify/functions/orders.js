@@ -226,6 +226,19 @@ exports.handler = async (event) => {
       return json(200, { ok: true, id: order.id, discount: order.discount, total: order.total });
     }
 
+    if(body.action === "confirmPayment"){
+      // Нийтэд нээлттэй (PIN шаардахгүй) — захиалагч "Мөнгөө шилжүүлсэн" товч дарахад
+      // дуудагдана. Захиалга аль хэдийн (agreeAndShowBank үед) бүртгэгдсэн байх ёстой тул
+      // энд зөвхөн тэмдэглэгээ нэмнэ, ШИНЭ захиалга үүсгэхгүй.
+      const doc = await readDoc();
+      const order = doc.orders.find(o => o.id === body.id);
+      if(!order) return json(404, { error: "Order not found" });
+      order.customerConfirmedPaid = true;
+      order.customerConfirmedAt = new Date().toISOString();
+      await writeDoc(doc);
+      return json(200, { ok: true });
+    }
+
     if(body.action === "validateCoupon"){
       const doc = await readDoc();
       const code = String(body.code || "").trim().toUpperCase();
@@ -257,7 +270,6 @@ exports.handler = async (event) => {
 
     return json(400, { error: "Unknown action" });
   }catch(e){
-    console.error("[orders error]", e.message, e.stack);
-    return json(500, { error: "Server error: " + e.message });
+    return json(500, { error: "Server error" });
   }
 };

@@ -33,6 +33,12 @@ async function validateCoupon(code){
   return callOrdersApi({ action: "validateCoupon", code });
 }
 
+// Нийтэд нээлттэй — захиалга аль хэдийн бүртгэгдсэн байх ёстой, зөвхөн
+// "төлбөр илгээсэн" гэсэн тэмдэглэгээ нэмнэ (шинэ захиалга үүсгэхгүй).
+async function confirmPayment(orderId){
+  return callOrdersApi({ action: "confirmPayment", id: orderId });
+}
+
 // Зөвхөн зөв PIN-тэй бол ажиллана. admin.html ашигладаг.
 async function adminListOrders(pin){
   const data = await callOrdersApi({ action: "list", pin });

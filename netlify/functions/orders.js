@@ -257,6 +257,7 @@ exports.handler = async (event) => {
 
     return json(400, { error: "Unknown action" });
   }catch(e){
-    return json(500, { error: "Server error" });
+    console.error("[orders error]", e.message, e.stack);
+    return json(500, { error: "Server error: " + e.message });
   }
 };

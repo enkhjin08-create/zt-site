@@ -575,6 +575,23 @@ async function agreeAndShowBank(){
   box.deliveryKhoroo = khoroo;
   box.deliveryAddress = address;
   saveBox(box);
+
+  // ⚠️ Захиалгыг ЭНД, тэр даруй бүртгэнэ (payMethod аль ч байсан хамаагүй) —
+  // "Дансаар шилжүүлэх" сонгосон хэрэглэгч дараа нь "Мөнгөө шилжүүлсэн" товчийг
+  // дарахаа мартсан ч захиалгын дэлгэрэнгүй мэдээлэл (юу авах, хаяг, утас)
+  // админд аль хэдийн харагдаж байх ёстой. Товч дарахад зөвхөн тэмдэглэгээ нэмнэ,
+  // шинэ захиалга дахин үүсгэхгүй (confirmPayment action, доор registerOrder-г үзнэ үү).
+  if(!box.orderId){
+    try{
+      const submitRes = await submitOrder(buildOrderObject());
+      box.orderId = submitRes.id;
+      saveBox(box);
+    }catch(e){
+      console.error("[order pre-register error]", e);
+      // Амжилтгүй бол ч UI-г бүү блокло — registerOrder() дээр дахин оролдоно.
+    }
+  }
+
   agreedToTerms = true;
   renderStepPanel();
   // Дансны мэдээлэл + "Төлбөр илгээсэн" товч руу шууд scroll хийж,
@@ -616,12 +633,20 @@ async function maybeInitQpay(){
   try{
     // 1) Захиалгыг шууд бүртгэнэ ("шинэ" төлөвтэйгээр) — QPay төлбөр орж ирмэгц
     //    статус нь автоматаар "confirmed" болно.
+    // ⚠️ agreeAndShowBank() энэ мөчид (payMethod аль ч байсан) захиалгыг аль хэдийн
+    //    бүртгэсэн байх ёстой тул box.orderId байгаа бол ТҮҮНИЙГ ашиглана — шинэ
+    //    захиалга дахин үүсгэвэл давхардал гарна.
     if(!qpayOrderId){
-      const orderObj = buildOrderObject();
-      const submitRes = await submitOrder(orderObj);
-      // ⚠️ Сервер тал өөрийн random ID үүсгэдэг тул client-ийн orderObj.id-г БИШ,
-      // харин серверийн хариунд буцаж ирсэн id-г ашиглах ЁСТОЙ.
-      qpayOrderId = submitRes.id;
+      if(box.orderId){
+        qpayOrderId = box.orderId;
+      }else{
+        const orderObj = buildOrderObject();
+        const submitRes = await submitOrder(orderObj);
+        // ⚠️ Сервер тал өөрийн random ID үүсгэдэг тул client-ийн orderObj.id-г БИШ,
+        // харин серверийн хариунд буцаж ирсэн id-г ашиглах ЁСТОЙ.
+        qpayOrderId = submitRes.id;
+        box.orderId = qpayOrderId;
+      }
       lastOrderText = buildOrderText();
       box.qpayOrderId = qpayOrderId;
       saveBox(box);
@@ -714,7 +739,17 @@ async function registerOrder(){
   const btn = document.getElementById("register-btn");
   if(btn){ btn.disabled = true; btn.textContent = "Илгээж байна..."; }
   try{
-    await submitOrder(buildOrderObject());
+    // ⚠️ Захиалга agreeAndShowBank() үед аль хэдийн бүртгэгдсэн байх ёстой (box.orderId) —
+    // энд зөвхөн "төлбөр илгээсэн" гэсэн тэмдэглэгээ нэмнэ, шинэ захиалга ДАХИН үүсгэхгүй.
+    // Хэрэв ямар нэг шалтгаанаар box.orderId байхгүй бол (жишээ нь урьдчилсан бүртгэл
+    // амжилтгүй болсон) fallback байдлаар шинээр бүртгэнэ.
+    if(box.orderId){
+      await confirmPayment(box.orderId);
+    }else{
+      const submitRes = await submitOrder(buildOrderObject());
+      box.orderId = submitRes.id;
+      await confirmPayment(box.orderId);
+    }
     orderRegistered = true;
     lastOrderText = buildOrderText();
     if(btn){ btn.textContent = "Илгээгдлээ ✓"; }

@@ -88,6 +88,7 @@ function sanitizeProduct(input, existing, validCategories, validRecipients){
     soldOut: typeof input.soldOut === "boolean" ? input.soldOut : !!existing.soldOut,
     bestSeller: typeof input.bestSeller === "boolean" ? input.bestSeller : !!existing.bestSeller,
     tag: str(input.tag != null ? input.tag : (existing.tag || ""), 30),
+    description: str(input.description != null ? input.description : (existing.description || ""), 600),
     images: images,
     image: images[0] || str(input.image != null ? input.image : existing.image, 500),
     url: str(input.url != null ? input.url : existing.url, 500),
@@ -115,6 +116,7 @@ function sanitizeOverride(input, existing, validCategories, validRecipients){
   if(typeof input.bestSeller === "boolean") patch.bestSeller = input.bestSeller;
   if(typeof input.hidden === "boolean") patch.hidden = input.hidden;
   if(input.tag != null) patch.tag = str(input.tag, 30);
+  if(input.description != null) patch.description = str(input.description, 600);
   const images = cleanImages(input.images);
   if(images !== null){
     patch.images = images;

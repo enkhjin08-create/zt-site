@@ -358,19 +358,63 @@ let adminPin = "";
 /* ---------------- Image upload (GitHub) ----------------
    Зураг upload хийхэд GitHub repo-д хадгалдаг.
    Netlify env vars: GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH */
+// Их хэмжээний зургийг (утасны камерын анхны зураг ихэвчлэн 3-15MB байдаг) upload хийхээс
+// өмнө browser дээр автоматаар жижигрүүлж, шахна. Учир нь Netlify Functions нэг хүсэлтэд
+// 6MB хүртэл л дэмждэг тул шахалгүй том зураг илгээвэл upload бүхэлдээ амжилтгүй болдог.
+function resizeImageFile(file, maxDim, quality){
+  maxDim = maxDim || 1600;
+  quality = quality || 0.85;
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if(width > maxDim || height > maxDim){
+        if(width > height){ height = Math.round(height * (maxDim/width)); width = maxDim; }
+        else{ width = Math.round(width * (maxDim/height)); height = maxDim; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if(!blob) return reject(new Error("Compress failed"));
+        resolve(blob);
+      }, "image/jpeg", quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Read failed")); };
+    img.src = url;
+  });
+}
+
 async function uploadToCloudinary(file){
+  // Зөвхөн зураг файлыг шахна — HEIC/бусад төрлийг canvas уншиж чадахгүй тул
+  // шахалт амжилтгүй болбол анхны файлыг л шууд явуулна (fallback).
+  let uploadBlob = file;
+  let uploadName = file.name;
+  try{
+    if(file.type && file.type.startsWith("image/") && file.size > 700*1024){
+      uploadBlob = await resizeImageFile(file, 1600, 0.85);
+      uploadName = file.name.replace(/\.(heic|heif|png|webp)$/i, ".jpg");
+    }
+  }catch(e){
+    // Шахалт амжилтгүй бол анхны файлаараа үргэлжлүүлнэ
+    uploadBlob = file;
+    uploadName = file.name;
+  }
+
   // File-г base64 болгоно
   const base64 = await new Promise((res, rej) => {
     const reader = new FileReader();
     reader.onload = () => res(reader.result.split(",")[1]);
     reader.onerror = () => rej(new Error("Read failed"));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(uploadBlob);
   });
 
   const res = await fetch("/api/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pin: adminPin, filename: file.name, content: base64 })
+    body: JSON.stringify({ pin: adminPin, filename: uploadName, content: base64 })
   });
   if(!res.ok){
     const err = await res.json().catch(()=>({}));

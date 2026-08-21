@@ -1,12 +1,15 @@
-// Facebook/Messenger/Telegram/Viber зэрэг апп-ууд линк шэйрлэхэд thumbnail зураг
-// татахдаа JavaScript ажиллуулдаггүй тул (product.html бол client-side SPA) статик
-// meta tag-той HTML авах шаардлагатай. Энэ Edge Function зөвхөн "bot" (crawler)
-// хандалтад л тухайн барааны нэр/үнэ/зурагтай тусгай HTML буцаана — жинхэнэ
-// хэрэглэгчид ердийн product.html-ийг л хэвээр авна (өөрчлөлт мэдрэгдэхгүй).
+// Facebook/Messenger/Telegram/Viber/iMessage зэрэг апп-ууд линк шэйрлэхэд thumbnail
+// татахдаа ихэвчлэн JavaScript ажиллуулдаггүй тул (product.html бол зөвхөн browser
+// дээр л дата ачаалдаг SPA хуудас) статик meta tag ХЭРЭГТЭЙ.
+//
+// ⚠️ Анхны хувилбар зөвхөн "мэдэгдэж буй bot" User-Agent-уудад (Facebook, Telegram гэх мэт)
+// тусгай HTML буцаадаг байсан ч Apple-ийн iMessage crawler нь ялгагдах тодорхой bot
+// тэмдэг ашигладаггүй тул алгасагдаж байсан. Тиймээс одоо ЭНЭ Edge Function БҮХ хандалтад
+// (хүн, bot аль алинд адилхан) жинхэнэ product.html-ийн <head> дотор зөв OG meta tag-г
+// шууд нэмж өгдөг болсон — жинхэнэ хэрэглэгчийн харах, ажиллах контент огт өөрчлөгдөхгүй,
+// зөвхөн <head> доторх мета мэдээлэл л product-специфик болно.
 
 import { PRODUCTS as BUILTIN_PRODUCTS } from "./_data/builtin-products.mjs";
-
-const BOT_UA_PATTERN = /facebookexternalhit|Facebot|Twitterbot|TelegramBot|WhatsApp|Viber|LinkedInBot|Slackbot|Discordbot|Pinterest|SkypeUriPreview|vkShare|Applebot|Googlebot|redditbot|Snapchat|W3C_Validator/i;
 
 const CATEGORY_LABELS = {
   cup: "CuteCup аяга",
@@ -48,11 +51,8 @@ async function fetchCustomData(origin){
 }
 
 function resolveProduct(id, builtin, custom){
-  // Эхлээд захиалгат (админаас нэмсэн) бараанаас хайна
   const customMatch = custom.products.find(p => String(p.id) === String(id));
   if(customMatch) return customMatch;
-
-  // Дараа нь үндсэн 103 барааны нэгээс хайж, override (админ засвар) байвал нэгтгэнэ
   const base = builtin.find(p => String(p.id) === String(id));
   if(!base) return null;
   const patch = custom.overrides[String(id)] || custom.overrides[id] || {};
@@ -61,18 +61,15 @@ function resolveProduct(id, builtin, custom){
 
 export default async (request, context) => {
   const url = new URL(request.url);
-  const ua = request.headers.get("user-agent") || "";
-  const isBot = BOT_UA_PATTERN.test(ua);
-
-  // Жинхэнэ хэрэглэгч бол ердийн статик product.html-ийг хэвээр нь буцаана — ямар ч өөрчлөлт үгүй.
-  if(!isBot) return context.next();
-
   const id = url.searchParams.get("id");
-  if(!id) return context.next();
+
+  // id байхгүй бол (ер нь тохиолдохгүй ч) ердийн статик хуудсыг хэвээр буцаана.
+  const originalResponse = await context.next();
+  if(!id) return originalResponse;
 
   const custom = await fetchCustomData(url.origin);
   const product = resolveProduct(id, BUILTIN_PRODUCTS, custom);
-  if(!product) return context.next();
+  if(!product) return originalResponse;
 
   const images = product.images && product.images.length ? product.images : (product.image ? [product.image] : []);
   const ogImage = images[0] || `${url.origin}/images/og-image.png`;
@@ -84,13 +81,7 @@ export default async (request, context) => {
   const title = product.name ? `${product.name}${price ? " — " + price : ""}` : "Зөвхөн түүнд";
   const pageUrl = `${url.origin}/product.html?id=${encodeURIComponent(id)}`;
 
-  const html = `<!DOCTYPE html>
-<html lang="mn">
-<head>
-<meta charset="UTF-8">
-<title>${escapeHTML(title)}</title>
-<meta name="description" content="${escapeHTML(desc)}">
-<meta property="og:type" content="product">
+  const injectedTags = `<meta property="og:type" content="product">
 <meta property="og:title" content="${escapeHTML(title)}">
 <meta property="og:description" content="${escapeHTML(desc)}">
 <meta property="og:image" content="${escapeHTML(ogImage)}">
@@ -101,15 +92,20 @@ ${catLabel ? `<meta property="product:category" content="${escapeHTML(catLabel)}
 <meta name="twitter:title" content="${escapeHTML(title)}">
 <meta name="twitter:description" content="${escapeHTML(desc)}">
 <meta name="twitter:image" content="${escapeHTML(ogImage)}">
-</head>
-<body>
-<p>${escapeHTML(title)}</p>
-</body>
-</html>`;
+<meta name="description" content="${escapeHTML(desc)}">
+<title>${escapeHTML(title)}</title>`;
+
+  let html = await originalResponse.text();
+  // Анхны статик <title>...</title>-г шинэ, product-специфик OG tag-ийн блокоор солино.
+  if(html.includes("<title>") && html.includes("</title>")){
+    html = html.replace(/<title>.*?<\/title>/s, injectedTags);
+  }else{
+    html = html.replace("</head>", injectedTags + "\n</head>");
+  }
 
   return new Response(html, {
-    status: 200,
-    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=600" }
+    status: originalResponse.status,
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" }
   });
 };
 

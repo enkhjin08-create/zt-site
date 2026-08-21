@@ -42,7 +42,7 @@ const DESCRIPTIONS = {
   greeting: "Хайрцагтайгаа хамт очих дулаан мэндчилгээ — хэдхэн үгээр сэтгэлээ илэрхийлээрэй."
 };
 function descriptionFor(p){
-  if(p.description && p.description.trim()) return escapeHTML(p.description.trim());
+  if(p.description && p.description.trim()) return escapeHTML(p.description.trim()).replace(/\n/g, "<br>");
   return DESCRIPTIONS[p.category] || "Зөвхөн түүнд тань зориулсан онцгой бэлэг.";
 }
 

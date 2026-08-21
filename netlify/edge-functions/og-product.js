@@ -36,17 +36,22 @@ function escapeHTML(s){
 }
 
 async function fetchCustomData(origin){
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2500);
   try{
     const res = await fetch(new URL("/.netlify/functions/products", origin), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "list" })
+      body: JSON.stringify({ action: "list" }),
+      signal: controller.signal
     });
     if(!res.ok) return { products: [], overrides: {} };
     const data = await res.json();
     return { products: data.products || [], overrides: data.overrides || {} };
   }catch(e){
     return { products: [], overrides: {} };
+  }finally{
+    clearTimeout(timeout);
   }
 }
 
@@ -63,28 +68,34 @@ export default async (request, context) => {
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
 
-  // id байхгүй бол (ер нь тохиолдохгүй ч) ердийн статик хуудсыг хэвээр буцаана.
   const originalResponse = await context.next();
-  if(!id) return originalResponse;
 
-  const custom = await fetchCustomData(url.origin);
-  const product = resolveProduct(id, BUILTIN_PRODUCTS, custom);
-  if(!product) return originalResponse;
+  // Зөвхөн энгийн GET хүсэлтэд л body-г өөрчилнө. iMessage/зарим preview fetcher
+  // эхлээд HEAD хүсэлт илгээдэг тул тэдгээрт хуучин хариугаа хэвээр буцаана —
+  // эс тэгвээс HEAD хариунд хоосон body дээр .text()/replace хийх нь Apple-ийн
+  // fetcher-т алдаа мэт харагдаж, урьдчилан харах цонх огт татгалзагдах эрсдэлтэй.
+  if(request.method !== "GET" || !id) return originalResponse;
 
-  const images = product.images && product.images.length ? product.images : (product.image ? [product.image] : []);
-  const ogImage = images[0] || `${url.origin}/images/og-image.png`;
-  const price = typeof product.price === "number" ? product.price.toLocaleString("mn-MN") + "₮" : "";
-  const catLabel = CATEGORY_LABELS[product.category] || "";
-  const desc = (product.description && product.description.trim())
-    ? product.description.trim()
-    : (CATEGORY_DESCRIPTIONS[product.category] || "Зөвхөн түүнд тань зориулсан онцгой бэлэг.");
-  const title = product.name ? `${product.name}${price ? " — " + price : ""}` : "Зөвхөн түүнд";
-  const pageUrl = `${url.origin}/product.html?id=${encodeURIComponent(id)}`;
+  try{
+    const custom = await fetchCustomData(url.origin);
+    const product = resolveProduct(id, BUILTIN_PRODUCTS, custom);
+    if(!product) return originalResponse;
 
-  const injectedTags = `<meta property="og:type" content="product">
+    const images = product.images && product.images.length ? product.images : (product.image ? [product.image] : []);
+    const ogImage = images[0] || `${url.origin}/images/og-image.png`;
+    const price = typeof product.price === "number" ? product.price.toLocaleString("mn-MN") + "₮" : "";
+    const catLabel = CATEGORY_LABELS[product.category] || "";
+    const desc = (product.description && product.description.trim())
+      ? product.description.trim()
+      : (CATEGORY_DESCRIPTIONS[product.category] || "Зөвхөн түүнд тань зориулсан онцгой бэлэг.");
+    const title = product.name ? `${product.name}${price ? " — " + price : ""}` : "Зөвхөн түүнд";
+    const pageUrl = `${url.origin}/product.html?id=${encodeURIComponent(id)}`;
+
+    const injectedTags = `<meta property="og:type" content="product">
 <meta property="og:title" content="${escapeHTML(title)}">
 <meta property="og:description" content="${escapeHTML(desc)}">
 <meta property="og:image" content="${escapeHTML(ogImage)}">
+<meta property="og:image:secure_url" content="${escapeHTML(ogImage)}">
 <meta property="og:url" content="${escapeHTML(pageUrl)}">
 <meta property="og:site_name" content="Зөвхөн түүнд">
 ${catLabel ? `<meta property="product:category" content="${escapeHTML(catLabel)}">` : ""}
@@ -95,18 +106,22 @@ ${catLabel ? `<meta property="product:category" content="${escapeHTML(catLabel)}
 <meta name="description" content="${escapeHTML(desc)}">
 <title>${escapeHTML(title)}</title>`;
 
-  let html = await originalResponse.text();
-  // Анхны статик <title>...</title>-г шинэ, product-специфик OG tag-ийн блокоор солино.
-  if(html.includes("<title>") && html.includes("</title>")){
-    html = html.replace(/<title>.*?<\/title>/s, injectedTags);
-  }else{
-    html = html.replace("</head>", injectedTags + "\n</head>");
-  }
+    let html = await originalResponse.text();
+    if(html.includes("<title>") && html.includes("</title>")){
+      html = html.replace(/<title>.*?<\/title>/s, injectedTags);
+    }else{
+      html = html.replace("</head>", injectedTags + "\n</head>");
+    }
 
-  return new Response(html, {
-    status: originalResponse.status,
-    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" }
-  });
+    return new Response(html, {
+      status: originalResponse.status,
+      headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" }
+    });
+  }catch(e){
+    // Ямар нэг алдаа гарвал (жишээ нь Blobs удаашрал) эвдэрсэн хариу буцаахаас
+    // илүү аюулгүй нь — анхны статик хуудсыг л шууд буцаах.
+    return originalResponse;
+  }
 };
 
 export const config = { path: "/product.html" };

@@ -82,7 +82,7 @@ export default async (request, context) => {
     if(!product) return originalResponse;
 
     const images = product.images && product.images.length ? product.images : (product.image ? [product.image] : []);
-    const ogImage = images[0] || `${url.origin}/images/og-image.png`;
+    const ogImage = images[0] || `${url.origin}/images/uploads/og-image.png`;
     const price = typeof product.price === "number" ? product.price.toLocaleString("mn-MN") + "₮" : "";
     const catLabel = CATEGORY_LABELS[product.category] || "";
     const desc = (product.description && product.description.trim())

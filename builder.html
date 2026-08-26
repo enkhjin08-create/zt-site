@@ -284,11 +284,33 @@ function renderStepPanel(){
 }
 
 function selectRecipient(k){ box.recipient = k; persist(); renderStepPanel(); }
-function selectContainer(id){ box.containerId = id; persist(); renderStepPanel(); }
+function selectContainer(id){
+  if(id){
+    const hasGiftset = box.itemIds.some(iid => { const p = getProduct(iid); return p && p.category === "giftset"; });
+    if(hasGiftset){
+      toast("Бэлгийн багц өөрөө сав баглаатай тул нэмэлт хайрцаг шаардлагагүй 🎁");
+      return;
+    }
+  }
+  box.containerId = id; persist(); renderStepPanel();
+}
 function toggleRecFilter(v){ recFilterOn = v; renderStepPanel(); }
 function toggleItem(id){
   const i = box.itemIds.indexOf(id);
+  const adding = i < 0;
   if(i>=0) box.itemIds.splice(i,1); else box.itemIds.push(id);
+
+  // "Бэлгийн багц" ангиллын бараа өөрөө бэлэн сав баглаатай ирдэг тул тусад нь
+  // хайрцаг сонгох шаардлагагүй — давхар мөнгө төлөгдөхөөс сэргийлж, аль хэдийн
+  // сонгосон хайрцаг байвал автоматаар цуцалж, үнэ хасна.
+  if(adding){
+    const p = getProduct(id);
+    if(p && p.category === "giftset" && box.containerId){
+      box.containerId = null;
+      toast("Бэлгийн багц өөрөө сав баглаатай тул хайрцгийн сонголтыг цуцаллаа 🎁");
+    }
+  }
+
   persist(); renderStepPanel();
 }
 function saveMessageAndNext(){

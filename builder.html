@@ -309,6 +309,7 @@ function toggleItem(id){
       box.containerId = null;
       toast("Бэлгийн багц өөрөө сав баглаатай тул хайрцгийн сонголтыг цуцаллаа 🎁");
     }
+    playRibbonAnimation();
   }
 
   persist(); renderStepPanel();
@@ -416,8 +417,15 @@ function renderSummary(){
   if(!hasAnything){
     return `
       <p class="eyebrow">Алхам 8</p>
-      <h2>Хайрцаг хоосон байна</h2>
-      <p class="lede">Буцаж очоод бэлэг сонгоорой.</p>
+      <div class="empty-state-fancy">
+        <svg viewBox="0 0 100 100" width="72" height="72" aria-hidden="true">
+          <rect x="20" y="42" width="60" height="40" rx="6" fill="none" stroke="var(--ink-faint)" stroke-width="3" stroke-dasharray="5 6"/>
+          <path d="M20 42 L50 24 L80 42" fill="none" stroke="var(--ink-faint)" stroke-width="3" stroke-dasharray="5 6" stroke-linejoin="round"/>
+          <line x1="50" y1="24" x2="50" y2="82" stroke="var(--ink-faint)" stroke-width="2.5" stroke-dasharray="4 5"/>
+        </svg>
+        <h2>Хайрцаг хоосон байна</h2>
+        <p class="lede">Буцаж очоод бэлэг сонгоорой.</p>
+      </div>
       ${stepActionsHTML({onNext:"goStep(3)", nextLabel:"Бэлэг сонгох →"})}
     `;
   }

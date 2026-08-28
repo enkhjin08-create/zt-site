@@ -30,7 +30,7 @@
   <div class="wrap">
     <div>
       <p class="eyebrow">Зөвхөн түүнд тань зориулсан бэлгийн дэлгүүр</p>
-      <h1>Онцгой хүндээ,<br><em>онцгой бэлэг</em>.</h1>
+      <h1><span id="hero-type" class="hero-type"></span><span class="hero-caret" aria-hidden="true"></span><br><em>онцгой бэлэг</em>.</h1>
       <p class="lede">Төрсөн өдөр, баяр, тэмдэглэлт өдөр бүрт зориулсан бэлгийг өөрийн хүссэнээр бүрдүүлж, хайртай хүндээ хүргүүлээрэй.</p>
       <div class="hero-actions">
         <a href="builder.html" class="btn btn-primary">Бэлгийн багц бэлдье →</a>
@@ -152,6 +152,8 @@
   </div>
 </section>
 
+<div class="gift-divider" aria-hidden="true"><span class="gd-knot"></span></div>
+
 <section class="section" id="bestseller-section" style="padding-top:0;display:none">
   <div class="wrap">
     <div class="section-head">
@@ -229,6 +231,8 @@
   </div>
 </section>
 
+<div class="gift-divider" aria-hidden="true"><span class="gd-knot"></span></div>
+
 <section class="section" style="padding-top:0">
   <div class="wrap">
     <div class="section-head">
@@ -252,6 +256,33 @@
 <script>
   renderHeader("index.html");
   renderFooter();
+
+  // Hero — "Ээждээ, / Хайртдаа, / Найздаа, ..." гэж бичигдэж, арилж солигдоно.
+  // Хувийн зурвас бичиж буй мэдрэмжийг эхний харагдах мөчид шууд илэрхийлнэ.
+  (function heroTypewriter(){
+    const el = document.getElementById("hero-type");
+    if(!el) return;
+    const words = Object.values(RECIPIENTS).map(r => r.label + ",");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(reduceMotion){ el.textContent = words[0]; return; }
+
+    let wordIdx = 0, charIdx = 0, deleting = false;
+    function tick(){
+      const word = words[wordIdx];
+      if(!deleting){
+        charIdx++;
+        el.textContent = word.slice(0, charIdx);
+        if(charIdx === word.length){ deleting = true; setTimeout(tick, 1400); return; }
+        setTimeout(tick, 75);
+      }else{
+        charIdx--;
+        el.textContent = word.slice(0, charIdx);
+        if(charIdx === 0){ deleting = false; wordIdx = (wordIdx+1) % words.length; setTimeout(tick, 300); return; }
+        setTimeout(tick, 35);
+      }
+    }
+    tick();
+  })();
 
   function renderRecipientRow(){
     const recRow = document.getElementById("recipient-row");

@@ -53,6 +53,25 @@ function addToBox(id){
   saveBox(box);
   const p = getProduct(id);
   toast((p ? p.name : "Бараа") + " хайрцагт нэмэгдлээ 🎀");
+  playRibbonAnimation();
+}
+
+/* ---------------- Ribbon-tie micro-animation ---------------- */
+// "Хайрцагт нэмэх" дархад тууз зангидаж буй мэт жижигхэн SVG анимаци тоглуулна —
+// гар хийцийн, анхааралтай боож буй мэдрэмжийг илэрхийлнэ. prefers-reduced-motion
+// идэвхтэй бол огт тоглуулахгүй.
+function playRibbonAnimation(){
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const holder = document.createElement("div");
+  holder.className = "ribbon-fx";
+  holder.innerHTML = `
+    <svg viewBox="0 0 64 64" width="64" height="64">
+      <path class="rf-loop rf-loop-l" d="M32 32 C 14 22, 6 30, 10 40 C 14 50, 26 46, 32 32" fill="none" stroke="#FF6698" stroke-width="5" stroke-linecap="round"/>
+      <path class="rf-loop rf-loop-r" d="M32 32 C 50 22, 58 30, 54 40 C 50 50, 38 46, 32 32" fill="none" stroke="#FF6698" stroke-width="5" stroke-linecap="round"/>
+      <circle class="rf-knot" cx="32" cy="32" r="5" fill="#C75077"/>
+    </svg>`;
+  document.body.appendChild(holder);
+  setTimeout(() => holder.remove(), 1100);
 }
 function removeFromBoxIndex(i){
   const box = loadBox();

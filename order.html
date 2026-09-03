@@ -119,24 +119,26 @@
   .link-status svg{width:15px;height:15px;flex-shrink:0;}
   .link-status.valid{color:#1C8A5A;}
   .link-status.invalid{color:#D6295C;}
+  .preview-row{display:none;align-items:center;gap:14px;margin-top:16px;}
+  .preview-row.show{display:flex;}
   .preview-box{
-    margin-top:16px;border-radius:var(--radius-md);overflow:hidden;
-    border:1.5px solid var(--line);background:var(--bg-soft);
-    aspect-ratio:16/10;position:relative;display:none;
+    width:96px;height:96px;flex-shrink:0;border-radius:var(--radius-sm);overflow:hidden;
+    border:1.5px solid var(--line);background:var(--bg-soft);position:relative;
   }
-  .preview-box.show{display:block;}
-  .preview-box iframe{width:100%;height:100%;border:none;display:block;}
+  .preview-box iframe{
+    width:400%;height:400%;border:none;display:block;pointer-events:none;
+    transform:scale(0.25);transform-origin:top left;
+  }
   .preview-fallback{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    height:100%;gap:10px;text-align:center;padding:20px;
+    display:flex;align-items:center;justify-content:center;height:100%;
   }
-  .preview-fallback svg{width:34px;height:34px;color:var(--primary);}
-  .preview-fallback p{font-size:13.5px;color:var(--ink-soft);margin:0;max-width:28ch;}
+  .preview-fallback svg{width:26px;height:26px;color:var(--ink-soft);}
+  .preview-caption{display:flex;flex-direction:column;gap:6px;}
+  .preview-caption .pc-title{font-size:13.5px;font-weight:600;}
   .preview-open-link{
-    font-size:13px;font-weight:600;color:var(--primary);text-decoration:none;
-    background:var(--primary-tint);padding:8px 16px;border-radius:999px;
+    font-size:12.5px;font-weight:600;color:var(--primary);text-decoration:none;
+    background:var(--primary-tint);padding:6px 13px;border-radius:999px;width:fit-content;
   }
-  .preview-open-row{display:flex;justify-content:flex-end;margin-top:10px;}
   .dpi-chip{
     display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:var(--sky);
     color:#0B5FA8;padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:600;
@@ -249,9 +251,12 @@
             <label>Canva линк</label>
             <input type="text" id="canva-link" placeholder="https://www.canva.com/design/...">
             <div class="link-status" id="link-status"></div>
-            <div class="preview-box" id="preview-box"></div>
-            <div class="preview-open-row" id="preview-open-row" style="display:none;">
-              <a href="#" target="_blank" rel="noopener" class="preview-open-link" id="preview-open-link">Canva-гаас шинэ цонхонд харах ↗</a>
+            <div class="preview-row" id="preview-row">
+              <div class="preview-box" id="preview-box"></div>
+              <div class="preview-caption">
+                <div class="pc-title">Таны дизайны урьдчилсан харагдац</div>
+                <a href="#" target="_blank" rel="noopener" class="preview-open-link" id="preview-open-link">Томоор харах ↗</a>
+              </div>
             </div>
           </div>
           <p class="helper-note">Canva дээрээ <strong>Share</strong> товч дараад <strong>"Anyone with the link can view"</strong> болгосны дараа линкээ хуулж наана уу.</p>
@@ -396,30 +401,26 @@ function buildEmbedUrl(v){
   }catch(e){ return null; }
 }
 function updatePreview(){
+  const row = document.getElementById('preview-row');
   const box = document.getElementById('preview-box');
-  const openRow = document.getElementById('preview-open-row');
   const openLink = document.getElementById('preview-open-link');
   const v = state.canvaLink;
 
   if(!v || !isValidCanvaLink(v)){
-    box.classList.remove('show'); box.innerHTML='';
-    openRow.style.display='none';
+    row.classList.remove('show'); box.innerHTML='';
     return;
   }
 
   openLink.href = v;
-  openRow.style.display='flex';
+  row.classList.add('show');
 
   const embedUrl = buildEmbedUrl(v);
   if(embedUrl){
-    box.classList.add('show');
-    box.innerHTML = `<iframe src="${embedUrl}" allow="fullscreen" loading="lazy"></iframe>`;
+    box.innerHTML = `<iframe src="${embedUrl}" loading="lazy"></iframe>`;
   } else {
-    // canva.link short links — can't embed, show a friendly fallback card
-    box.classList.add('show');
+    // canva.link short links — can't embed a thumbnail, show a placeholder icon
     box.innerHTML = `<div class="preview-fallback">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 8l6 4-6 4V8z"/></svg>
-      <p>Богиносгосон линкийн preview-г шууд харуулах боломжгүй — гэхдээ линк хадгалагдлаа.</p>
     </div>`;
   }
 }

@@ -17,11 +17,13 @@
 // - Confirm env var names match what's already set in Netlify:
 //   QPAY_USERNAME, QPAY_PASSWORD, QPAY_INVOICE_CODE
 
-const { getStore } = require('@netlify/blobs');
+const { getStore, connectLambda } = require('@netlify/blobs');
 
 const QPAY_BASE = process.env.QPAY_BASE_URL || 'https://merchant.qpay.mn/v2';
 
 exports.handler = async (event) => {
+  connectLambda(event); // required for Netlify Blobs in CommonJS "Lambda compatibility mode" functions
+
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }

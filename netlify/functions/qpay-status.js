@@ -8,11 +8,13 @@
 // TODO: swap in zt-site's existing Resend sending helper / template if one
 // already exists, rather than the inline fetch below.
 
-const { getStore } = require('@netlify/blobs');
+const { getStore, connectLambda } = require('@netlify/blobs');
 
 const QPAY_BASE = process.env.QPAY_BASE_URL || 'https://merchant.qpay.mn/v2';
 
 exports.handler = async (event) => {
+  connectLambda(event); // required for Netlify Blobs in CommonJS "Lambda compatibility mode" functions
+
   const orderId = event.queryStringParameters?.orderId;
   if (!orderId) return { statusCode: 400, body: 'Missing orderId' };
 

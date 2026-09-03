@@ -4,9 +4,11 @@
 // { status: 'printed' }) from admin.html. Same shared-password gate as
 // list-print-orders.js — see the TODO there about swapping in real admin auth.
 
-const { getStore } = require('@netlify/blobs');
+const { getStore, connectLambda } = require('@netlify/blobs');
 
 exports.handler = async (event) => {
+  connectLambda(event); // required for Netlify Blobs in CommonJS "Lambda compatibility mode" functions
+
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }

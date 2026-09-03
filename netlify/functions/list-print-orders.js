@@ -7,9 +7,11 @@
 // existing customer-profile auth), swap this shared-password check for that
 // instead — a single shared password is an MVP stopgap, not the long-term fit.
 
-const { getStore } = require('@netlify/blobs');
+const { getStore, connectLambda } = require('@netlify/blobs');
 
 exports.handler = async (event) => {
+  connectLambda(event); // required for Netlify Blobs in CommonJS "Lambda compatibility mode" functions
+
   if (event.headers['x-admin-key'] !== process.env.ADMIN_KEY) {
     return { statusCode: 401, body: 'Unauthorized' };
   }

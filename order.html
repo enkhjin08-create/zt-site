@@ -125,10 +125,8 @@
     width:96px;height:96px;flex-shrink:0;border-radius:var(--radius-sm);overflow:hidden;
     border:1.5px solid var(--line);background:var(--bg-soft);position:relative;
   }
-  .preview-box iframe{
-    width:400%;height:400%;border:none;display:block;pointer-events:none;
-    transform:scale(0.25);transform-origin:top left;
-  }
+  .preview-box iframe{display:none;} /* no longer used, kept harmless if referenced */
+  .preview-box img{width:100%;height:100%;object-fit:cover;display:block;}
   .preview-fallback{
     display:flex;align-items:center;justify-content:center;height:100%;
   }
@@ -388,20 +386,6 @@ canvaLinkInput.addEventListener('input', ()=>{
 function isValidCanvaLink(v){
   return /^https:\/\/(www\.)?(canva\.com\/design\/|canva\.link\/)/.test(v);
 }
-function buildEmbedUrl(v){
-  // Canva design view pages can be embedded by appending ?embed to a /view URL.
-  // Only works for full canva.com/design/... links — canva.link short links
-  // redirect and can't be reliably turned into an embed URL client-side.
-  try{
-    const url = new URL(v);
-    if(url.hostname.indexOf('canva.com')===-1) return null;
-    let path = url.pathname;
-    if(!path.endsWith('/view')){
-      path = path.replace(/\/$/, '') + '/view';
-    }
-    return `https://www.canva.com${path}?embed`;
-  }catch(e){ return null; }
-}
 function updatePreview(){
   const row = document.getElementById('preview-row');
   const box = document.getElementById('preview-box');
@@ -416,22 +400,15 @@ function updatePreview(){
 
   openLink.href = v;
   row.classList.add('show');
-
-  const directEmbedUrl = buildEmbedUrl(v);
-  if(directEmbedUrl){
-    box.innerHTML = `<iframe src="${directEmbedUrl}" loading="lazy"></iframe>`;
-    return;
-  }
-
-  // canva.link short link — show a loading spinner while we resolve it server-side
   showPreviewSpinner(box);
-  fetch('/.netlify/functions/resolve-canva-link?url='+encodeURIComponent(v))
+
+  fetch('/.netlify/functions/get-canva-thumbnail?url='+encodeURIComponent(v))
     .then(res=>res.json())
     .then(data=>{
       if(requestId !== previewRequestId) return; // input changed since this request started
-      const embedUrl = data.resolvedUrl ? buildEmbedUrl(data.resolvedUrl) : null;
-      if(embedUrl){
-        box.innerHTML = `<iframe src="${embedUrl}" loading="lazy"></iframe>`;
+      if(data.resolvedUrl) openLink.href = data.resolvedUrl;
+      if(data.thumbnailUrl){
+        box.innerHTML = `<img src="${data.thumbnailUrl}" alt="Дизайны урьдчилсан харагдац">`;
       } else {
         showPreviewPlaceholder(box);
       }

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Захиалгын самбар — Хэвлэлийн үйлчилгээ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF6EC; --paper-deep:#F1EADA; --ink:#1C1A17; --ink-soft:#5B5648;
+    --line:#DCD2B8; --forest:#1F4D3D; --forest-deep:#153529;
+    --cyan:#00AEEF; --magenta:#EC1E79; --yellow:#FFC72C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;font-size:15px;}
+  h1,h2{font-family:'Fraunces',serif;font-weight:500;margin:0;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px;}
+  header{border-bottom:1px solid var(--line);padding:20px 0;}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .wordmark{font-family:'Fraunces',serif;font-size:19px;}
+  .wordmark span{color:var(--forest);}
+  .logout{font-size:13px;color:var(--ink-soft);background:none;border:none;cursor:pointer;text-decoration:underline;}
+
+  .filters{display:flex;gap:8px;margin:26px 0 18px;flex-wrap:wrap;}
+  .filter-pill{border:1px solid var(--line);padding:8px 14px;font-size:13.5px;cursor:pointer;background:#fff;}
+  .filter-pill.active{background:var(--forest);border-color:var(--forest);color:#fff;}
+
+  .order-card{border:1px solid var(--line);background:#fff;padding:20px;margin-bottom:14px;position:relative;}
+  .order-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  .order-title{font-family:'Fraunces',serif;font-size:18px;}
+  .order-id{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+  .order-total{font-family:'Fraunces',serif;font-size:19px;text-align:right;}
+  .order-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--line);font-size:13.5px;}
+  .order-meta .k{color:var(--ink-soft);font-size:11.5px;margin-bottom:2px;}
+  .badges{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
+  .badge{font-size:11.5px;padding:4px 9px;border:1px solid var(--line);}
+  .badge.paid{border-color:var(--forest);color:var(--forest);}
+  .badge.pending{border-color:var(--yellow);color:#8a6d00;}
+  .badge.checked{border-color:var(--cyan);color:#00789e;}
+  .badge.printed{border-color:var(--magenta);color:var(--magenta);}
+  .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+  .btn{border:1px solid var(--line);background:#fff;padding:9px 14px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--ink);display:inline-block;}
+  .btn.primary{background:var(--forest);border-color:var(--forest);color:#fff;}
+  .btn.primary:hover{background:var(--forest-deep);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .empty-state{text-align:center;padding:60px 0;color:var(--ink-soft);font-size:14px;}
+
+  .gate{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:100;}
+  .gate-box{width:280px;text-align:center;}
+  .gate-box input{width:100%;border:1px solid var(--line);padding:11px 12px;font-size:14px;margin-top:16px;text-align:center;}
+  .gate-box button{width:100%;margin-top:12px;background:var(--forest);color:#fff;border:none;padding:11px;font-size:14px;cursor:pointer;}
+  .gate-err{color:var(--magenta);font-size:12.5px;margin-top:10px;display:none;}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <h2 style="font-size:20px;">Захиалгын самбар</h2>
+    <input type="password" id="gate-pass" placeholder="Нууц үг">
+    <button id="gate-submit">Нэвтрэх</button>
+    <div class="gate-err" id="gate-err">Нууц үг буруу байна.</div>
+  </div>
+</div>
+
+<header>
+  <div class="wrap">
+    <div class="wordmark">ZuvkhunTuund <span>· Хэвлэлийн захиалгууд</span></div>
+    <button class="logout" id="logout-btn">Гарах</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters" id="filters">
+    <div class="filter-pill active" data-filter="all">Бүгд</div>
+    <div class="filter-pill" data-filter="pending">Хүлээгдэж буй төлбөр</div>
+    <div class="filter-pill" data-filter="unchecked">Линк шалгаагүй</div>
+    <div class="filter-pill" data-filter="printed">Хэвлэгдсэн</div>
+  </div>
+  <div id="orders-list"></div>
+</div>
+
+<script>
+const ADMIN_KEY_STORAGE = 'print_admin_key';
+let orders = [];
+let activeFilter = 'all';
+
+// ---- gate ----
+function checkGate(){
+  const key = sessionStorage.getItem(ADMIN_KEY_STORAGE);
+  if(key){ document.getElementById('gate').style.display='none'; loadOrders(); }
+}
+document.getElementById('gate-submit').addEventListener('click', async ()=>{
+  const val = document.getElementById('gate-pass').value;
+  sessionStorage.setItem(ADMIN_KEY_STORAGE, val);
+  const ok = await loadOrders();
+  if(ok){ document.getElementById('gate').style.display='none'; }
+  else { document.getElementById('gate-err').style.display='block'; sessionStorage.removeItem(ADMIN_KEY_STORAGE); }
+});
+document.getElementById('logout-btn').addEventListener('click', ()=>{
+  sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+  location.reload();
+});
+checkGate();
+
+// ---- data ----
+async function loadOrders(){
+  try{
+    const res = await fetch('/.netlify/functions/list-print-orders', {
+      headers: { 'x-admin-key': sessionStorage.getItem(ADMIN_KEY_STORAGE) || '' }
+    });
+    if(res.status===401) return false;
+    orders = await res.json();
+    render();
+    return true;
+  }catch(e){ return false; }
+}
+
+async function updateOrder(orderId, patch){
+  await fetch('/.netlify/functions/update-print-order', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'x-admin-key': sessionStorage.getItem(ADMIN_KEY_STORAGE) || '' },
+    body: JSON.stringify({ orderId, patch })
+  });
+  const o = orders.find(o=>o.orderId===orderId);
+  if(o) Object.assign(o, patch);
+  render();
+}
+
+// ---- filters ----
+document.getElementById('filters').addEventListener('click',(e)=>{
+  const t = e.target.closest('.filter-pill'); if(!t) return;
+  activeFilter = t.dataset.filter;
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.toggle('active', p===t));
+  render();
+});
+
+function filtered(){
+  if(activeFilter==='pending') return orders.filter(o=>o.status!=='paid');
+  if(activeFilter==='unchecked') return orders.filter(o=>!o.linkChecked);
+  if(activeFilter==='printed') return orders.filter(o=>o.status==='printed');
+  return orders;
+}
+
+// ---- render ----
+function render(){
+  const list = document.getElementById('orders-list');
+  const items = filtered().slice().sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt));
+  if(items.length===0){ list.innerHTML = '<div class="empty-state">Захиалга алга.</div>'; return; }
+
+  list.innerHTML = items.map(o=>`
+    <div class="order-card">
+      <div class="order-top">
+        <div>
+          <div class="order-title">${o.product} · ${o.size} × ${o.qty}${o.shape==='custom' ? ' · тусгай хэлбэр' : ''}</div>
+          <div class="order-id">#${o.orderId} · ${new Date(o.createdAt).toLocaleString('mn-MN')}</div>
+        </div>
+        <div class="order-total">${Number(o.total).toLocaleString()}₮</div>
+      </div>
+      <div class="order-meta">
+        <div><div class="k">Хэрэглэгч</div>${o.customer?.name || '—'}</div>
+        <div><div class="k">Утас</div>${o.customer?.phone || '—'}</div>
+        <div><div class="k">Хүлээн авах</div>${o.customer?.delivery==='delivery' ? 'Хүргэлт — '+(o.customer.address||'') : 'Очиж авах'}</div>
+      </div>
+      <div class="badges">
+        <span class="badge ${o.status==='paid' || o.status==='printed' ? 'paid':'pending'}">${o.status==='paid' ? 'Төлбөр төлөгдсөн' : o.status==='printed' ? 'Хэвлэгдсэн' : 'Хүлээгдэж буй'}</span>
+        <span class="badge ${o.linkChecked?'checked':'pending'}">${o.linkChecked ? 'Линк шалгасан' : 'Линк шалгаагүй'}</span>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="${o.canvaLink}" target="_blank" rel="noopener">Canva линк нээх</a>
+        ${!o.linkChecked ? `<button class="btn" onclick="updateOrder('${o.orderId}',{linkChecked:true})">Линк шалгасан гэж тэмдэглэх</button>` : ''}
+        ${o.status!=='printed' ? `<button class="btn" onclick="updateOrder('${o.orderId}',{status:'printed'})" ${o.status!=='paid' ? 'disabled title="Төлбөр төлөгдөөгүй байна"' : ''}>Хэвлэсэн гэж тэмдэглэх</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>

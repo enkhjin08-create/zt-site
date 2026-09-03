@@ -120,6 +120,24 @@
   .link-status svg{width:15px;height:15px;flex-shrink:0;}
   .link-status.valid{color:#1C8A5A;}
   .link-status.invalid{color:#D6295C;}
+  .preview-box{
+    margin-top:16px;border-radius:var(--radius-md);overflow:hidden;
+    border:1.5px solid var(--line);background:var(--bg-soft);
+    aspect-ratio:16/10;position:relative;display:none;
+  }
+  .preview-box.show{display:block;}
+  .preview-box iframe{width:100%;height:100%;border:none;display:block;}
+  .preview-fallback{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    height:100%;gap:10px;text-align:center;padding:20px;
+  }
+  .preview-fallback svg{width:34px;height:34px;color:var(--primary);}
+  .preview-fallback p{font-size:13.5px;color:var(--ink-soft);margin:0;max-width:28ch;}
+  .preview-open-link{
+    font-size:13px;font-weight:600;color:var(--primary);text-decoration:none;
+    background:var(--primary-tint);padding:8px 16px;border-radius:999px;
+  }
+  .preview-open-row{display:flex;justify-content:flex-end;margin-top:10px;}
   .dpi-chip{
     display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:var(--sky);
     color:#0B5FA8;padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:600;
@@ -232,6 +250,10 @@
             <label>Canva линк</label>
             <input type="text" id="canva-link" placeholder="https://www.canva.com/design/...">
             <div class="link-status" id="link-status"></div>
+            <div class="preview-box" id="preview-box"></div>
+            <div class="preview-open-row" id="preview-open-row" style="display:none;">
+              <a href="#" target="_blank" rel="noopener" class="preview-open-link" id="preview-open-link">Canva-гаас шинэ цонхонд харах ↗</a>
+            </div>
           </div>
           <p class="helper-note">Canva дээрээ <strong>Share</strong> товч дараад <strong>"Anyone with the link can view"</strong> болгосны дараа линкээ хуулж наана уу.</p>
           <span class="dpi-chip">✓ 300dpi ойролцоо нарийвчлал зөвлөж байна</span>
@@ -358,10 +380,53 @@ const linkStatusEl = document.getElementById('link-status');
 canvaLinkInput.addEventListener('input', ()=>{
   state.canvaLink = canvaLinkInput.value.trim();
   updateLinkStatus();
+  updatePreview();
   render();
 });
 function isValidCanvaLink(v){
   return /^https:\/\/(www\.)?(canva\.com\/design\/|canva\.link\/)/.test(v);
+}
+function buildEmbedUrl(v){
+  // Canva design view pages can be embedded by appending ?embed to a /view URL.
+  // Only works for full canva.com/design/... links — canva.link short links
+  // redirect and can't be reliably turned into an embed URL client-side.
+  try{
+    const url = new URL(v);
+    if(url.hostname.indexOf('canva.com')===-1) return null;
+    let path = url.pathname;
+    if(!path.endsWith('/view')){
+      path = path.replace(/\/$/, '') + '/view';
+    }
+    return `https://www.canva.com${path}?embed`;
+  }catch(e){ return null; }
+}
+function updatePreview(){
+  const box = document.getElementById('preview-box');
+  const openRow = document.getElementById('preview-open-row');
+  const openLink = document.getElementById('preview-open-link');
+  const v = state.canvaLink;
+
+  if(!v || !isValidCanvaLink(v)){
+    box.classList.remove('show'); box.innerHTML='';
+    openRow.style.display='none';
+    return;
+  }
+
+  openLink.href = v;
+  openRow.style.display='flex';
+
+  const embedUrl = buildEmbedUrl(v);
+  if(embedUrl){
+    box.classList.add('show');
+    box.innerHTML = `<iframe src="${embedUrl}" allow="fullscreen" loading="lazy"></iframe>`;
+  } else {
+    // canva.link short links — can't embed, show a friendly fallback card
+    box.classList.add('show');
+    box.innerHTML = `<div class="preview-fallback">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 8l6 4-6 4V8z"/></svg>
+      <p>Богиносгосон линкийн preview-г шууд харуулах боломжгүй — гэхдээ линк хадгалагдлаа.</p>
+    </div>`;
+  }
 }
 function updateLinkStatus(){
   const v = state.canvaLink;

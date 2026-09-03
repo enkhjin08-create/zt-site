@@ -116,6 +116,10 @@
   #canva-link:focus{outline:none;border-color:var(--primary);}
   .helper-note{font-size:13.5px;color:var(--ink-soft);margin-top:12px;line-height:1.6;}
   .helper-note strong{color:var(--ink);}
+  .link-status{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-top:10px;min-height:18px;}
+  .link-status svg{width:15px;height:15px;flex-shrink:0;}
+  .link-status.valid{color:#1C8A5A;}
+  .link-status.invalid{color:#D6295C;}
   .dpi-chip{
     display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:var(--sky);
     color:#0B5FA8;padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:600;
@@ -133,7 +137,8 @@
   /* ---- receipt ---- */
   .grid{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start;padding-bottom:70px;}
   @media (max-width:960px){ .grid{grid-template-columns:1fr;} }
-  .receipt{position:sticky;top:20px;}
+  .col-side{align-self:start;position:sticky;top:20px;}
+  .receipt{align-self:start;max-height:calc(100vh - 40px);overflow-y:auto;}
   .receipt h2{font-size:18px;}
   .line{display:flex;justify-content:space-between;font-size:14px;padding:10px 0;border-bottom:1px solid var(--line);}
   .line.total{border-bottom:none;margin-top:8px;padding-top:16px;font-family:'Poppins',sans-serif;font-weight:700;font-size:21px;}
@@ -226,6 +231,7 @@
           <div class="field" style="margin-top:0;">
             <label>Canva линк</label>
             <input type="text" id="canva-link" placeholder="https://www.canva.com/design/...">
+            <div class="link-status" id="link-status"></div>
           </div>
           <p class="helper-note">Canva дээрээ <strong>Share</strong> товч дараад <strong>"Anyone with the link can view"</strong> болгосны дараа линкээ хуулж наана уу.</p>
           <span class="dpi-chip">✓ 300dpi ойролцоо нарийвчлал зөвлөж байна</span>
@@ -348,8 +354,26 @@ document.querySelectorAll('.pill[data-delivery]').forEach(pill=>{
 
 // ---- canva link ----
 const canvaLinkInput = document.getElementById('canva-link');
-canvaLinkInput.addEventListener('input', ()=>{ state.canvaLink = canvaLinkInput.value.trim(); render(); });
-function isValidCanvaLink(v){ return /^https:\/\/(www\.)?canva\.com\/design\//.test(v); }
+const linkStatusEl = document.getElementById('link-status');
+canvaLinkInput.addEventListener('input', ()=>{
+  state.canvaLink = canvaLinkInput.value.trim();
+  updateLinkStatus();
+  render();
+});
+function isValidCanvaLink(v){
+  return /^https:\/\/(www\.)?(canva\.com\/design\/|canva\.link\/)/.test(v);
+}
+function updateLinkStatus(){
+  const v = state.canvaLink;
+  if(!v){ linkStatusEl.className='link-status'; linkStatusEl.innerHTML=''; return; }
+  if(isValidCanvaLink(v)){
+    linkStatusEl.className='link-status valid';
+    linkStatusEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>Зөв Canva линк байна`;
+  } else {
+    linkStatusEl.className='link-status invalid';
+    linkStatusEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6L6 18M6 6l12 12"/></svg>Canva линк шиг харагдахгүй байна — дахин шалгаарай`;
+  }
+}
 
 // ---- pricing / receipt ----
 function calc(){

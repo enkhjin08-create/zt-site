@@ -37,7 +37,7 @@ exports.handler = async (event) => {
   if (!product || !size || !qty || !total || !customer?.name || !customer?.phone || !canvaLink) {
     return { statusCode: 400, body: 'Missing required fields' };
   }
-  if (!/^https:\/\/(www\.)?canva\.com\/design\//.test(canvaLink)) {
+  if (!/^https:\/\/(www\.)?(canva\.com\/design\/|canva\.link\/)/.test(canvaLink)) {
     return { statusCode: 400, body: 'Invalid Canva link' };
   }
 

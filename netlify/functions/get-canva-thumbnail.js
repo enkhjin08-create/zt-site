@@ -22,7 +22,22 @@ exports.handler = async (event) => {
       redirect: 'follow',
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ZuvkhunTuundBot/1.0; +https://zuvhuntuund.com)' }
     });
-    const html = await res.text();
+    let finalUrl = res.url;
+    let html = await res.text();
+
+    // Canva's "copy link" share button resolves to a .../edit URL (with utm_*
+    // query params). The editor route doesn't render the og:image meta tag —
+    // only the read-only .../view route does — so re-fetch that instead.
+    if (/\/edit(\?|$)/.test(finalUrl)) {
+      const viewUrl = finalUrl.split('?')[0].replace(/\/edit$/, '/view');
+      const viewRes = await fetch(viewUrl, {
+        method: 'GET',
+        redirect: 'follow',
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ZuvkhunTuundBot/1.0; +https://zuvhuntuund.com)' }
+      });
+      finalUrl = viewUrl;
+      html = await viewRes.text();
+    }
 
     // og:image tag can appear with property/content attributes in either order
     const match =
@@ -33,7 +48,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ thumbnailUrl, resolvedUrl: res.url })
+      body: JSON.stringify({ thumbnailUrl, resolvedUrl: finalUrl })
     };
   } catch (err) {
     console.error('get-canva-thumbnail failed', err);

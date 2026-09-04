@@ -35,11 +35,11 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: 'Invalid JSON' };
   }
 
-  const { product, size, shape, qty, total, customer, canvaLink } = body;
+  const { product, size, shape, qty, total, customer, canvaLink, designTitle } = body;
   if (!product || !size || !qty || !total || !customer?.name || !customer?.phone || !canvaLink) {
     return { statusCode: 400, body: 'Missing required fields' };
   }
-  if (!/^https:\/\/(www\.)?(canva\.com\/design\/|canva\.link\/)/.test(canvaLink)) {
+  if (!/^https:\/\/(www\.)?canva\.com\//.test(canvaLink)) {
     return { statusCode: 400, body: 'Invalid Canva link' };
   }
 
@@ -61,6 +61,7 @@ exports.handler = async (event) => {
       product, size, shape, qty, total,
       customer,
       canvaLink,
+      designTitle,
       status: 'pending',
       linkChecked: false,
       qpayInvoiceId: invoice.invoice_id,

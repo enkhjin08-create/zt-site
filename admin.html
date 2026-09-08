@@ -394,28 +394,44 @@
           </div>
           <div>
             <label class="field-label">1-р дүрс (зүүн)</label>
-            <select name="themeIcon1" class="field-input">
+            <select name="themeIcon1" class="field-input" onchange="toggleCampaignEmojiInput(this,'themeIcon1Emoji')">
               <option value="flower">🌸 Цэцэг</option>
               <option value="cup">☕ Аяга</option>
               <option value="giftset">🎁 Бэлгийн багц</option>
               <option value="greeting">💌 Мэндчилгээ</option>
               <option value="box">🎀 Бант</option>
               <option value="extra">📦 Хайрцаг</option>
+              <option value="heart">❤️ Зүрх</option>
+              <option value="star">⭐ Од</option>
+              <option value="book">📖 Ном</option>
+              <option value="cake">🎂 Бялуу</option>
+              <option value="ribbon">🎀 Тууз</option>
+              <option value="balloon">🎈 Бөмбөлөг</option>
+              <option value="custom">🖋️ Өөрийн emoji...</option>
             </select>
+            <input name="themeIcon1Emoji" class="field-input" type="text" placeholder="Жишээ: 🎄" maxlength="8" style="margin-top:8px;display:none">
           </div>
           <div>
             <label class="field-label">2-р дүрс (баруун)</label>
-            <select name="themeIcon2" class="field-input">
+            <select name="themeIcon2" class="field-input" onchange="toggleCampaignEmojiInput(this,'themeIcon2Emoji')">
               <option value="cup">☕ Аяга</option>
               <option value="flower">🌸 Цэцэг</option>
               <option value="giftset">🎁 Бэлгийн багц</option>
               <option value="greeting">💌 Мэндчилгээ</option>
               <option value="box">🎀 Бант</option>
               <option value="extra">📦 Хайрцаг</option>
+              <option value="heart">❤️ Зүрх</option>
+              <option value="star">⭐ Од</option>
+              <option value="book">📖 Ном</option>
+              <option value="cake">🎂 Бялуу</option>
+              <option value="ribbon">🎀 Тууз</option>
+              <option value="balloon">🎈 Бөмбөлөг</option>
+              <option value="custom">🖋️ Өөрийн emoji...</option>
             </select>
+            <input name="themeIcon2Emoji" class="field-input" type="text" placeholder="Жишээ: ☃️" maxlength="8" style="margin-top:8px;display:none">
           </div>
         </div>
-        <p class="lede" style="font-size:12px;margin-top:6px">Эдгээр нь нүүр хуудасны анимацитай бэлгийн хайрцгийн лент болон дотор дүрсийг тухайн баярт тохируулан бага зэрэг өөрчилнө.</p>
+        <p class="lede" style="font-size:12px;margin-top:6px">Эдгээр нь нүүр хуудасны анимацитай бэлгийн хайрцгийн лент болон дотор дүрсийг тухайн баярт тохируулан бага зэрэг өөрчилнө. "Өөрийн emoji" сонговол доор гарч ирэх талбарт хүссэн emoji-гээ (жиш: 🎄 ☃️ 🧧 🎃) шууд бичиж болно.</p>
         <div style="margin-top:14px">
           <label class="field-label">Онцолсон барааны ID-нууд (таслалаар тусгаарлана)</label>
           <input name="featuredProductIds" class="field-input" type="text" placeholder="Жишээ: 12,45,9003" required>
@@ -1843,6 +1859,10 @@ function editCampaign(id){
   f.themeColor.value = (c.theme && c.theme.color) || "#FF6698";
   f.themeIcon1.value = (c.theme && c.theme.icon1) || "flower";
   f.themeIcon2.value = (c.theme && c.theme.icon2) || "cup";
+  f.themeIcon1Emoji.value = (c.theme && c.theme.icon1Emoji) || "";
+  f.themeIcon2Emoji.value = (c.theme && c.theme.icon2Emoji) || "";
+  toggleCampaignEmojiInput(f.themeIcon1, "themeIcon1Emoji");
+  toggleCampaignEmojiInput(f.themeIcon2, "themeIcon2Emoji");
   f.featuredProductIds.value = (c.featuredProductIds || []).join(",");
   document.getElementById("campaign-form-heading").textContent = "Кампанит ажил засах";
   document.getElementById("campaign-cancel-edit").style.display = "";
@@ -1856,6 +1876,16 @@ function resetCampaignForm(){
   f.id.value = "";
   document.getElementById("campaign-form-heading").textContent = "Шинэ кампанит ажил нэмэх";
   document.getElementById("campaign-cancel-edit").style.display = "none";
+  toggleCampaignEmojiInput(f.themeIcon1, "themeIcon1Emoji");
+  toggleCampaignEmojiInput(f.themeIcon2, "themeIcon2Emoji");
+}
+
+// "Өөрийн emoji..." сонговол доор нь emoji бичих талбарыг харуулна.
+function toggleCampaignEmojiInput(selectEl, inputName){
+  const f = selectEl.form;
+  const input = f.elements[inputName];
+  if(!input) return;
+  input.style.display = selectEl.value === "custom" ? "" : "none";
 }
 
 async function submitCampaignForm(e){
@@ -1887,7 +1917,9 @@ async function submitCampaignForm(e){
     theme: {
       color: f.themeColor.value,
       icon1: f.themeIcon1.value,
-      icon2: f.themeIcon2.value
+      icon2: f.themeIcon2.value,
+      icon1Emoji: f.themeIcon1Emoji.value.trim(),
+      icon2Emoji: f.themeIcon2Emoji.value.trim()
     },
     featuredProductIds
   };

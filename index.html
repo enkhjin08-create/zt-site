@@ -84,7 +84,7 @@
         </circle>
 
         <!-- Icon slot 1 (default: flower) -->
-        <g id="hero-icon-1" transform="translate(95,170) scale(0.36) translate(-50,-50)" opacity=".9" style="color:#0F4B42">
+        <g id="hero-icon-1" transform="translate(100,205) scale(0.48) translate(-50,-50)" opacity=".9" style="color:#0F4B42">
           <circle cx="50" cy="46" r="8" fill="none" stroke="currentColor" stroke-width="5"/>
           <circle cx="50" cy="26" r="11" fill="none" stroke="currentColor" stroke-width="4.5"/>
           <circle cx="50" cy="66" r="11" fill="none" stroke="currentColor" stroke-width="4.5"/>
@@ -96,7 +96,7 @@
         </g>
 
         <!-- Icon slot 2 (default: cup) -->
-        <g id="hero-icon-2" transform="translate(205,175) scale(0.36) translate(-50,-50)" opacity=".9" style="color:var(--hero-ribbon)">
+        <g id="hero-icon-2" transform="translate(205,205) scale(0.48) translate(-50,-50)" opacity=".9" style="color:var(--hero-ribbon)">
           <path d="M26 30h40v28a20 20 0 0 1-20 20 20 20 0 0 1-20-20V30z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
           <path d="M66 38h6a10 10 0 0 1 0 20h-6" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
           <path d="M36 22c0-4 4-4 4-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
@@ -384,12 +384,28 @@
     svg.style.setProperty("--hero-ribbon", color);
     svg.style.setProperty("--hero-ribbon-dark", darkenColor(color, 20));
 
-    const icon1Key = (theme && theme.icon1) || "flower";
-    const icon2Key = (theme && theme.icon2) || "cup";
-    const g1 = document.getElementById("hero-icon-1");
-    const g2 = document.getElementById("hero-icon-2");
-    if(g1 && typeof ICONS !== "undefined" && ICONS[icon1Key]) g1.innerHTML = ICONS[icon1Key];
-    if(g2 && typeof ICONS !== "undefined" && ICONS[icon2Key]) g2.innerHTML = ICONS[icon2Key];
+    setHeroIcon(document.getElementById("hero-icon-1"), (theme && theme.icon1) || "flower", theme && theme.icon1Emoji);
+    setHeroIcon(document.getElementById("hero-icon-2"), (theme && theme.icon2) || "cup", theme && theme.icon2Emoji);
+  }
+
+  // Icon slot-д эсвэл урьдчилан бэлдсэн ICONS сангийн дүрсийг, эсвэл
+  // админ өөрөө бичсэн emoji-г тавина. textContent ашигладаг тул
+  // emoji аюулгүйгээр (HTML тайлбарлахгүйгээр) шууд харагдана.
+  function setHeroIcon(g, key, emoji){
+    if(!g) return;
+    if(key === "custom" && emoji){
+      g.innerHTML = "";
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", "50");
+      text.setAttribute("y", "50");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "central");
+      text.setAttribute("font-size", "58");
+      text.textContent = emoji;
+      g.appendChild(text);
+      return;
+    }
+    if(typeof ICONS !== "undefined" && ICONS[key]) g.innerHTML = ICONS[key];
   }
 </script>
 </body>

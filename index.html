@@ -84,7 +84,7 @@
         </circle>
 
         <!-- Icon slot 1 (default: flower) -->
-        <g id="hero-icon-1" transform="translate(100,205) scale(0.48) translate(-50,-50)" opacity=".9" style="color:#0F4B42">
+        <g id="hero-icon-1" transform="translate(116,156) scale(0.34) translate(-50,-50)" opacity=".9" style="color:#0F4B42">
           <circle cx="50" cy="46" r="8" fill="none" stroke="currentColor" stroke-width="5"/>
           <circle cx="50" cy="26" r="11" fill="none" stroke="currentColor" stroke-width="4.5"/>
           <circle cx="50" cy="66" r="11" fill="none" stroke="currentColor" stroke-width="4.5"/>
@@ -96,11 +96,27 @@
         </g>
 
         <!-- Icon slot 2 (default: cup) -->
-        <g id="hero-icon-2" transform="translate(205,205) scale(0.48) translate(-50,-50)" opacity=".9" style="color:var(--hero-ribbon)">
+        <g id="hero-icon-2" transform="translate(140,200) scale(0.34) translate(-50,-50)" opacity=".9" style="color:var(--hero-ribbon)">
           <path d="M26 30h40v28a20 20 0 0 1-20 20 20 20 0 0 1-20-20V30z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
           <path d="M66 38h6a10 10 0 0 1 0 20h-6" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
           <path d="M36 22c0-4 4-4 4-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
           <path d="M48 22c0-4 4-4 4-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        </g>
+
+        <!-- Icon slot 3 (default: giftset) -->
+        <g id="hero-icon-3" transform="translate(180,200) scale(0.34) translate(-50,-50)" opacity=".9" style="color:var(--hero-ribbon-dark)">
+          <rect x="22" y="42" width="56" height="38" rx="4" fill="none" stroke="currentColor" stroke-width="5"/>
+          <path d="M22 56h56" stroke="currentColor" stroke-width="5"/>
+          <path d="M50 42v38" stroke="currentColor" stroke-width="5"/>
+          <path d="M50 42c-4-10-22-14-22-2 0 6 10 6 22 2z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linejoin="round"/>
+          <path d="M50 42c4-10 22-14 22-2 0 6-10 6-22 2z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linejoin="round"/>
+        </g>
+
+        <!-- Icon slot 4 (default: greeting) -->
+        <g id="hero-icon-4" transform="translate(204,156) scale(0.34) translate(-50,-50)" opacity=".9" style="color:#0F4B42">
+          <rect x="20" y="18" width="60" height="64" rx="6" fill="none" stroke="currentColor" stroke-width="5"/>
+          <path d="M50 18v64" stroke="currentColor" stroke-width="4"/>
+          <path d="M58 53c-3-6-13-6-13-1 0 4 6 4 13 8 7-4 13-4 13-8 0-5-10-5-13 1z" fill="currentColor" stroke="none"/>
         </g>
 
         <!-- Sparkles -->
@@ -386,6 +402,8 @@
 
     setHeroIcon(document.getElementById("hero-icon-1"), (theme && theme.icon1) || "flower", theme && theme.icon1Emoji);
     setHeroIcon(document.getElementById("hero-icon-2"), (theme && theme.icon2) || "cup", theme && theme.icon2Emoji);
+    setHeroIcon(document.getElementById("hero-icon-3"), (theme && theme.icon3) || "giftset", theme && theme.icon3Emoji);
+    setHeroIcon(document.getElementById("hero-icon-4"), (theme && theme.icon4) || "greeting", theme && theme.icon4Emoji);
   }
 
   // Icon slot-д эсвэл урьдчилан бэлдсэн ICONS сангийн дүрсийг, эсвэл

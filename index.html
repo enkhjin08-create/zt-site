@@ -54,8 +54,8 @@
 <div class="gift-divider" aria-hidden="true" id="campaign-divider" style="display:none"><span class="gd-knot"></span></div>
 
 <section class="hero" id="default-hero">
-  <div class="wrap">
-    <div>
+  <div class="wrap" id="hero-wrap">
+    <div id="hero-text-col">
       <p class="eyebrow">Зөвхөн түүнд тань зориулсан бэлгийн дэлгүүр</p>
       <h1><span id="hero-type" class="hero-type"></span><span class="hero-caret" aria-hidden="true"></span><br><em>онцгой бэлэг</em>.</h1>
       <p class="lede">Төрсөн өдөр, баяр, тэмдэглэлт өдөр бүрт зориулсан бэлгийг өөрийн хүссэнээр бүрдүүлж, хайртай хүндээ хүргүүлээрэй.</p>
@@ -363,9 +363,16 @@
 
     document.getElementById("campaign-section").style.display = "";
     document.getElementById("campaign-divider").style.display = "";
-    // Кампанит ажил идэвхтэй үед стандарт hero хэсгийг нуугаад, кампанит
-    // ажлын баннерыг хуудасны хамгийн дээд, анхны харагдах зүйл болгоно.
-    document.getElementById("default-hero").style.display = "none";
+    // Кампанит ажил идэвхтэй үед стандарт hero-ийн ТЕКСТ хэсгийг л нуугаад,
+    // анимацитай бэлгийн хайрцгийг хэвээр нь харуулна (устгахгүй, зөвхөн
+    // голлуулж, дангаар нь үлдээнэ).
+    document.getElementById("hero-text-col").style.display = "none";
+    const heroWrap = document.getElementById("hero-wrap");
+    heroWrap.style.gridTemplateColumns = "1fr";
+    heroWrap.style.justifyItems = "center";
+    document.getElementById("default-hero").style.paddingTop = "8px";
+    const heroArt = document.querySelector("#default-hero .hero-art");
+    if(heroArt){ heroArt.style.maxWidth = "340px"; heroArt.style.margin = "0 auto"; }
 
     const b = c.banner || {};
     document.getElementById("campaign-banner-title").textContent = b.title || c.name || "";

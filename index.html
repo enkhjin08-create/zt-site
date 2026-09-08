@@ -26,7 +26,34 @@
 
 <header class="site-header"></header>
 
-<section class="hero">
+<section class="section" id="campaign-section" style="display:none;padding-top:56px">
+  <div class="wrap">
+    <a id="campaign-banner-link" href="#" style="text-decoration:none;display:block">
+      <div id="campaign-banner" style="border-radius:24px;padding:48px 40px;display:flex;align-items:center;gap:28px;flex-wrap:wrap;background:linear-gradient(120deg,var(--ribbon-tint),var(--paper-deep))">
+        <img id="campaign-banner-img" alt="" style="display:none;width:110px;height:110px;object-fit:cover;border-radius:20px;flex-shrink:0">
+        <div style="flex:1;min-width:220px">
+          <p class="eyebrow" id="campaign-banner-eyebrow">Баярын онцгой санал</p>
+          <h1 id="campaign-banner-title" style="margin:6px 0 10px;font-size:clamp(28px,3.6vw,44px);line-height:1.1"></h1>
+          <p class="lede" id="campaign-banner-subtitle" style="margin:0"></p>
+        </div>
+        <span class="btn btn-primary" id="campaign-banner-cta" style="flex-shrink:0"></span>
+      </div>
+    </a>
+  </div>
+  <div class="wrap" style="margin-top:32px">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Хугацаатай санал</p>
+        <h2 id="campaign-section-title"></h2>
+      </div>
+    </div>
+    <div class="product-grid" id="campaign-products"></div>
+  </div>
+</section>
+
+<div class="gift-divider" aria-hidden="true" id="campaign-divider" style="display:none"><span class="gd-knot"></span></div>
+
+<section class="hero" id="default-hero">
   <div class="wrap">
     <div>
       <p class="eyebrow">Зөвхөн түүнд тань зориулсан бэлгийн дэлгүүр</p>
@@ -137,33 +164,6 @@
     </div>
   </div>
 </section>
-
-<section class="section" id="campaign-section" style="display:none">
-  <div class="wrap">
-    <a id="campaign-banner-link" href="#" style="text-decoration:none;display:block">
-      <div id="campaign-banner" style="border-radius:24px;padding:36px 32px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;background:linear-gradient(120deg,var(--ribbon-tint),var(--paper-deep))">
-        <img id="campaign-banner-img" alt="" style="display:none;width:88px;height:88px;object-fit:cover;border-radius:18px;flex-shrink:0">
-        <div style="flex:1;min-width:200px">
-          <p class="eyebrow">Баярын онцгой санал</p>
-          <h2 id="campaign-banner-title" style="margin:4px 0 6px"></h2>
-          <p class="lede" id="campaign-banner-subtitle" style="margin:0"></p>
-        </div>
-        <span class="btn btn-primary" id="campaign-banner-cta" style="flex-shrink:0"></span>
-      </div>
-    </a>
-  </div>
-  <div class="wrap" style="margin-top:28px">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Хугацаатай санал</p>
-        <h2 id="campaign-section-title"></h2>
-      </div>
-    </div>
-    <div class="product-grid" id="campaign-products"></div>
-  </div>
-</section>
-
-<div class="gift-divider" aria-hidden="true"><span class="gd-knot"></span></div>
 
 <section class="section">
   <div class="wrap">
@@ -362,6 +362,10 @@
     if(!featured.length) return; // онцолсон бараа олдоогүй бол баннер харуулахгүй
 
     document.getElementById("campaign-section").style.display = "";
+    document.getElementById("campaign-divider").style.display = "";
+    // Кампанит ажил идэвхтэй үед стандарт hero хэсгийг нуугаад, кампанит
+    // ажлын баннерыг хуудасны хамгийн дээд, анхны харагдах зүйл болгоно.
+    document.getElementById("default-hero").style.display = "none";
 
     const b = c.banner || {};
     document.getElementById("campaign-banner-title").textContent = b.title || c.name || "";

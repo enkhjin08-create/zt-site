@@ -196,12 +196,18 @@ function sanitizeCampaign(input, existing){
   const eb = existing.banner || {};
   const t = input.theme || {};
   const et = existing.theme || {};
-  const HERO_ICON_KEYS = ["cup", "giftset", "flower", "extra", "greeting", "box"];
+  const HERO_ICON_KEYS = ["cup", "giftset", "flower", "extra", "greeting", "box", "heart", "star", "book", "cake", "ribbon", "balloon", "custom"];
   const hexColor = (v, fallback) => {
     const s = str(v, 7).trim();
     return /^#[0-9A-Fa-f]{6}$/.test(s) ? s : (fallback || "#FF6698");
   };
   const iconKey = (v, fallback) => HERO_ICON_KEYS.includes(v) ? v : (fallback || "flower");
+  // Emoji-г 1-4 тэмдэгт хүртэл зөвшөөрнө (ихэнх emoji, түүний дотор
+  // хослол/skin-tone variant-уудыг хамарна), аюулгүйн үүднээс товч байлгана.
+  const emojiStr = (v, fallback) => {
+    const s = str(v, 16).trim();
+    return s || (fallback || "");
+  };
 
   return {
     id: existing.id || str(input.id, 60).trim() || ("camp" + Date.now()),
@@ -219,7 +225,9 @@ function sanitizeCampaign(input, existing){
     theme: {
       color: hexColor(t.color != null ? t.color : et.color, "#FF6698"),
       icon1: iconKey(t.icon1 != null ? t.icon1 : et.icon1, "flower"),
-      icon2: iconKey(t.icon2 != null ? t.icon2 : et.icon2, "cup")
+      icon2: iconKey(t.icon2 != null ? t.icon2 : et.icon2, "cup"),
+      icon1Emoji: emojiStr(t.icon1Emoji != null ? t.icon1Emoji : et.icon1Emoji, ""),
+      icon2Emoji: emojiStr(t.icon2Emoji != null ? t.icon2Emoji : et.icon2Emoji, "")
     },
     sectionTitle: str(input.sectionTitle != null ? input.sectionTitle : existing.sectionTitle, 140),
     featuredProductIds: ids(input.featuredProductIds),

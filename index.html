@@ -415,10 +415,13 @@
       g.innerHTML = "";
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", "50");
-      text.setAttribute("y", "50");
+      text.setAttribute("y", "54");
       text.setAttribute("text-anchor", "middle");
       text.setAttribute("dominant-baseline", "central");
       text.setAttribute("font-size", "58");
+      // Сайтын үндсэн фонт (Museo Sans гэх мэт) emoji агуулдаггүй тул
+      // тусгайлан өнгөт emoji фонтуудыг зааж өгнө — эс тэгвэл хоосон харагдана.
+      text.setAttribute("font-family", "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji','Segoe UI Symbol',sans-serif");
       text.textContent = emoji;
       g.appendChild(text);
       return;

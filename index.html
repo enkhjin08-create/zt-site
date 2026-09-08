@@ -34,7 +34,7 @@
       <p class="lede" id="hero-lede">Төрсөн өдөр, баяр, тэмдэглэлт өдөр бүрт зориулсан бэлгийг өөрийн хүссэнээр бүрдүүлж, хайртай хүндээ хүргүүлээрэй.</p>
       <div class="hero-actions">
         <a href="builder.html" class="btn btn-primary" id="hero-cta-primary">Бэлгийн багц бэлдье →</a>
-        <a href="category.html" class="btn btn-outline">Бүтээгдэхүүн үзэх</a>
+        <a href="category.html" class="btn btn-outline" id="hero-cta-secondary">Бүтээгдэхүүн үзэх</a>
       </div>
     </div>
     <div class="hero-art" aria-hidden="true">
@@ -369,6 +369,10 @@
       const primary = document.getElementById("hero-cta-primary");
       primary.textContent = (b.ctaText || "Үзэх") + " →";
       primary.href = b.ctaLink || "category.html";
+      // Кампанит ажил идэвхтэй үед 2-р (Бүтээгдэхүүн үзэх) товчийг нуугаад,
+      // зөвхөн кампанит ажлын CTA товч ганцаараа харагдана.
+      const secondary = document.getElementById("hero-cta-secondary");
+      if(secondary) secondary.style.display = "none";
     }
 
     // Кампанит ажлын тематик өнгө + дүрсүүд байвал бэлгийн хайрцгийн
@@ -397,8 +401,16 @@
     const svg = document.getElementById("hero-svg");
     if(!svg) return;
     const color = (theme && theme.color) || "#FF6698";
+    const colorDark = darkenColor(color, 20);
     svg.style.setProperty("--hero-ribbon", color);
-    svg.style.setProperty("--hero-ribbon-dark", darkenColor(color, 20));
+    svg.style.setProperty("--hero-ribbon-dark", colorDark);
+
+    // "Баярын онцгой санал" текст + "Багц үзэх" товчийг мөн адил тематик
+    // өнгөөр будна — ингэснээр бүх зүйл нэг өнгөний схемтэй нийцтэй харагдана.
+    const eyebrow = document.getElementById("hero-eyebrow");
+    if(eyebrow) eyebrow.style.color = colorDark;
+    const primaryBtn = document.getElementById("hero-cta-primary");
+    if(primaryBtn){ primaryBtn.style.background = color; primaryBtn.style.boxShadow = "none"; }
 
     setHeroIcon(document.getElementById("hero-icon-1"), (theme && theme.icon1) || "flower", theme && theme.icon1Emoji);
     setHeroIcon(document.getElementById("hero-icon-2"), (theme && theme.icon2) || "cup", theme && theme.icon2Emoji);

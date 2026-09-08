@@ -387,6 +387,35 @@
           <label class="field-label">Баннерын зураг (URL, заавал биш)</label>
           <input name="bannerImage" class="field-input" type="text" placeholder="images/uploads/teachers-day.jpg">
         </div>
+        <div class="grid-3" style="margin-top:14px">
+          <div>
+            <label class="field-label">Бэлгийн хайрцгийн тематик өнгө</label>
+            <input name="themeColor" class="field-input" type="color" value="#FF6698" style="height:44px;padding:4px">
+          </div>
+          <div>
+            <label class="field-label">1-р дүрс (зүүн)</label>
+            <select name="themeIcon1" class="field-input">
+              <option value="flower">🌸 Цэцэг</option>
+              <option value="cup">☕ Аяга</option>
+              <option value="giftset">🎁 Бэлгийн багц</option>
+              <option value="greeting">💌 Мэндчилгээ</option>
+              <option value="box">🎀 Бант</option>
+              <option value="extra">📦 Хайрцаг</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">2-р дүрс (баруун)</label>
+            <select name="themeIcon2" class="field-input">
+              <option value="cup">☕ Аяга</option>
+              <option value="flower">🌸 Цэцэг</option>
+              <option value="giftset">🎁 Бэлгийн багц</option>
+              <option value="greeting">💌 Мэндчилгээ</option>
+              <option value="box">🎀 Бант</option>
+              <option value="extra">📦 Хайрцаг</option>
+            </select>
+          </div>
+        </div>
+        <p class="lede" style="font-size:12px;margin-top:6px">Эдгээр нь нүүр хуудасны анимацитай бэлгийн хайрцгийн лент болон дотор дүрсийг тухайн баярт тохируулан бага зэрэг өөрчилнө.</p>
         <div style="margin-top:14px">
           <label class="field-label">Онцолсон барааны ID-нууд (таслалаар тусгаарлана)</label>
           <input name="featuredProductIds" class="field-input" type="text" placeholder="Жишээ: 12,45,9003" required>
@@ -1811,6 +1840,9 @@ function editCampaign(id){
   f.ctaText.value = (c.banner && c.banner.ctaText) || "";
   f.ctaLink.value = (c.banner && c.banner.ctaLink) || "";
   f.bannerImage.value = (c.banner && c.banner.image) || "";
+  f.themeColor.value = (c.theme && c.theme.color) || "#FF6698";
+  f.themeIcon1.value = (c.theme && c.theme.icon1) || "flower";
+  f.themeIcon2.value = (c.theme && c.theme.icon2) || "cup";
   f.featuredProductIds.value = (c.featuredProductIds || []).join(",");
   document.getElementById("campaign-form-heading").textContent = "Кампанит ажил засах";
   document.getElementById("campaign-cancel-edit").style.display = "";
@@ -1851,6 +1883,11 @@ async function submitCampaignForm(e){
       ctaText: f.ctaText.value.trim(),
       ctaLink: f.ctaLink.value.trim(),
       image: f.bannerImage.value.trim()
+    },
+    theme: {
+      color: f.themeColor.value,
+      icon1: f.themeIcon1.value,
+      icon2: f.themeIcon2.value
     },
     featuredProductIds
   };

@@ -365,14 +365,8 @@
     document.getElementById("campaign-divider").style.display = "";
     // Кампанит ажил идэвхтэй үед стандарт hero-ийн ТЕКСТ хэсгийг л нуугаад,
     // анимацитай бэлгийн хайрцгийг хэвээр нь харуулна (устгахгүй, зөвхөн
-    // голлуулж, дангаар нь үлдээнэ).
-    document.getElementById("hero-text-col").style.display = "none";
-    const heroWrap = document.getElementById("hero-wrap");
-    heroWrap.style.gridTemplateColumns = "1fr";
-    heroWrap.style.justifyItems = "center";
-    document.getElementById("default-hero").style.paddingTop = "8px";
-    const heroArt = document.querySelector("#default-hero .hero-art");
-    if(heroArt){ heroArt.style.maxWidth = "340px"; heroArt.style.margin = "0 auto"; }
+    // голлуулж, дангаар нь үлдээнэ). CSS класс ашигладаг тул grid эвдрэхгүй.
+    document.getElementById("default-hero").classList.add("campaign-active");
 
     const b = c.banner || {};
     document.getElementById("campaign-banner-title").textContent = b.title || c.name || "";

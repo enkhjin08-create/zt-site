@@ -138,6 +138,33 @@
   </div>
 </section>
 
+<section class="section" id="campaign-section" style="display:none">
+  <div class="wrap">
+    <a id="campaign-banner-link" href="#" style="text-decoration:none;display:block">
+      <div id="campaign-banner" style="border-radius:24px;padding:36px 32px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;background:linear-gradient(120deg,var(--ribbon-tint),var(--paper-deep))">
+        <img id="campaign-banner-img" alt="" style="display:none;width:88px;height:88px;object-fit:cover;border-radius:18px;flex-shrink:0">
+        <div style="flex:1;min-width:200px">
+          <p class="eyebrow">Баярын онцгой санал</p>
+          <h2 id="campaign-banner-title" style="margin:4px 0 6px"></h2>
+          <p class="lede" id="campaign-banner-subtitle" style="margin:0"></p>
+        </div>
+        <span class="btn btn-primary" id="campaign-banner-cta" style="flex-shrink:0"></span>
+      </div>
+    </a>
+  </div>
+  <div class="wrap" style="margin-top:28px">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Хугацаатай санал</p>
+        <h2 id="campaign-section-title"></h2>
+      </div>
+    </div>
+    <div class="product-grid" id="campaign-products"></div>
+  </div>
+</section>
+
+<div class="gift-divider" aria-hidden="true"><span class="gd-knot"></span></div>
+
 <section class="section">
   <div class="wrap">
     <div class="section-head">
@@ -319,7 +346,38 @@
       document.getElementById("bestseller-section").style.display = "";
       document.getElementById("bestseller-grid").innerHTML = bestSellers.slice(0,8).map(productCardHTML).join("");
     }
+
+    renderActiveCampaign();
   })();
+
+  // Идэвхтэй кампанит ажил байвал (жишээ: Багш нарын баярын багцууд) баннер
+  // + онцолсон бүтээгдэхүүнийг харуулна. Байхгүй бол хэсэг нуугдмал хэвээр үлдэнэ.
+  function renderActiveCampaign(){
+    const c = window.ACTIVE_CAMPAIGN;
+    if(!c) return;
+
+    const featured = (c.featuredProductIds || [])
+      .map(id => PRODUCTS.find(p => String(p.id) === String(id)))
+      .filter(p => p && !p.soldOut);
+    if(!featured.length) return; // онцолсон бараа олдоогүй бол баннер харуулахгүй
+
+    document.getElementById("campaign-section").style.display = "";
+
+    const b = c.banner || {};
+    document.getElementById("campaign-banner-title").textContent = b.title || c.name || "";
+    document.getElementById("campaign-banner-subtitle").textContent = b.subtitle || "";
+    const cta = document.getElementById("campaign-banner-cta");
+    cta.textContent = (b.ctaText || "Үзэх") + " →";
+    document.getElementById("campaign-banner-link").href = b.ctaLink || "category.html";
+    if(b.image){
+      const img = document.getElementById("campaign-banner-img");
+      img.src = b.image;
+      img.style.display = "";
+    }
+
+    document.getElementById("campaign-section-title").textContent = c.sectionTitle || c.name || "";
+    document.getElementById("campaign-products").innerHTML = featured.map(productCardHTML).join("");
+  }
 </script>
 </body>
 </html>

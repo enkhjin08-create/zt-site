@@ -44,6 +44,7 @@
     <button class="pill" data-tab="categories" onclick="switchTab('categories')">Ангилал</button>
     <button class="pill" data-tab="customers" onclick="switchTab('customers')">👤 Хэрэглэгчид</button>
     <button class="pill" data-tab="coupons" onclick="switchTab('coupons')">Купон</button>
+    <button class="pill" data-tab="campaigns" onclick="switchTab('campaigns')">🎉 Кампанит ажил</button>
   </div>
 
   <div id="dashboard-tab" style="margin-top:22px">
@@ -336,6 +337,71 @@
     <h3 style="font-size:16px;margin-bottom:12px">Бүх купон</h3>
     <div id="coupon-list" style="display:flex;flex-direction:column;gap:10px"></div>
     <div class="empty-state" id="coupon-empty" style="display:none">Купон алга байна.</div>
+  </div>
+
+  <div id="campaigns-tab" style="display:none;margin-top:22px">
+    <div class="step-panel" style="margin-bottom:24px;padding:26px">
+      <h3 style="font-size:18px;margin-bottom:4px" id="campaign-form-heading">Шинэ кампанит ажил нэмэх</h3>
+      <p class="lede" style="font-size:13px;margin-bottom:16px">Тохирох огнооны хооронд нүүр хуудасны дээд хэсэгт баннер + онцолсон бараанууд автоматаар харагдана (жишээ: Багш нарын баяр, Шинэ жил).</p>
+      <form id="campaign-form" onsubmit="submitCampaignForm(event)">
+        <input type="hidden" name="id">
+        <div class="grid-2">
+          <div>
+            <label class="field-label">Кампанит ажлын нэр (дотоод)</label>
+            <input name="name" class="field-input" type="text" placeholder="Жишээ: Багш нарын баяр 2026" required>
+          </div>
+          <div>
+            <label class="field-label">Бүтээгдэхүүний жагсаалтын гарчиг</label>
+            <input name="sectionTitle" class="field-input" type="text" placeholder="Багш нарын баярын онцгой багцууд" required>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:14px">
+          <div>
+            <label class="field-label">Эхлэх огноо</label>
+            <input name="startDate" class="field-input" type="date" required>
+          </div>
+          <div>
+            <label class="field-label">Дуусах огноо</label>
+            <input name="endDate" class="field-input" type="date" required>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <label class="field-label">Баннер гарчиг</label>
+          <input name="bannerTitle" class="field-input" type="text" placeholder="Багш нарын баярт зориулсан онцгой багцууд" required>
+        </div>
+        <div style="margin-top:14px">
+          <label class="field-label">Баннер доод текст</label>
+          <input name="bannerSubtitle" class="field-input" type="text" placeholder="Эрт захиалбал онцгой хямдралтай">
+        </div>
+        <div class="grid-2" style="margin-top:14px">
+          <div>
+            <label class="field-label">Товчны текст</label>
+            <input name="ctaText" class="field-input" type="text" placeholder="Багц үзэх">
+          </div>
+          <div>
+            <label class="field-label">Товч дарахад очих холбоос</label>
+            <input name="ctaLink" class="field-input" type="text" placeholder="category.html?cat=giftset">
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <label class="field-label">Баннерын зураг (URL, заавал биш)</label>
+          <input name="bannerImage" class="field-input" type="text" placeholder="images/uploads/teachers-day.jpg">
+        </div>
+        <div style="margin-top:14px">
+          <label class="field-label">Онцолсон барааны ID-нууд (таслалаар тусгаарлана)</label>
+          <input name="featuredProductIds" class="field-input" type="text" placeholder="Жишээ: 12,45,9003" required>
+          <p class="lede" style="font-size:12px;margin-top:4px">Бараа удирдах табаас ID-г нь хараарай (жагсаалтад бараа бүрийн доор жижгээр харагддаг).</p>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:18px">
+          <button class="btn btn-primary" type="submit">Кампанит ажил хадгалах</button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="resetCampaignForm()" id="campaign-cancel-edit" style="display:none">Цуцлах</button>
+        </div>
+      </form>
+    </div>
+
+    <h3 style="font-size:16px;margin-bottom:12px">Бүх кампанит ажил</h3>
+    <div id="campaign-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="empty-state" id="campaign-empty" style="display:none">Кампанит ажил алга байна.</div>
   </div>
 </div>
 
@@ -959,11 +1025,13 @@ function switchTab(tab){
   document.getElementById("categories-tab").style.display = tab === "categories" ? "" : "none";
   document.getElementById("customers-tab").style.display = tab === "customers" ? "" : "none";
   document.getElementById("coupons-tab").style.display = tab === "coupons" ? "" : "none";
+  document.getElementById("campaigns-tab").style.display = tab === "campaigns" ? "" : "none";
   if(tab === "dashboard") loadDashboard();
   if(tab === "products" && !productsLoaded) loadAllProducts();
   if(tab === "categories") loadCategoriesTab();
   if(tab === "customers") loadCustomersTab();
   if(tab === "coupons") loadCouponsTab();
+  if(tab === "campaigns") loadCampaignsTab();
 }
 
 /* ---------------- Product management (base catalog + custom) ---------------- */
@@ -1675,6 +1743,151 @@ async function deleteCouponConfirm(code){
     await adminDeleteCoupon(adminPin, code);
     toast("Купон устгагдлаа");
     await loadCouponsTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+/* ---------------- Campaign management (баярын нүүр хуудасны баннер) ---------------- */
+let campaignsCache = [];
+let editingCampaignId = null;
+
+async function loadCampaignsTab(){
+  const list = document.getElementById("campaign-list");
+  list.innerHTML = `<p class="lede">Уншиж байна...</p>`;
+  document.getElementById("campaign-empty").style.display = "none";
+  try{
+    campaignsCache = await adminListCampaigns(adminPin);
+    renderCampaignList();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    list.innerHTML = `<p class="lede">Уншихад алдаа гарлаа.</p>`;
+  }
+}
+
+function renderCampaignList(){
+  const wrap = document.getElementById("campaign-list");
+  const empty = document.getElementById("campaign-empty");
+  if(!campaignsCache.length){ wrap.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  const today = new Date().toISOString().slice(0,10);
+  wrap.innerHTML = campaignsCache.map(c => campaignRowHTML(c, today)).join("");
+}
+
+function campaignRowHTML(c, today){
+  const isLive = c.active !== false && c.startDate <= today && today <= c.endDate;
+  const productNames = (c.featuredProductIds || [])
+    .map(id => { const p = (window._ALL_PRODUCTS_ADMIN || []).find(x => String(x.id) === String(id)); return p ? p.name : ("#" + id); })
+    .join(", ");
+  return `<div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+    <div style="flex:1;min-width:180px">
+      <div style="font-weight:700;font-size:14px">${escapeHTML(c.name)}
+        ${isLive ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--sage-tint);border:none">🟢 Идэвхтэй</span>` : ""}
+        ${c.active === false ? `<span class="pill" style="font-size:10.5px;padding:2px 8px;background:var(--paper-deep);border:none">Хаалттай</span>` : ""}
+      </div>
+      <div style="font-size:12.5px;color:var(--ink-faint);margin-top:2px">
+        ${c.startDate} → ${c.endDate} · Бараа: ${escapeHTML(productNames || "—")}
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="editCampaign('${c.id}')">Засах</button>
+    <button class="btn btn-ghost btn-sm" onclick="toggleCampaignActive('${c.id}', ${c.active === false})">${c.active === false ? "Нээх" : "Хаах"}</button>
+    <button class="btn btn-outline btn-sm" onclick="deleteCampaignConfirm('${c.id}')">Устгах</button>
+  </div>`;
+}
+
+function editCampaign(id){
+  const c = campaignsCache.find(x => x.id === id);
+  if(!c) return;
+  editingCampaignId = id;
+  const f = document.getElementById("campaign-form");
+  f.id.value = c.id;
+  f.name.value = c.name || "";
+  f.sectionTitle.value = c.sectionTitle || "";
+  f.startDate.value = c.startDate || "";
+  f.endDate.value = c.endDate || "";
+  f.bannerTitle.value = (c.banner && c.banner.title) || "";
+  f.bannerSubtitle.value = (c.banner && c.banner.subtitle) || "";
+  f.ctaText.value = (c.banner && c.banner.ctaText) || "";
+  f.ctaLink.value = (c.banner && c.banner.ctaLink) || "";
+  f.bannerImage.value = (c.banner && c.banner.image) || "";
+  f.featuredProductIds.value = (c.featuredProductIds || []).join(",");
+  document.getElementById("campaign-form-heading").textContent = "Кампанит ажил засах";
+  document.getElementById("campaign-cancel-edit").style.display = "";
+  f.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function resetCampaignForm(){
+  editingCampaignId = null;
+  const f = document.getElementById("campaign-form");
+  f.reset();
+  f.id.value = "";
+  document.getElementById("campaign-form-heading").textContent = "Шинэ кампанит ажил нэмэх";
+  document.getElementById("campaign-cancel-edit").style.display = "none";
+}
+
+async function submitCampaignForm(e){
+  e.preventDefault();
+  const f = e.target;
+  const featuredProductIds = f.featuredProductIds.value
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => (isNaN(Number(s)) ? s : Number(s)));
+
+  if(!featuredProductIds.length){ toast("Дор хаяж 1 барааны ID оруулна уу 🙏"); return; }
+  if(f.startDate.value > f.endDate.value){ toast("Эхлэх огноо дуусах огнооноос хойш байж болохгүй"); return; }
+
+  const campaign = {
+    id: editingCampaignId || undefined,
+    name: f.name.value.trim(),
+    sectionTitle: f.sectionTitle.value.trim(),
+    startDate: f.startDate.value,
+    endDate: f.endDate.value,
+    active: true,
+    banner: {
+      title: f.bannerTitle.value.trim(),
+      subtitle: f.bannerSubtitle.value.trim(),
+      ctaText: f.ctaText.value.trim(),
+      ctaLink: f.ctaLink.value.trim(),
+      image: f.bannerImage.value.trim()
+    },
+    featuredProductIds
+  };
+
+  const btn = f.querySelector("button[type=submit]");
+  btn.disabled = true; btn.textContent = "Хадгалж байна...";
+  try{
+    await adminSaveCampaign(adminPin, campaign);
+    toast("Кампанит ажил хадгалагдлаа ✓");
+    resetCampaignForm();
+    await loadCampaignsTab();
+  }catch(err){
+    if(err.status === 401){ logout(); return; }
+    toast(err.message || "Алдаа гарлаа. Дахин оролдоорой.");
+  }
+  btn.disabled = false; btn.textContent = "Кампанит ажил хадгалах";
+}
+
+async function toggleCampaignActive(id, val){
+  try{
+    const c = campaignsCache.find(x => x.id === id);
+    await adminSaveCampaign(adminPin, Object.assign({}, c, { active: val }));
+    toast(val ? "Кампанит ажил нээгдлээ" : "Кампанит ажил хаагдлаа");
+    await loadCampaignsTab();
+  }catch(e){
+    if(e.status === 401){ logout(); return; }
+    toast("Алдаа гарлаа");
+  }
+}
+
+async function deleteCampaignConfirm(id){
+  if(!confirm("Энэ кампанит ажлыг устгах уу?")) return;
+  try{
+    await adminDeleteCampaign(adminPin, id);
+    toast("Кампанит ажил устгагдлаа");
+    if(editingCampaignId === id) resetCampaignForm();
+    await loadCampaignsTab();
   }catch(e){
     if(e.status === 401){ logout(); return; }
     toast("Алдаа гарлаа");

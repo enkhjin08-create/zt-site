@@ -35,7 +35,8 @@ const EMPTY_DOC = {
   recipients: {},
   recipientOverrides: {},
   coupons: {},
-  users: {}
+  users: {},
+  campaigns: []
 };
 
 // Хэрэв автомат context ажиллахгүй бол (жишээ: "environment has not been
@@ -69,7 +70,8 @@ async function readDoc(){
     recipients: rec.recipients || {},
     recipientOverrides: rec.recipientOverrides || {},
     coupons: rec.coupons || {},
-    users: rec.users || {}
+    users: rec.users || {},
+    campaigns: rec.campaigns || []
   };
 }
 

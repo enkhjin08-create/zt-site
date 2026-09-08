@@ -28,6 +28,15 @@
    - action="deleteCategory"  → зөв PIN-тэй бол нэмсэн ангилал устгана
    - action="addRecipient"    → зөв PIN-тэй бол шинэ хүлээн авагч нэмнэ
    - action="deleteRecipient" → зөв PIN-тэй бол нэмсэн хүлээн авагчийг устгана
+   - action="listCampaigns"   → зөв PIN-тэй бол бүх кампанит ажлыг буцаана (админ хэсэгт)
+   - action="saveCampaign"    → зөв PIN-тэй бол кампанит ажил нэмнэ/засна (баннер + онцолсон бараа)
+   - action="deleteCampaign"  → зөв PIN-тэй бол кампанит ажлыг устгана
+
+   Кампанит ажил (campaigns) нь баярын үед (жишээ: Багш нарын баяр) нүүр
+   хуудсанд түр хугацаагаар баннер + онцолсон бүтээгдэхүүний хэсэг харуулах
+   зориулалттай. Идэвхтэй эсэхийг action="list"-ийн "campaigns" массиваас
+   клиент тал (index.html) огноогоор өөрөө шалгадаг — тусдаа store биш, яг
+   ижил "main" blob дотор хадгалагдана.
    ============================================================ */
 
 const { readDoc, writeDoc } = require("./_data.js");
@@ -171,6 +180,40 @@ function sanitizeRecipientOverride(input, existing){
   return patch;
 }
 
+function sanitizeCampaign(input, existing){
+  input = input || {};
+  existing = existing || {};
+  const str = (v, max) => String(v == null ? "" : v).slice(0, max);
+  const dateStr = (v, fallback) => {
+    const s = str(v, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : (fallback || "");
+  };
+  const ids = (arr) => {
+    if(!Array.isArray(arr)) return existing.featuredProductIds || [];
+    return arr.slice(0, 24);
+  };
+  const b = input.banner || {};
+  const eb = existing.banner || {};
+
+  return {
+    id: existing.id || str(input.id, 60).trim() || ("camp" + Date.now()),
+    name: str(input.name, 120) || existing.name || "Нэргүй кампанит ажил",
+    startDate: dateStr(input.startDate, existing.startDate),
+    endDate: dateStr(input.endDate, existing.endDate),
+    active: typeof input.active === "boolean" ? input.active : (existing.active != null ? existing.active : true),
+    banner: {
+      image: str(b.image != null ? b.image : eb.image, 500),
+      title: str(b.title != null ? b.title : eb.title, 140),
+      subtitle: str(b.subtitle != null ? b.subtitle : eb.subtitle, 220),
+      ctaText: str(b.ctaText != null ? b.ctaText : eb.ctaText, 40),
+      ctaLink: str(b.ctaLink != null ? b.ctaLink : eb.ctaLink, 300)
+    },
+    sectionTitle: str(input.sectionTitle != null ? input.sectionTitle : existing.sectionTitle, 140),
+    featuredProductIds: ids(input.featuredProductIds),
+    createdAt: existing.createdAt || new Date().toISOString()
+  };
+}
+
 const COUPON_TYPES = ["percent", "fixed"];
 
 function sanitizeCoupon(input, existing){
@@ -209,7 +252,7 @@ exports.handler = async (event) => {
   try{
     if(body.action === "list"){
       const doc = await readDoc();
-      return json(200, { ok: true, products: doc.products, overrides: doc.overrides, categories: doc.categories, recipients: doc.recipients, recipientOverrides: doc.recipientOverrides });
+      return json(200, { ok: true, products: doc.products, overrides: doc.overrides, categories: doc.categories, recipients: doc.recipients, recipientOverrides: doc.recipientOverrides, campaigns: doc.campaigns });
     }
 
     if(body.action === "add"){
@@ -375,6 +418,35 @@ exports.handler = async (event) => {
       if(!body.code) return json(400, { error: "Missing code" });
       const doc = await readDoc();
       delete doc.coupons[body.code];
+      await writeDoc(doc);
+      return json(200, { ok: true });
+    }
+
+    if(body.action === "listCampaigns"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      const doc = await readDoc();
+      return json(200, { ok: true, campaigns: doc.campaigns });
+    }
+
+    if(body.action === "saveCampaign"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      const doc = await readDoc();
+      const incoming = body.campaign || {};
+      const idx = incoming.id ? doc.campaigns.findIndex(c => c.id === incoming.id) : -1;
+      const existing = idx >= 0 ? doc.campaigns[idx] : null;
+      const campaign = sanitizeCampaign(incoming, existing);
+      if(!campaign.startDate || !campaign.endDate) return json(400, { error: "startDate, endDate шаардлагатай" });
+      if(idx >= 0) doc.campaigns[idx] = campaign;
+      else doc.campaigns.push(campaign);
+      await writeDoc(doc);
+      return json(200, { ok: true, campaign });
+    }
+
+    if(body.action === "deleteCampaign"){
+      if(!checkPin(body.pin)) return json(401, { error: "Invalid PIN" });
+      if(!body.id) return json(400, { error: "Missing id" });
+      const doc = await readDoc();
+      doc.campaigns = doc.campaigns.filter(c => c.id !== body.id);
       await writeDoc(doc);
       return json(200, { ok: true });
     }

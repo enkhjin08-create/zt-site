@@ -32,12 +32,25 @@ async function fetchProductsData(){
       overrides: (data && data.overrides) || {},
       categories: (data && data.categories) || {},
       recipients: (data && data.recipients) || {},
-      recipientOverrides: (data && data.recipientOverrides) || {}
+      recipientOverrides: (data && data.recipientOverrides) || {},
+      campaigns: (data && data.campaigns) || []
     };
   }catch(e){
     console.warn("Custom products failed to load:", e);
-    return { products: [], overrides: {}, categories: {}, recipients: {}, recipientOverrides: {} };
+    return { products: [], overrides: {}, categories: {}, recipients: {}, recipientOverrides: {}, campaigns: [] };
   }
+}
+
+// Огноогоор идэвхтэй кампанит ажлыг сонгоно (эхлэх/дуусах огнооны хооронд,
+// active !== false бол). Олон идэвхтэй кампанит ажил зэрэгцвэл эхнийхийг авна.
+function getActiveCampaign(campaigns){
+  if(!Array.isArray(campaigns) || !campaigns.length) return null;
+  const today = new Date().toISOString().slice(0,10);
+  return campaigns.find(c =>
+    c && c.active !== false &&
+    c.startDate && c.endDate &&
+    c.startDate <= today && today <= c.endDate
+  ) || null;
 }
 
 // Хуучин нэрийг хадгалж байгаа (зарим хуучин дуудалт ашиглаж байж магадгүй)
@@ -86,6 +99,16 @@ async function adminSetRecipientOverride(pin, key, patch){
 async function adminClearRecipientOverride(pin, key){
   return callProductsApi({ action: "clearRecipientOverride", pin, key });
 }
+async function adminListCampaigns(pin){
+  const data = await callProductsApi({ action: "listCampaigns", pin });
+  return (data && data.campaigns) || [];
+}
+async function adminSaveCampaign(pin, campaign){
+  return callProductsApi({ action: "saveCampaign", pin, campaign });
+}
+async function adminDeleteCampaign(pin, id){
+  return callProductsApi({ action: "deleteCampaign", pin, id });
+}
 async function adminListCoupons(pin){
   const data = await callProductsApi({ action: "listCoupons", pin });
   return (data && data.coupons) || {};
@@ -112,11 +135,13 @@ const BASE_RECIPIENTS = JSON.parse(JSON.stringify(RECIPIENTS));
 
 let LAST_OVERRIDES = {};
 let LAST_RECIPIENT_OVERRIDES = {};
+window.ACTIVE_CAMPAIGN = null;
 
 async function initProducts(){
   const data = await fetchProductsData();
   LAST_OVERRIDES = data.overrides;
   LAST_RECIPIENT_OVERRIDES = data.recipientOverrides;
+  window.ACTIVE_CAMPAIGN = getActiveCampaign(data.campaigns);
 
   // CATEGORIES, RECIPIENTS-ийг ШИНЭЭР сэргээж, дараа нь хамгийн сүүлийн нэмэлтийг тавина.
   Object.keys(CATEGORIES).forEach(k => delete CATEGORIES[k]);

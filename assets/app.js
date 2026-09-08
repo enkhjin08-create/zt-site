@@ -129,7 +129,22 @@ const ICONS = {
         <circle cx="30" cy="44" r="7" fill="none" stroke="currentColor" stroke-width="5"/>
         <circle cx="70" cy="44" r="7" fill="none" stroke="currentColor" stroke-width="5"/>
         <path d="M50 50v26" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-        <path d="M38 64c4 6 20 6 24 0" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>`
+        <path d="M38 64c4 6 20 6 24 0" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>`,
+  heart: `<path d="M50 82C30 68 14 54 14 36c0-12 10-20 20-20 8 0 14 5 16 12 2-7 8-12 16-12 10 0 20 8 20 20 0 18-16 32-36 46z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>`,
+  star: `<path d="M50 14l10 22 24 3-18 17 5 24-21-12-21 12 5-24-18-17 24-3z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>`,
+  book: `<path d="M50 26c-8-6-20-8-30-6v50c10-2 22 0 30 6 8-6 20-8 30-6V20c-10-2-22 0-30 6z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M50 26v50" stroke="currentColor" stroke-width="4"/>`,
+  cake: `<rect x="24" y="52" width="52" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="5"/>
+        <path d="M24 62c8 6 16-6 24 0s16-6 24 0" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        <path d="M50 52V38" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        <path d="M50 30c-4-4-4-8 0-12 4 4 4 8 0 12z" fill="currentColor" stroke="none"/>`,
+  ribbon: `<path d="M50 50c-4-14-24-18-24-4 0 8 12 8 24 4z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linejoin="round"/>
+        <path d="M50 50c4-14 24-18 24-4 0 8-12 8-24 4z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linejoin="round"/>
+        <circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/>
+        <path d="M50 55v20" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>`,
+  balloon: `<path d="M50 20c14 0 22 12 22 24 0 14-10 26-22 26s-22-12-22-26c0-12 8-24 22-24z" fill="none" stroke="currentColor" stroke-width="5"/>
+        <path d="M50 70l-4 8 4-2 4 2z" fill="currentColor" stroke="none"/>
+        <path d="M50 78c4 4 0 8 4 12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>`
 };
 
 // Ангилал бүрийн дүрс — built-in ангилал бол шууд key-ээрээ, custom (Админ

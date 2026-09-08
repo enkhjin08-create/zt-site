@@ -409,28 +409,35 @@
   // Icon slot-д эсвэл урьдчилан бэлдсэн ICONS сангийн дүрсийг, эсвэл
   // админ өөрөө бичсэн emoji-г тавина. textContent ашигладаг тул
   // emoji аюулгүйгээр (HTML тайлбарлахгүйгээр) шууд харагдана.
+  // Урьдчилан бэлдсэн сонголт бүрийг тохирох emoji-той харгалзуулна — ингэснээр
+  // "Өөрийн emoji" сонголттой ижил Apple/систем emoji хэлбэрээр, стилийн хувьд
+  // нэгдмэл харагдана (vector шугаман дүрстэй холилдохгүй).
+  const HERO_ICON_EMOJI = {
+    flower: "🌸", cup: "☕", giftset: "🎁", extra: "📦", greeting: "💌",
+    box: "🎀", heart: "❤️", star: "⭐", book: "📖", cake: "🎂",
+    ribbon: "🎗️", balloon: "🎈"
+  };
+
   function setHeroIcon(g, key, emoji){
     if(!g) return;
-    if(key === "custom" && emoji){
-      g.innerHTML = "";
-      // SVG <text>-ийн dominant-baseline зарим Safari/iOS хувилбарт буруу
-      // ажилладаг (текст far off-position болж, харагдахгүй болдог). Үүнээс
-      // сэргийлж HTML flexbox ашиглан emoji-г төвлөрүүлнэ — бүх browser дээр
-      // адилхан ажиллана.
-      const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
-      fo.setAttribute("x", "6");
-      fo.setAttribute("y", "6");
-      fo.setAttribute("width", "88");
-      fo.setAttribute("height", "88");
-      const div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
-      div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-      div.style.cssText = "width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:56px;line-height:1;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji','Segoe UI Symbol',sans-serif";
-      div.textContent = emoji;
-      fo.appendChild(div);
-      g.appendChild(fo);
-      return;
-    }
-    if(typeof ICONS !== "undefined" && ICONS[key]) g.innerHTML = ICONS[key];
+    const finalEmoji = key === "custom" ? emoji : HERO_ICON_EMOJI[key];
+    if(!finalEmoji) return;
+    g.innerHTML = "";
+    // SVG <text>-ийн dominant-baseline зарим Safari/iOS хувилбарт буруу
+    // ажилладаг (текст far off-position болж, харагдахгүй болдог). Үүнээс
+    // сэргийлж HTML flexbox ашиглан emoji-г төвлөрүүлнэ — бүх browser дээр
+    // адилхан ажиллана.
+    const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+    fo.setAttribute("x", "6");
+    fo.setAttribute("y", "6");
+    fo.setAttribute("width", "88");
+    fo.setAttribute("height", "88");
+    const div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+    div.style.cssText = "width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:56px;line-height:1;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji','Segoe UI Symbol',sans-serif";
+    div.textContent = finalEmoji;
+    fo.appendChild(div);
+    g.appendChild(fo);
   }
 </script>
 </body>

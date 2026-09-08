@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=2">
 </head>
 <body>
 
@@ -365,8 +365,17 @@
     document.getElementById("campaign-divider").style.display = "";
     // Кампанит ажил идэвхтэй үед стандарт hero-ийн ТЕКСТ хэсгийг л нуугаад,
     // анимацитай бэлгийн хайрцгийг хэвээр нь харуулна (устгахгүй, зөвхөн
-    // голлуулж, дангаар нь үлдээнэ). CSS класс ашигладаг тул grid эвдрэхгүй.
-    document.getElementById("default-hero").classList.add("campaign-active");
+    // голлуулж, дангаар нь үлдээнэ). CSS класс + давхар inline тохиргоо
+    // ашигладаг тул style.css кэшлэгдсэн хуучин хувилбартай ч зөв харагдана.
+    const heroEl = document.getElementById("default-hero");
+    heroEl.classList.add("campaign-active");
+    heroEl.style.paddingTop = "8px";
+    const heroTextCol = document.getElementById("hero-text-col");
+    if(heroTextCol) heroTextCol.style.display = "none";
+    const heroWrapEl = document.getElementById("hero-wrap");
+    if(heroWrapEl){ heroWrapEl.style.gridTemplateColumns = "1fr"; heroWrapEl.style.justifyItems = "center"; }
+    const heroArtEl = heroEl.querySelector(".hero-art");
+    if(heroArtEl){ heroArtEl.style.maxWidth = "340px"; heroArtEl.style.margin = "0 auto"; heroArtEl.style.width = "100%"; }
 
     const b = c.banner || {};
     document.getElementById("campaign-banner-title").textContent = b.title || c.name || "";

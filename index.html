@@ -21,13 +21,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
 <link rel="stylesheet" href="assets/style.css?v=3">
+<noscript><style>#hero-wrap{ opacity:1 !important; }</style></noscript>
 </head>
 <body>
 
 <header class="site-header"></header>
 
 <section class="hero" id="default-hero">
-  <div class="wrap" id="hero-wrap">
+  <div class="wrap" id="hero-wrap" style="opacity:0;transition:opacity .35s ease">
     <div id="hero-text-col">
       <p class="eyebrow" id="hero-eyebrow">Зөвхөн түүнд тань зориулсан бэлгийн дэлгүүр</p>
       <h1 id="hero-h1"><span id="hero-type" class="hero-type"></span><span class="hero-caret" aria-hidden="true"></span><br><em>онцгой бэлэг</em>.</h1>
@@ -345,6 +346,12 @@
     }
 
     renderActiveCampaign();
+
+    // Hero-ийн эцсийн байдал (өгөгдмөл эсвэл кампанит ажлын) шийдэгдсэний
+    // дараа л зөөлөн харагдуулна — ингэснээр "өгөгдмөл контент нэг агшин
+    // харагдаад кампанит ажлаар солигдох" гэсэн анивчилтаас сэргийлнэ.
+    const heroWrapEl = document.getElementById("hero-wrap");
+    if(heroWrapEl) heroWrapEl.style.opacity = "1";
   })();
 
   // Идэвхтэй кампанит ажил байвал (жишээ: Багш нарын баярын багцууд) hero-ийн

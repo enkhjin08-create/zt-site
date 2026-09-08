@@ -146,16 +146,6 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight: 700; letter-spacing:
 .hero{ padding: 64px 0 56px; }
 .hero .wrap{ display:grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items:center; }
 .hero h1{ font-size: clamp(36px, 4.4vw, 58px); line-height: 1.06; }
-
-/* Идэвхтэй кампанит ажлын үед hero-ийн текстийг нуугаад, анимацитай
-   бэлгийн хайрцгийг дангаар нь голлуулна (inline JS-ээр биш, тогтвортой
-   CSS дүрмээр — grid эвдрэлээс сэргийлнэ). */
-#default-hero.campaign-active{ padding-top: 8px; }
-#default-hero.campaign-active #hero-text-col{ display:none; }
-#default-hero.campaign-active #hero-wrap{
-  grid-template-columns: 1fr; justify-items:center; gap:0;
-}
-#default-hero.campaign-active .hero-art{ max-width: 340px; margin: 0 auto; width:100%; }
 .hero-actions{ display:flex; gap:14px; margin-top: 28px; flex-wrap:wrap; }
 .hero-art{ position:relative; }
 .hero-art svg{ width:100%; height:auto; }

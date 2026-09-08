@@ -226,8 +226,12 @@ function sanitizeCampaign(input, existing){
       color: hexColor(t.color != null ? t.color : et.color, "#FF6698"),
       icon1: iconKey(t.icon1 != null ? t.icon1 : et.icon1, "flower"),
       icon2: iconKey(t.icon2 != null ? t.icon2 : et.icon2, "cup"),
+      icon3: iconKey(t.icon3 != null ? t.icon3 : et.icon3, "giftset"),
+      icon4: iconKey(t.icon4 != null ? t.icon4 : et.icon4, "greeting"),
       icon1Emoji: emojiStr(t.icon1Emoji != null ? t.icon1Emoji : et.icon1Emoji, ""),
-      icon2Emoji: emojiStr(t.icon2Emoji != null ? t.icon2Emoji : et.icon2Emoji, "")
+      icon2Emoji: emojiStr(t.icon2Emoji != null ? t.icon2Emoji : et.icon2Emoji, ""),
+      icon3Emoji: emojiStr(t.icon3Emoji != null ? t.icon3Emoji : et.icon3Emoji, ""),
+      icon4Emoji: emojiStr(t.icon4Emoji != null ? t.icon4Emoji : et.icon4Emoji, "")
     },
     sectionTitle: str(input.sectionTitle != null ? input.sectionTitle : existing.sectionTitle, 140),
     featuredProductIds: ids(input.featuredProductIds),

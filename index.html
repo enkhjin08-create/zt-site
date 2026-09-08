@@ -20,47 +20,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
-<link rel="stylesheet" href="assets/style.css?v=2">
+<link rel="stylesheet" href="assets/style.css?v=3">
 </head>
 <body>
 
 <header class="site-header"></header>
 
-<section class="section" id="campaign-section" style="display:none;padding-top:56px">
-  <div class="wrap">
-    <a id="campaign-banner-link" href="#" style="text-decoration:none;display:block">
-      <div id="campaign-banner" style="border-radius:24px;padding:48px 40px;display:flex;align-items:center;gap:28px;flex-wrap:wrap;background:linear-gradient(120deg,var(--ribbon-tint),var(--paper-deep))">
-        <img id="campaign-banner-img" alt="" style="display:none;width:110px;height:110px;object-fit:cover;border-radius:20px;flex-shrink:0">
-        <div style="flex:1;min-width:220px">
-          <p class="eyebrow" id="campaign-banner-eyebrow">Баярын онцгой санал</p>
-          <h1 id="campaign-banner-title" style="margin:6px 0 10px;font-size:clamp(28px,3.6vw,44px);line-height:1.1"></h1>
-          <p class="lede" id="campaign-banner-subtitle" style="margin:0"></p>
-        </div>
-        <span class="btn btn-primary" id="campaign-banner-cta" style="flex-shrink:0"></span>
-      </div>
-    </a>
-  </div>
-  <div class="wrap" style="margin-top:32px">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Хугацаатай санал</p>
-        <h2 id="campaign-section-title"></h2>
-      </div>
-    </div>
-    <div class="product-grid" id="campaign-products"></div>
-  </div>
-</section>
-
-<div class="gift-divider" aria-hidden="true" id="campaign-divider" style="display:none"><span class="gd-knot"></span></div>
-
 <section class="hero" id="default-hero">
   <div class="wrap" id="hero-wrap">
     <div id="hero-text-col">
-      <p class="eyebrow">Зөвхөн түүнд тань зориулсан бэлгийн дэлгүүр</p>
-      <h1><span id="hero-type" class="hero-type"></span><span class="hero-caret" aria-hidden="true"></span><br><em>онцгой бэлэг</em>.</h1>
-      <p class="lede">Төрсөн өдөр, баяр, тэмдэглэлт өдөр бүрт зориулсан бэлгийг өөрийн хүссэнээр бүрдүүлж, хайртай хүндээ хүргүүлээрэй.</p>
+      <p class="eyebrow" id="hero-eyebrow">Зөвхөн түүнд тань зориулсан бэлгийн дэлгүүр</p>
+      <h1 id="hero-h1"><span id="hero-type" class="hero-type"></span><span class="hero-caret" aria-hidden="true"></span><br><em>онцгой бэлэг</em>.</h1>
+      <p class="lede" id="hero-lede">Төрсөн өдөр, баяр, тэмдэглэлт өдөр бүрт зориулсан бэлгийг өөрийн хүссэнээр бүрдүүлж, хайртай хүндээ хүргүүлээрэй.</p>
       <div class="hero-actions">
-        <a href="builder.html" class="btn btn-primary">Бэлгийн багц бэлдье →</a>
+        <a href="builder.html" class="btn btn-primary" id="hero-cta-primary">Бэлгийн багц бэлдье →</a>
         <a href="category.html" class="btn btn-outline">Бүтээгдэхүүн үзэх</a>
       </div>
     </div>
@@ -164,6 +137,20 @@
     </div>
   </div>
 </section>
+
+<section class="section" id="campaign-products-section" style="display:none;padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Хугацаатай санал</p>
+        <h2 id="campaign-section-title"></h2>
+      </div>
+    </div>
+    <div class="product-grid" id="campaign-products"></div>
+  </div>
+</section>
+
+<div class="gift-divider" aria-hidden="true" id="campaign-divider" style="display:none"><span class="gd-knot"></span></div>
 
 <section class="section">
   <div class="wrap">
@@ -350,8 +337,11 @@
     renderActiveCampaign();
   })();
 
-  // Идэвхтэй кампанит ажил байвал (жишээ: Багш нарын баярын багцууд) баннер
-  // + онцолсон бүтээгдэхүүнийг харуулна. Байхгүй бол хэсэг нуугдмал хэвээр үлдэнэ.
+  // Идэвхтэй кампанит ажил байвал (жишээ: Багш нарын баярын багцууд) hero-ийн
+  // ӨӨРИЙН текстийг (гарчиг, тайлбар, товч) кампанит ажлын мэдээллээр солино —
+  // анимацитай бэлгийн хайрцаг, зохион байгуулалт хэвээрээ үлдэнэ. Доор нь
+  // онцолсон бүтээгдэхүүний жагсаалт харагдана. Кампанит ажил байхгүй/дуусвал
+  // hero буцаад стандарт төрхөндөө шилжинэ.
   function renderActiveCampaign(){
     const c = window.ACTIVE_CAMPAIGN;
     if(!c) return;
@@ -359,36 +349,20 @@
     const featured = (c.featuredProductIds || [])
       .map(id => PRODUCTS.find(p => String(p.id) === String(id)))
       .filter(p => p && !p.soldOut);
-    if(!featured.length) return; // онцолсон бараа олдоогүй бол баннер харуулахгүй
-
-    document.getElementById("campaign-section").style.display = "";
-    document.getElementById("campaign-divider").style.display = "";
-    // Кампанит ажил идэвхтэй үед стандарт hero-ийн ТЕКСТ хэсгийг л нуугаад,
-    // анимацитай бэлгийн хайрцгийг хэвээр нь харуулна (устгахгүй, зөвхөн
-    // голлуулж, дангаар нь үлдээнэ). CSS класс + давхар inline тохиргоо
-    // ашигладаг тул style.css кэшлэгдсэн хуучин хувилбартай ч зөв харагдана.
-    const heroEl = document.getElementById("default-hero");
-    heroEl.classList.add("campaign-active");
-    heroEl.style.paddingTop = "8px";
-    const heroTextCol = document.getElementById("hero-text-col");
-    if(heroTextCol) heroTextCol.style.display = "none";
-    const heroWrapEl = document.getElementById("hero-wrap");
-    if(heroWrapEl){ heroWrapEl.style.gridTemplateColumns = "1fr"; heroWrapEl.style.justifyItems = "center"; }
-    const heroArtEl = heroEl.querySelector(".hero-art");
-    if(heroArtEl){ heroArtEl.style.maxWidth = "340px"; heroArtEl.style.margin = "0 auto"; heroArtEl.style.width = "100%"; }
+    if(!featured.length) return; // онцолсон бараа олдоогүй бол хэвээр орхино
 
     const b = c.banner || {};
-    document.getElementById("campaign-banner-title").textContent = b.title || c.name || "";
-    document.getElementById("campaign-banner-subtitle").textContent = b.subtitle || "";
-    const cta = document.getElementById("campaign-banner-cta");
-    cta.textContent = (b.ctaText || "Үзэх") + " →";
-    document.getElementById("campaign-banner-link").href = b.ctaLink || "category.html";
-    if(b.image){
-      const img = document.getElementById("campaign-banner-img");
-      img.src = b.image;
-      img.style.display = "";
+    if(b.title){
+      document.getElementById("hero-eyebrow").textContent = "Баярын онцгой санал";
+      document.getElementById("hero-h1").textContent = b.title;
+      document.getElementById("hero-lede").textContent = b.subtitle || "";
+      const primary = document.getElementById("hero-cta-primary");
+      primary.textContent = (b.ctaText || "Үзэх") + " →";
+      primary.href = b.ctaLink || "category.html";
     }
 
+    document.getElementById("campaign-products-section").style.display = "";
+    document.getElementById("campaign-divider").style.display = "";
     document.getElementById("campaign-section-title").textContent = c.sectionTitle || c.name || "";
     document.getElementById("campaign-products").innerHTML = featured.map(productCardHTML).join("");
   }

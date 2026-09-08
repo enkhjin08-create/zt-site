@@ -194,6 +194,14 @@ function sanitizeCampaign(input, existing){
   };
   const b = input.banner || {};
   const eb = existing.banner || {};
+  const t = input.theme || {};
+  const et = existing.theme || {};
+  const HERO_ICON_KEYS = ["cup", "giftset", "flower", "extra", "greeting", "box"];
+  const hexColor = (v, fallback) => {
+    const s = str(v, 7).trim();
+    return /^#[0-9A-Fa-f]{6}$/.test(s) ? s : (fallback || "#FF6698");
+  };
+  const iconKey = (v, fallback) => HERO_ICON_KEYS.includes(v) ? v : (fallback || "flower");
 
   return {
     id: existing.id || str(input.id, 60).trim() || ("camp" + Date.now()),
@@ -207,6 +215,11 @@ function sanitizeCampaign(input, existing){
       subtitle: str(b.subtitle != null ? b.subtitle : eb.subtitle, 220),
       ctaText: str(b.ctaText != null ? b.ctaText : eb.ctaText, 40),
       ctaLink: str(b.ctaLink != null ? b.ctaLink : eb.ctaLink, 300)
+    },
+    theme: {
+      color: hexColor(t.color != null ? t.color : et.color, "#FF6698"),
+      icon1: iconKey(t.icon1 != null ? t.icon1 : et.icon1, "flower"),
+      icon2: iconKey(t.icon2 != null ? t.icon2 : et.icon2, "cup")
     },
     sectionTitle: str(input.sectionTitle != null ? input.sectionTitle : existing.sectionTitle, 140),
     featuredProductIds: ids(input.featuredProductIds),

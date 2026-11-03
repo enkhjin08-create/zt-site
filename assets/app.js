@@ -206,7 +206,8 @@ function renderHeader(active){
   ];
   const navLinks = links.map(([href,label]) =>
     `<a href="${href}" class="${active===href ? "active" : ""}">${label}</a>`).join("")
-    + `<a href="https://kidsbook.zuvhuntuund.com/" target="_blank" rel="noopener">📖 Хүүхдийн ном</a>`;
+    + `<a href="https://kidsbook.zuvhuntuund.com/" target="_blank" rel="noopener">📖 Хүүхдийн ном</a>`
+    + `<a href="https://bouquet.zuvhuntuund.com/" target="_blank" rel="noopener">💐 Сонин баглаа</a>`;
   const html = `
   <div class="wrap">
     <a href="index.html" class="logo">

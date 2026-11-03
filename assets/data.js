@@ -1030,6 +1030,76 @@ const PRODUCTS = [
     "category": "flower",
     "soldOut": false,
     "url": "https://zuvhuntuund.com/products/331797/896536"
+  },
+  {
+      "id": 1793000000001,
+      "image": "https://zuvhuntuund.com/images/uploads/cup-candle-star.jpg",
+      "name": "Candle Star аяга",
+      "price": 34000,
+      "oldPrice": null,
+      "category": "giftset",
+      "soldOut": false,
+      "url": ""
+  },
+  {
+      "id": 1793000000002,
+      "image": "https://zuvhuntuund.com/images/uploads/cup-christmas-red.jpg",
+      "name": "Улаан сэнжтэй Christmas аяга",
+      "price": 23500,
+      "oldPrice": null,
+      "category": "giftset",
+      "soldOut": false,
+      "url": ""
+  },
+  {
+      "id": 1793000000003,
+      "image": "https://zuvhuntuund.com/images/uploads/cup-red-black-pair.jpg",
+      "name": "Улаан хар хос аяга",
+      "price": 65000,
+      "oldPrice": null,
+      "category": "giftset",
+      "soldOut": false,
+      "url": ""
+  },
+  {
+      "id": 1793000000004,
+      "image": "https://zuvhuntuund.com/images/uploads/cup-penguin-hat.jpg",
+      "name": "Нугас аяга · таглай",
+      "price": 32500,
+      "oldPrice": null,
+      "category": "giftset",
+      "soldOut": false,
+      "url": ""
+  },
+  {
+      "id": 1793000000005,
+      "image": "https://zuvhuntuund.com/images/uploads/cup-sweet-dreams.jpg",
+      "name": "Мууртай аяга (Sweet dreams)",
+      "price": 33000,
+      "oldPrice": null,
+      "category": "giftset",
+      "soldOut": false,
+      "url": ""
+  },
+  {
+      "id": 1793000000006,
+      "image": "https://zuvhuntuund.com/images/uploads/cup-mushroom.jpg",
+      "name": "Мөөгтэй аяга · таглай",
+      "price": 32000,
+      "oldPrice": null,
+      "category": "giftset",
+      "soldOut": false,
+      "url": ""
+  },
+  {
+      "id": 1793000000007,
+      "image": "https://zuvhuntuund.com/images/uploads/cup-small-cat.jpg",
+      "name": "Жижиг мууртай аяга",
+      "price": 20000,
+      "oldPrice": null,
+      "category": "giftset",
+      "soldOut": false,
+      "url": ""
   }
 ];
 

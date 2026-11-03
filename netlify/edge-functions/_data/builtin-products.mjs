@@ -1036,7 +1036,7 @@ export const PRODUCTS = [
       "name": "Candle Star аяга",
       "price": 34000,
       "oldPrice": null,
-      "category": "giftset",
+      "category": "cup",
       "soldOut": false,
       "url": ""
   },
@@ -1046,7 +1046,7 @@ export const PRODUCTS = [
       "name": "Улаан сэнжтэй Christmas аяга",
       "price": 23500,
       "oldPrice": null,
-      "category": "giftset",
+      "category": "cup",
       "soldOut": false,
       "url": ""
   },
@@ -1056,7 +1056,7 @@ export const PRODUCTS = [
       "name": "Улаан хар хос аяга",
       "price": 65000,
       "oldPrice": null,
-      "category": "giftset",
+      "category": "cup",
       "soldOut": false,
       "url": ""
   },
@@ -1066,7 +1066,7 @@ export const PRODUCTS = [
       "name": "Нугас аяга · таглай",
       "price": 32500,
       "oldPrice": null,
-      "category": "giftset",
+      "category": "cup",
       "soldOut": false,
       "url": ""
   },
@@ -1076,7 +1076,7 @@ export const PRODUCTS = [
       "name": "Мууртай аяга (Sweet dreams)",
       "price": 33000,
       "oldPrice": null,
-      "category": "giftset",
+      "category": "cup",
       "soldOut": false,
       "url": ""
   },
@@ -1086,7 +1086,7 @@ export const PRODUCTS = [
       "name": "Мөөгтэй аяга · таглай",
       "price": 32000,
       "oldPrice": null,
-      "category": "giftset",
+      "category": "cup",
       "soldOut": false,
       "url": ""
   },
@@ -1096,7 +1096,7 @@ export const PRODUCTS = [
       "name": "Жижиг мууртай аяга",
       "price": 20000,
       "oldPrice": null,
-      "category": "giftset",
+      "category": "cup",
       "soldOut": false,
       "url": ""
   }

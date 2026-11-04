@@ -355,7 +355,7 @@
     const giftsetPreview = document.getElementById("giftset-preview");
     giftsetPreview.innerHTML = PRODUCTS.filter(p => p.category === "giftset" && !p.soldOut).slice(0,4).map(productCardHTML).join("");
 
-    const bestSellers = PRODUCTS.filter(p => p.bestSeller && !p.soldOut);
+    const bestSellers = PRODUCTS.filter(p => p.bestSeller && !p.soldOut).sort((a,b) => b.id - a.id); // сүүлд нэмсэн нь эхэнд
     if(bestSellers.length){
       document.getElementById("bestseller-section").style.display = "";
       document.getElementById("bestseller-grid").innerHTML = bestSellers.slice(0,8).map(productCardHTML).join("");

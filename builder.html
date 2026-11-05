@@ -280,6 +280,7 @@ function renderStepPanel(){
   if(step === 8){
     panel.innerHTML = renderSummary();
     maybeInitQpay();
+    if(hasFlower()) initDeliveryMap();
   }
 }
 
@@ -321,14 +322,129 @@ function saveMessageAndNext(){
 }
 
 const DELIVERY_FEE_BASE = 7000;
-const DELIVERY_FEE_FLOWER = 10000;
 
-function getDeliveryFee(){
-  const hasFlower = box.itemIds.some(id => {
+function hasFlower(){
+  return box.itemIds.some(id => {
     const p = getProduct(id);
     return p && p.category === "flower";
   });
-  return hasFlower ? DELIVERY_FEE_FLOWER : DELIVERY_FEE_BASE;
+}
+// Амьд цэцэгтэй захиалга UBCab-аар хүргэгдэнэ (bouquet.zuvhuntuund.com-тай ижил тооцоо):
+// газрын зураг дээрх байршлаас замын зайг бодож UBCab-ын үнийг гаргана.
+function getDeliveryFee(){
+  if(!hasFlower()) return DELIVERY_FEE_BASE;
+  if(box.deliveryPayer === "recipient") return 0;   // UBCab-д хүргэлтийн үед өөрөө төлнө
+  return box.deliveryQuote > 0 ? box.deliveryQuote : 0;
+}
+function flowerDeliveryReady(){
+  // Тэмдэглэсэн байршил заавал хэрэгтэй — үгүй бол үнэ тооцогдохгүй
+  return !hasFlower() || (box.deliveryLat && box.deliveryLng && box.deliveryQuote > 0);
+}
+
+let _leafletP = null;
+function loadLeaflet(){
+  if(window.L) return Promise.resolve(window.L);
+  return (_leafletP ||= new Promise((res, rej) => {
+    const css = document.createElement("link"); css.rel = "stylesheet";
+    css.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(css);
+    const js = document.createElement("script");
+    js.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    js.onload = () => res(window.L); js.onerror = rej; document.head.appendChild(js);
+  }));
+}
+let _dlMap = null, _quoteSeq = 0;
+function syncCustomerFields(){
+  const g = id => document.getElementById(id);
+  if(g("cust-name")) box.customerName = g("cust-name").value.trim();
+  if(g("cust-phone")) box.customerPhone = g("cust-phone").value.trim();
+  if(g("cust-email")) box.customerEmail = g("cust-email").value.trim();
+  if(g("cust-district")) box.deliveryDistrict = g("cust-district").value;
+  if(g("cust-khoroo")) box.deliveryKhoroo = g("cust-khoroo").value.trim();
+  if(g("cust-address")) box.deliveryAddress = g("cust-address").value.trim();
+}
+function setDeliveryPayer(v){
+  syncCustomerFields();
+  box.deliveryPayer = v === "recipient" ? "recipient" : "sender";
+  persist(); renderStepPanel();
+}
+function dlQuoteText(){
+  return box.deliveryQuote > 0
+    ? `≈ ${box.deliveryKm} км · UBCab <b>${formatPrice(box.deliveryQuote)}</b>`
+    : "Газрын зураг дээр дарж хүргэх цэгээ сонгоно уу.";
+}
+async function pickDeliveryPoint(ll){
+  const my = ++_quoteSeq;
+  box.deliveryLat = Math.round(ll.lat * 1e6) / 1e6;
+  box.deliveryLng = Math.round(ll.lng * 1e6) / 1e6;
+  box.deliveryKm = 0; box.deliveryQuote = 0;
+  const q = document.getElementById("dl-q"); if(q) q.textContent = "Зайг тооцож байна…";
+  try{
+    const r = await fetch(`/api/delivery-quote?lat=${box.deliveryLat}&lng=${box.deliveryLng}`);
+    const j = await r.json();
+    if(my !== _quoteSeq) return;
+    if(!r.ok) throw new Error(j.error || "Тооцоолж чадсангүй.");
+    box.deliveryKm = j.km; box.deliveryQuote = j.fee;
+  }catch(err){
+    if(my !== _quoteSeq) return;
+    persist();
+    const q2 = document.getElementById("dl-q"); if(q2) q2.textContent = err.message;
+    return;
+  }
+  // Хэрэглэгчийн бөглөсөн талбарыг алдалгүйгээр дүнг шинэчилнэ
+  syncCustomerFields();
+  persist(); renderStepPanel();
+}
+async function initDeliveryMap(){
+  const el = document.getElementById("dl-map");
+  if(!el) return;
+  try{
+    const L = await loadLeaflet();
+    if(_dlMap){ _dlMap.remove(); _dlMap = null; }
+    const has = box.deliveryLat && box.deliveryLng;
+    const map = L.map(el, { scrollWheelZoom: false }).setView(has ? [box.deliveryLat, box.deliveryLng] : [47.9185, 106.9177], has ? 15 : 12);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
+    const icon = L.divIcon({ className: "", html: '<span style="display:block;width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#FF6698;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)"></span>', iconSize: [26,26], iconAnchor: [13,26] });
+    let mk = has ? L.marker([box.deliveryLat, box.deliveryLng], { icon, draggable: true }).addTo(map) : null;
+    const place = ll => {
+      if(!mk){ mk = L.marker(ll, { icon, draggable: true }).addTo(map); mk.on("dragend", () => pickDeliveryPoint(mk.getLatLng())); }
+      else mk.setLatLng(ll);
+      pickDeliveryPoint(L.latLng(ll));
+    };
+    if(mk) mk.on("dragend", () => pickDeliveryPoint(mk.getLatLng()));
+    map.on("click", e => place(e.latlng));
+    document.getElementById("dl-geo")?.addEventListener("click", () => {
+      if(!navigator.geolocation){ toast("Таны төхөөрөмж байршил олгохгүй байна"); return; }
+      navigator.geolocation.getCurrentPosition(
+        pos => { const ll = { lat: pos.coords.latitude, lng: pos.coords.longitude }; map.setView([ll.lat, ll.lng], 16); place(ll); },
+        () => toast("Байршлыг авч чадсангүй — газрын зураг дээр дарж сонгоно уу"));
+    });
+    setTimeout(() => map.invalidateSize(), 50);
+    _dlMap = map;
+  }catch(e){
+    el.innerHTML = '<p style="padding:14px;font-size:13px;color:var(--ink-faint)">Газрын зураг ачаалж чадсангүй. Интернэтээ шалгаад дахин оролдоно уу.</p>';
+  }
+}
+function flowerDeliveryHTML(){
+  const pay = box.deliveryPayer === "recipient" ? "recipient" : "sender";
+  const fee = box.deliveryQuote > 0 ? formatPrice(box.deliveryQuote) : "";
+  const opt = (val, title, sub, price) => `
+    <label style="display:flex;gap:10px;align-items:flex-start;border:1.5px solid ${pay===val?"var(--ribbon)":"var(--line)"};border-radius:14px;padding:12px 14px;margin-top:8px;cursor:pointer;background:${pay===val?"var(--paper-deep)":"#fff"}">
+      <input type="radio" name="dl-payer" value="${val}" ${pay===val?"checked":""} onchange="setDeliveryPayer('${val}')" style="margin-top:3px">
+      <span style="flex:1"><b>${title}</b><br><small style="color:var(--ink-faint)">${sub}</small></span>
+      <b style="white-space:nowrap">${price}</b>
+    </label>`;
+  return `
+    <div style="margin-top:14px">
+      <label class="field-label">🚕 Амьд цэцгийн хүргэлт — UBCab</label>
+      <p style="font-size:12.5px;color:var(--ink-faint);margin:4px 0 8px">Цэцгийг UBCab-аар хүргэнэ. Үнэ манай салбараас таны хаяг хүртэлх замын зайгаар ойролцоогоор бодогдоно.</p>
+      <div id="dl-map" style="height:260px;border-radius:14px;overflow:hidden;border:1px solid var(--line)"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+        <button type="button" class="btn btn-ghost btn-sm" id="dl-geo">📍 Миний байршил</button>
+        <span id="dl-q" style="font-size:13.5px">${dlQuoteText()}</span>
+      </div>
+      ${opt("sender", "UBCab-ын мөнгийг одоо төлнө", "Хүргэлтийн төлбөр захиалгын дүнд нэмэгдэнэ", fee ? "+" + fee : "Зайнаас хамаарна")}
+      ${opt("recipient", "UBCab-д хүргэлтийн үед өөрөө төлнө", "Хүлээн авахдаа жолоочид бэлнээр / дансаар төлнө", fee ? "≈" + fee : "Жолоочид төлнө")}
+    </div>`;
 }
 const BANK_INFO = { holder: "Энхжин", account: "MN490005005304653256" };
 
@@ -368,6 +484,12 @@ function buildOrderObject(){
     message: box.message || "",
     subtotal: subtotal,
     deliveryFee: getDeliveryFee(),
+    deliveryMethod: hasFlower() ? "ubcab" : "",
+    deliveryPayer: box.deliveryPayer || "sender",
+    deliveryKm: hasFlower() ? (box.deliveryKm || 0) : 0,
+    deliveryQuote: hasFlower() ? (box.deliveryQuote || 0) : 0,
+    deliveryLat: hasFlower() ? (box.deliveryLat || 0) : 0,
+    deliveryLng: hasFlower() ? (box.deliveryLng || 0) : 0,
     couponCode: box.couponCode || "",
     discount: discount,
     total: Math.max(0, subtotal + getDeliveryFee() - discount),
@@ -396,7 +518,9 @@ function buildOrderText(){
   }
   if(box.message) lines.push("Зурвас: \"" + box.message + "\"");
   lines.push("Барааны дүн: " + formatPrice(subtotal));
-  lines.push("Хүргэлт: " + formatPrice(getDeliveryFee()));
+  if(hasFlower()){
+    lines.push("Хүргэлт (UBCab ≈" + (box.deliveryKm||0) + " км): " + (box.deliveryPayer === "recipient" ? "жолоочид хүргэлтийн үед өөрөө төлнө (≈" + formatPrice(box.deliveryQuote||0) + ")" : formatPrice(getDeliveryFee())));
+  } else lines.push("Хүргэлт: " + formatPrice(getDeliveryFee()));
   if(discount > 0) lines.push("Купон (" + box.couponCode + "): -" + formatPrice(discount));
   lines.push("Нийт төлөх дүн: " + formatPrice(grandTotal));
   lines.push("");
@@ -468,6 +592,8 @@ function renderSummary(){
       <textarea id="cust-address" class="field-input" style="margin-top:10px;min-height:70px;resize:vertical" placeholder="Гудамж, байр, тоот, орц, давхар — лавлах зориг (барилгын нэр, ойролцоох газар) бичвэл хүргэлт хялбар олно" onchange="box.deliveryAddress=this.value.trim();persist();">${escapeHTML(box.deliveryAddress || "")}</textarea>
     </div>
 
+    ${hasFlower() ? flowerDeliveryHTML() : ""}
+
     <div style="margin-top:14px">
       <label class="field-label">Хямдралын купон (заавал биш)</label>
       ${box.couponCode ? `
@@ -487,7 +613,11 @@ function renderSummary(){
     <div class="summary-text" id="summary-text" style="margin-top:18px">${text}</div>
 
     <div class="notice-box">
-      <strong>Хүргэлтийн нөхцөл:</strong> Улаанбаатарын А, Б бүсэд хүргэлт ${formatPrice(getDeliveryFee())}${box.itemIds.some(id=>{const p=getProduct(id);return p&&p.category==="flower";}) ? " (цэцэг орсон тул +3,000₮)" : ""}.
+      <strong>Хүргэлтийн нөхцөл:</strong> ${hasFlower()
+        ? (box.deliveryPayer === "recipient"
+            ? "Амьд цэцгийг UBCab-аар хүргэнэ. UBCab-ын мөнгийг хүргэлтийн үед жолоочид өөрөө төлнө (захиалгын дүнд ороогүй)."
+            : "Амьд цэцгийг UBCab-аар хүргэнэ. UBCab-ын хүргэлтийн төлбөр (" + (box.deliveryQuote > 0 ? formatPrice(box.deliveryQuote) : "байршил сонгосны дараа тооцогдоно") + ") захиалгын дүнд орсон.")
+        : "Улаанбаатарын А, Б бүсэд хүргэлт " + formatPrice(getDeliveryFee()) + "."}
       Хүргэлт 24-48 цагийн дотор очно.
     </div>
     <div class="notice-box warn">
@@ -606,6 +736,7 @@ async function agreeAndShowBank(){
   if(!name || !phone){ toast("Нэр, утасны дугаараа бөглөнө үү 🙏"); return; }
   if(!email || !email.includes("@")){ toast("Зөв имэйл хаягаа бөглөнө үү 🙏"); return; }
   if(!district || !address){ toast("Хүргэлтийн дүүрэг, дэлгэрэнгүй хаягаа бөглөнө үү 🙏"); return; }
+  if(hasFlower() && !(box.deliveryLat && box.deliveryLng && box.deliveryQuote > 0)){ toast("Амьд цэцгийн хүргэлтийн үнийг бодохын тулд газрын зураг дээр хүргэх байршлаа тэмдэглэнэ үү 📍"); return; }
   box.customerName = name;
   box.customerPhone = phone;
   box.customerEmail = email;

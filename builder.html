@@ -280,7 +280,7 @@ function renderStepPanel(){
   if(step === 8){
     panel.innerHTML = renderSummary();
     maybeInitQpay();
-    if(hasFlower()) initDeliveryMap();
+    if(hasFlower() && !isPickup()) initDeliveryMap();
   }
 }
 
@@ -331,14 +331,44 @@ function hasFlower(){
 }
 // Амьд цэцэгтэй захиалга UBCab-аар хүргэгдэнэ (bouquet.zuvhuntuund.com-тай ижил тооцоо):
 // газрын зураг дээрх байршлаас замын зайг бодож UBCab-ын үнийг гаргана.
+const PICKUP_INFO = {
+  name: "Орчлон салбар",
+  address: "Орчлон цогцолбор, 3 давхар, 312 тоот (Хүнс, хөдөө аж ахуйн яамны эсрэг), Улаанбаатар",
+  hours: "19:00 хүртэл"
+};
+function isPickup(){ return box.deliveryMode === "pickup"; }
+function setDeliveryMode(m){
+  syncCustomerFields();
+  box.deliveryMode = m === "pickup" ? "pickup" : "deliver";
+  persist(); renderStepPanel();
+}
+function deliveryModeHTML(){
+  const pk = isPickup();
+  const card = (val, title, sub, price, on) => `
+    <label style="display:flex;gap:10px;align-items:flex-start;border:1.5px solid ${on?"var(--ribbon)":"var(--line)"};border-radius:14px;padding:12px 14px;margin-top:8px;cursor:pointer;background:${on?"var(--paper-deep)":"#fff"}">
+      <input type="radio" name="dl-mode" value="${val}" ${on?"checked":""} onchange="setDeliveryMode('${val}')" style="margin-top:3px">
+      <span style="flex:1"><b>${title}</b><br><small style="color:var(--ink-faint)">${sub}</small></span>
+      <b style="white-space:nowrap">${price}</b>
+    </label>`;
+  return `
+    <div style="margin-top:14px">
+      <label class="field-label">Хэрхэн авах вэ?</label>
+      ${card("deliver", "🚚 Хүргүүлж авна", hasFlower() ? "Амьд цэцгийг UBCab-аар хүргэнэ" : "Улаанбаатарын А, Б бүсэд 24-48 цагийн дотор", hasFlower() ? "Зайнаас хамаарна" : formatPrice(DELIVERY_FEE_BASE), !pk)}
+      ${card("pickup", "🏪 Дэлгүүрээс өөрөө очиж авна", PICKUP_INFO.name + " · " + PICKUP_INFO.hours, "Үнэгүй", pk)}
+      ${pk ? `<div style="margin-top:10px;background:var(--sage-tint);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.55">
+        📍 <b>${PICKUP_INFO.name}</b><br>${PICKUP_INFO.address}<br>🕒 ${PICKUP_INFO.hours}<br>
+        <span style="color:var(--ink-soft)">Захиалга бэлэн болмогц утас/имэйлээр мэдэгдэнэ. Хүргэлтийн төлбөр төлөхгүй.</span></div>` : ""}
+    </div>`;
+}
 function getDeliveryFee(){
+  if(isPickup()) return 0;
   if(!hasFlower()) return DELIVERY_FEE_BASE;
   if(box.deliveryPayer === "recipient") return 0;   // UBCab-д хүргэлтийн үед өөрөө төлнө
   return box.deliveryQuote > 0 ? box.deliveryQuote : 0;
 }
 function flowerDeliveryReady(){
   // Тэмдэглэсэн байршил заавал хэрэгтэй — үгүй бол үнэ тооцогдохгүй
-  return !hasFlower() || (box.deliveryLat && box.deliveryLng && box.deliveryQuote > 0);
+  return isPickup() || !hasFlower() || (box.deliveryLat && box.deliveryLng && box.deliveryQuote > 0);
 }
 
 let _leafletP = null;
@@ -474,9 +504,9 @@ function buildOrderObject(){
     customerName: box.customerName || "",
     customerPhone: box.customerPhone || "",
     customerEmail: box.customerEmail || "",
-    deliveryDistrict: box.deliveryDistrict || "",
-    deliveryKhoroo: box.deliveryKhoroo || "",
-    deliveryAddress: box.deliveryAddress || "",
+    deliveryDistrict: isPickup() ? "" : (box.deliveryDistrict || ""),
+    deliveryKhoroo: isPickup() ? "" : (box.deliveryKhoroo || ""),
+    deliveryAddress: isPickup() ? "Дэлгүүрээс өөрөө очиж авна (" + PICKUP_INFO.name + ")" : (box.deliveryAddress || ""),
     recipientKey: box.recipient,
     recipient: box.recipient ? RECIPIENTS[box.recipient].label : "—",
     container: container ? { id: container.id, name: container.name, price: container.price } : null,
@@ -484,12 +514,12 @@ function buildOrderObject(){
     message: box.message || "",
     subtotal: subtotal,
     deliveryFee: getDeliveryFee(),
-    deliveryMethod: hasFlower() ? "ubcab" : "",
+    deliveryMethod: isPickup() ? "pickup" : (hasFlower() ? "ubcab" : ""),
     deliveryPayer: box.deliveryPayer || "sender",
-    deliveryKm: hasFlower() ? (box.deliveryKm || 0) : 0,
-    deliveryQuote: hasFlower() ? (box.deliveryQuote || 0) : 0,
-    deliveryLat: hasFlower() ? (box.deliveryLat || 0) : 0,
-    deliveryLng: hasFlower() ? (box.deliveryLng || 0) : 0,
+    deliveryKm: (hasFlower() && !isPickup()) ? (box.deliveryKm || 0) : 0,
+    deliveryQuote: (hasFlower() && !isPickup()) ? (box.deliveryQuote || 0) : 0,
+    deliveryLat: (hasFlower() && !isPickup()) ? (box.deliveryLat || 0) : 0,
+    deliveryLng: (hasFlower() && !isPickup()) ? (box.deliveryLng || 0) : 0,
     couponCode: box.couponCode || "",
     discount: discount,
     total: Math.max(0, subtotal + getDeliveryFee() - discount),
@@ -508,7 +538,8 @@ function buildOrderText(){
   lines.push("ЗАХИАЛГЫН ХҮСЭЛТ — Зөвхөн түүнд");
   lines.push("Захиалгын дугаар: " + ensureOrderNumber());
   lines.push("Захиалагч: " + (box.customerName || "—") + " · " + (box.customerPhone || "—") + " · " + (box.customerEmail || "—"));
-  lines.push("Хүргэлтийн хаяг: " + [box.deliveryDistrict, box.deliveryKhoroo ? box.deliveryKhoroo + "-р хороо" : "", box.deliveryAddress].filter(Boolean).join(", "));
+  if(isPickup()) lines.push("Авах хэлбэр: ДЭЛГҮҮРЭЭС ӨӨРӨӨ ОЧИЖ АВНА — " + PICKUP_INFO.name + ", " + PICKUP_INFO.address);
+  else lines.push("Хүргэлтийн хаяг: " + [box.deliveryDistrict, box.deliveryKhoroo ? box.deliveryKhoroo + "-р хороо" : "", box.deliveryAddress].filter(Boolean).join(", "));
   lines.push("Хүлээн авагч: " + recipient);
   if(container) lines.push("Сав: " + container.name + " (" + formatPrice(container.price) + ")");
   else lines.push("Сав: дахин боловсруулсан бор цаасан уут (үнэгүй)");
@@ -518,7 +549,9 @@ function buildOrderText(){
   }
   if(box.message) lines.push("Зурвас: \"" + box.message + "\"");
   lines.push("Барааны дүн: " + formatPrice(subtotal));
-  if(hasFlower()){
+  if(isPickup()){
+    lines.push("Хүргэлт: үнэгүй (өөрөө очиж авна)");
+  } else if(hasFlower()){
     lines.push("Хүргэлт (UBCab ≈" + (box.deliveryKm||0) + " км): " + (box.deliveryPayer === "recipient" ? "жолоочид хүргэлтийн үед өөрөө төлнө (≈" + formatPrice(box.deliveryQuote||0) + ")" : formatPrice(getDeliveryFee())));
   } else lines.push("Хүргэлт: " + formatPrice(getDeliveryFee()));
   if(discount > 0) lines.push("Купон (" + box.couponCode + "): -" + formatPrice(discount));
@@ -579,7 +612,9 @@ function renderSummary(){
       <input id="cust-email" class="field-input" type="email" value="${escapeHTML(box.customerEmail || "")}" placeholder="таны@имэйл.com" onchange="box.customerEmail=this.value.trim();persist();">
     </div>
 
-    <div style="margin-top:14px">
+    ${deliveryModeHTML()}
+
+    <div style="margin-top:14px;${isPickup() ? "display:none" : ""}">
       <label class="field-label">Хүргэлтийн хаяг</label>
       <div class="grid-2" style="margin-top:6px">
         <select id="cust-district" class="field-input" onchange="box.deliveryDistrict=this.value;persist();">
@@ -592,7 +627,7 @@ function renderSummary(){
       <textarea id="cust-address" class="field-input" style="margin-top:10px;min-height:70px;resize:vertical" placeholder="Гудамж, байр, тоот, орц, давхар — лавлах зориг (барилгын нэр, ойролцоох газар) бичвэл хүргэлт хялбар олно" onchange="box.deliveryAddress=this.value.trim();persist();">${escapeHTML(box.deliveryAddress || "")}</textarea>
     </div>
 
-    ${hasFlower() ? flowerDeliveryHTML() : ""}
+    ${hasFlower() && !isPickup() ? flowerDeliveryHTML() : ""}
 
     <div style="margin-top:14px">
       <label class="field-label">Хямдралын купон (заавал биш)</label>
@@ -613,12 +648,14 @@ function renderSummary(){
     <div class="summary-text" id="summary-text" style="margin-top:18px">${text}</div>
 
     <div class="notice-box">
-      <strong>Хүргэлтийн нөхцөл:</strong> ${hasFlower()
+      <strong>${isPickup() ? "Авах нөхцөл" : "Хүргэлтийн нөхцөл"}:</strong> ${isPickup()
+        ? "Та захиалгаа " + PICKUP_INFO.name + "-аас (" + PICKUP_INFO.hours + ") өөрөө очиж авна. Хүргэлтийн төлбөр байхгүй."
+        : hasFlower()
         ? (box.deliveryPayer === "recipient"
             ? "Амьд цэцгийг UBCab-аар хүргэнэ. UBCab-ын мөнгийг хүргэлтийн үед жолоочид өөрөө төлнө (захиалгын дүнд ороогүй)."
             : "Амьд цэцгийг UBCab-аар хүргэнэ. UBCab-ын хүргэлтийн төлбөр (" + (box.deliveryQuote > 0 ? formatPrice(box.deliveryQuote) : "байршил сонгосны дараа тооцогдоно") + ") захиалгын дүнд орсон.")
         : "Улаанбаатарын А, Б бүсэд хүргэлт " + formatPrice(getDeliveryFee()) + "."}
-      Хүргэлт 24-48 цагийн дотор очно.
+      ${isPickup() ? "" : "Хүргэлт 24-48 цагийн дотор очно."}
     </div>
     <div class="notice-box warn">
       Хэрвээ та дансаар төлбөрөө шилжүүлсэн бол бид дансаа шалгаад төлвийг нь солих болно.
@@ -735,8 +772,8 @@ async function agreeAndShowBank(){
   const address = document.getElementById("cust-address").value.trim();
   if(!name || !phone){ toast("Нэр, утасны дугаараа бөглөнө үү 🙏"); return; }
   if(!email || !email.includes("@")){ toast("Зөв имэйл хаягаа бөглөнө үү 🙏"); return; }
-  if(!district || !address){ toast("Хүргэлтийн дүүрэг, дэлгэрэнгүй хаягаа бөглөнө үү 🙏"); return; }
-  if(hasFlower() && !(box.deliveryLat && box.deliveryLng && box.deliveryQuote > 0)){ toast("Амьд цэцгийн хүргэлтийн үнийг бодохын тулд газрын зураг дээр хүргэх байршлаа тэмдэглэнэ үү 📍"); return; }
+  if(!isPickup() && (!district || !address)){ toast("Хүргэлтийн дүүрэг, дэлгэрэнгүй хаягаа бөглөнө үү 🙏"); return; }
+  if(!isPickup() && hasFlower() && !(box.deliveryLat && box.deliveryLng && box.deliveryQuote > 0)){ toast("Амьд цэцгийн хүргэлтийн үнийг бодохын тулд газрын зураг дээр хүргэх байршлаа тэмдэглэнэ үү 📍"); return; }
   box.customerName = name;
   box.customerPhone = phone;
   box.customerEmail = email;

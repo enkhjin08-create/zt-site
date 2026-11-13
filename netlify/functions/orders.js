@@ -85,7 +85,7 @@ function sanitizeOrder(input){
     message: str(input.message, 1000),
     subtotal: num(input.subtotal),
     deliveryFee: num(input.deliveryFee),
-    deliveryMethod: input.deliveryMethod === "ubcab" ? "ubcab" : "",
+    deliveryMethod: input.deliveryMethod === "ubcab" ? "ubcab" : (input.deliveryMethod === "pickup" ? "pickup" : ""),
     deliveryPayer: input.deliveryPayer === "recipient" ? "recipient" : "sender",
     deliveryKm: num(input.deliveryKm),
     deliveryQuote: num(input.deliveryQuote),
@@ -120,6 +120,7 @@ async function sendOrderNotificationEmail(order){
       <h2 style="color:#C9536A">🎀 Шинэ захиалга — №${escapeHtml(order.orderNumber)}</h2>
       <p><b>Захиалагч:</b> ${escapeHtml(order.customerName)} · ${escapeHtml(order.customerPhone)}</p>
       <p><b>Хүргэлтийн хаяг:</b> ${escapeHtml([order.deliveryDistrict, order.deliveryKhoroo ? order.deliveryKhoroo + "-р хороо" : "", order.deliveryAddress].filter(Boolean).join(", "))}</p>
+      ${order.deliveryMethod === "pickup" ? `<p><b>🏪 Дэлгүүрээс өөрөө очиж авна</b> — хүргэлт байхгүй</p>` : ""}
       ${order.deliveryMethod === "ubcab" ? `<p><b>🚕 UBCab хүргэлт:</b> ≈${order.deliveryKm} км · ${(order.deliveryQuote||0).toLocaleString()}₮ · ${order.deliveryPayer === "recipient" ? "хүргэлтийн үед жолоочид өөрөө төлнө (захиалгын дүнд ороогүй)" : "захиалгын дүнд орсон"}${order.deliveryLat ? ` · <a href="https://www.google.com/maps?q=${order.deliveryLat},${order.deliveryLng}">газрын зураг</a>` : ""}</p>` : ""}
       <p><b>Хүлээн авагч:</b> ${escapeHtml(order.recipient)}</p>
       ${order.container ? `<p><b>Сав:</b> ${escapeHtml(order.container.name)} (${order.container.price.toLocaleString()}₮)</p>` : ""}

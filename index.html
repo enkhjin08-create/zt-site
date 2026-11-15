@@ -21,6 +21,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
 <link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/gift-scroll.css?v=1">
 <noscript><style>#hero-wrap{ opacity:1 !important; }</style></noscript>
 </head>
 <body>
@@ -146,6 +147,48 @@
           repeatCount="indefinite" additive="sum"/>
       </svg>
     </div>
+  </div>
+</section>
+
+<section class="gift-scroll" id="gift-scroll" aria-label="Бэлэг бэлдэх animation">
+  <div class="gs-sticky">
+    <div class="gs-progress" aria-hidden="true"><i id="gs-bar"></i></div>
+    <p class="gs-eyebrow">Зөвхөн түүнд</p>
+    <div class="gs-caps">
+      <div class="gs-cap is-on" id="gs-cap1"><h2>Бэлгээ <em>сонго</em></h2><p>Хайртай хүнийхээ дуртай зүйлсийг нэг дор цуглуулъя.</p></div>
+      <div class="gs-cap" id="gs-cap2"><h2>Хайраар <em>боож</em></h2><p>Сав баглаа, ленточ, бяцхан захидалтай нь хамт.</p></div>
+      <div class="gs-cap" id="gs-cap3"><h2>Бэлэг <em>бэлэн!</em></h2><p>Одоо өөрийн бэлгийн хайрцгийг бэлдээрэй.</p><a class="btn btn-primary" href="builder.html">Бэлгээ бэлдэх →</a></div>
+    </div>
+    <svg class="gs-svg" viewBox="0 0 400 400" role="img" aria-label="Бэлгийн хайрцагт бэлэг орж, ленточоор боогдож буй зураг">
+      <ellipse cx="200" cy="372" rx="120" ry="10" fill="#15140F" opacity=".10"/>
+      <g id="gs-box">
+        <rect x="105" y="208" width="190" height="30" rx="6" fill="#C75077"/>
+        <g id="gs-items">
+          <!-- аяга -->
+          <g id="gs-cup"><rect x="-24" y="-64" width="48" height="64" rx="10" fill="#FBF4E8" stroke="#0F4B42" stroke-width="3"/><path d="M24 -48 C44 -48 44 -18 24 -18" fill="none" stroke="#0F4B42" stroke-width="3.5" stroke-linecap="round"/><path d="M0 -22 C-14 -34 -6 -48 0 -40 C6 -48 14 -34 0 -22Z" fill="#FF6698"/></g>
+          <!-- цэцэг -->
+          <g id="gs-flower"><path d="M0 0 L0 -96" stroke="#0F4B42" stroke-width="4" stroke-linecap="round"/><ellipse cx="-12" cy="-40" rx="14" ry="6" transform="rotate(-30 -12 -40)" fill="#0F4B42"/><g transform="translate(0,-102)"><circle cx="0" cy="-15" r="13" fill="#FF6698"/><circle cx="14" cy="-5" r="13" fill="#FF6698"/><circle cx="9" cy="12" r="13" fill="#FF6698"/><circle cx="-9" cy="12" r="13" fill="#FF6698"/><circle cx="-14" cy="-5" r="13" fill="#FF6698"/><circle r="9" fill="#FBF4E8"/></g></g>
+          <!-- захидал -->
+          <g id="gs-card"><rect x="-28" y="-78" width="56" height="78" rx="6" fill="#FFFFFF" stroke="#0F4B42" stroke-width="3"/><path d="M0 -36 C-14 -48 -6 -62 0 -54 C6 -62 14 -48 0 -36Z" fill="#FF6698"/><path d="M-16 -22 H16 M-16 -14 H8" stroke="#9AA39F" stroke-width="3" stroke-linecap="round"/></g>
+        </g>
+        <rect x="95" y="230" width="210" height="130" rx="12" fill="#FF6698"/>
+        <rect x="95" y="230" width="210" height="14" fill="#000" opacity=".06"/>
+        <rect id="gs-hband" x="95" y="286" width="210" height="22" fill="#0F4B42"/>
+        <g id="gs-lid">
+          <rect x="85" y="190" width="230" height="46" rx="10" fill="#FF7FAA"/>
+          <rect x="85" y="224" width="230" height="12" rx="6" fill="#000" opacity=".07"/>
+        </g>
+        <rect id="gs-vband" x="188" y="190" width="24" height="170" fill="#0F4B42"/>
+        <g id="gs-bow">
+          <path d="M200 190 C168 146 118 158 138 188 C150 204 188 198 200 190Z" fill="#0F4B42"/>
+          <path d="M200 190 C232 146 282 158 262 188 C250 204 212 198 200 190Z" fill="#0F4B42"/>
+          <path d="M196 192 L170 232 L186 228 L198 200Z M204 192 L230 232 L214 228 L202 200Z" fill="#0F4B42"/>
+          <circle cx="200" cy="190" r="11" fill="#FF6698" stroke="#FBF4E8" stroke-width="3"/>
+        </g>
+      </g>
+      <g id="gs-confetti"></g>
+    </svg>
+    <p class="gs-hint" id="gs-hint"><span>↓</span> Гүйлгээд үзээрэй</p>
   </div>
 </section>
 
@@ -294,6 +337,7 @@
 <script src="assets/auth.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/products-api.js"></script>
+<script src="assets/gift-scroll.js?v=1" defer></script>
 <script>
   renderHeader("index.html");
   renderFooter();

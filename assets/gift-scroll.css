@@ -1,0 +1,24 @@
+/* Бэлэг бэлдэх scroll animation — нүүр хуудас */
+.gift-scroll{ position:relative; height:380vh; height:380svh; background:linear-gradient(180deg,var(--paper) 0%,var(--paper-deep) 100%); }
+.gs-sticky{ position:sticky; top:0; height:100vh; height:100svh; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 20px; text-align:center; }
+.gs-eyebrow{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ribbon-dark); font-weight:700; margin:0 0 6px; }
+.gs-caps{ position:relative; height:112px; width:min(560px,100%); margin-bottom:6px; }
+.gs-cap{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; opacity:0; transform:translateY(14px); transition:opacity .45s ease, transform .45s ease; pointer-events:none; }
+.gs-cap.is-on{ opacity:1; transform:none; pointer-events:auto; }
+.gs-cap h2{ font-size:clamp(28px,6vw,46px); line-height:1.08; margin:0 0 8px; color:var(--ink); }
+.gs-cap h2 em{ font-style:normal; color:var(--ribbon); }
+.gs-cap p{ margin:0; color:var(--ink-soft); font-size:clamp(14px,3.6vw,17px); max-width:34ch; }
+.gs-cap .btn{ margin-top:12px; }
+.gs-svg{ width:min(88vw,50vh,460px); height:auto; overflow:visible; display:block; }
+.gs-hint{ position:absolute; bottom:max(22px,env(safe-area-inset-bottom)); left:0; right:0; font-size:12.5px; color:var(--ink-faint); transition:opacity .3s; }
+.gs-hint span{ display:inline-block; animation:gsBob 1.6s ease-in-out infinite; }
+@keyframes gsBob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
+.gs-progress{ position:absolute; left:0; top:0; height:3px; width:100%; background:transparent; }
+.gs-progress i{ display:block; height:100%; width:0; background:var(--ribbon); }
+@media (max-height:640px){ .gs-caps{ height:96px } .gs-cap p{ display:none } }
+@media (prefers-reduced-motion: reduce){
+  .gift-scroll{ height:auto; }
+  .gs-sticky{ position:relative; height:auto; padding:56px 20px; }
+  .gs-cap{ transition:none; }
+  .gs-hint{ display:none; }
+}

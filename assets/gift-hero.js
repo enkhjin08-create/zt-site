@@ -41,7 +41,7 @@
       it.el.setAttribute("opacity", t > 0.02 ? 1 : 0);
     });
     var tl = seg(p, 0.32, 0.56);
-    lid.setAttribute("transform", "translate(" + lerp(75, 0, easeOut(tl)) + "," + lerp(-175, 0, easeBack(tl)) + ") rotate(" + lerp(22, 0, easeOut(tl)) + " 200 212)");
+    lid.setAttribute("transform", "translate(" + lerp(66, 0, easeOut(tl)) + "," + lerp(-100, 0, easeBack(tl)) + ") rotate(" + lerp(15, 0, easeOut(tl)) + " 200 212)");
     vband.setAttribute("transform", "translate(0,190) scale(1," + easeOut(seg(p, 0.54, 0.68)) + ") translate(0,-190)");
     hband.setAttribute("transform", "translate(200,0) scale(" + easeOut(seg(p, 0.60, 0.72)) + ",1) translate(-200,0)");
     var tb = easeBack(seg(p, 0.68, 0.80));

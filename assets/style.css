@@ -144,11 +144,11 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight: 700; letter-spacing:
 
 /* ---------------- Hero ---------------- */
 .hero{ padding: 64px 0 56px; }
-.hero .wrap{ display:grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items:center; }
+.hero .wrap{ display:grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items:end; } /* хайрцгийн сүүдэр товчнуудын доод ирмэгтэй зэрэгцэнэ */
 .hero h1{ font-size: clamp(36px, 4.4vw, 58px); line-height: 1.06; }
 .hero-actions{ display:flex; gap:14px; margin-top: 28px; flex-wrap:wrap; }
 .hero-art{ position:relative; }
-.hero-art svg{ width:100%; height:auto; }
+.hero-art svg{ width:100%; height:auto; display:block; }
 @media (max-width: 860px){
   .hero .wrap{ grid-template-columns: 1fr; }
   .hero-art{ order:-1; max-width: 320px; margin: 0 auto; }

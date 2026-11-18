@@ -772,7 +772,7 @@ export const PRODUCTS = [
   },
   {
     "id": 400570,
-    "image": "https://cdn.zochil.shop/b16db5e0-7548-401d-822f-74d2d12f59cd_t1500.png",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-400570.jpg",
     "name": "Гэр sticky note",
     "price": 4000,
     "oldPrice": 4500,

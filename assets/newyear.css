@@ -1,0 +1,50 @@
+/* Шинэ жилийн өнгө аяс — зөвхөн body.ny үед идэвхжинэ (newyear.js огноогоор асаана/унтраана) */
+body.ny{ --ny-red:#B3202A; --ny-red-deep:#7E1420; --ny-gold:#FFD36B; --ny-cream:#FFF6E6; --ny-green:#0F4B42; }
+
+/* Дээд мэдэгдлийн зурвас */
+.ny-bar{ background:linear-gradient(90deg,var(--ny-red-deep),var(--ny-red),var(--ny-red-deep)); color:var(--ny-cream);
+  text-align:center; font-size:13.5px; font-weight:700; padding:9px 16px; letter-spacing:.2px; }
+.ny-bar a{ color:var(--ny-gold); text-decoration:underline; text-underline-offset:3px; margin-left:8px; white-space:nowrap; }
+
+/* Hero */
+body.ny .hero{ position:relative; overflow:hidden; padding-bottom:92px;
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgba(255,211,107,.22), transparent 60%),
+    radial-gradient(900px 500px at 0% 110%, rgba(0,0,0,.28), transparent 60%),
+    linear-gradient(160deg,var(--ny-red) 0%,var(--ny-red-deep) 100%); }
+body.ny .hero::before{ content:""; position:absolute; inset:0; pointer-events:none; opacity:.55;
+  background-image:
+    radial-gradient(2px 2px at 12% 22%, #fff 99%, transparent), radial-gradient(1.6px 1.6px at 28% 70%, #fff 99%, transparent),
+    radial-gradient(2.4px 2.4px at 44% 18%, #fff 99%, transparent), radial-gradient(1.6px 1.6px at 58% 82%, #fff 99%, transparent),
+    radial-gradient(2px 2px at 72% 30%, #fff 99%, transparent), radial-gradient(2.4px 2.4px at 88% 64%, #fff 99%, transparent),
+    radial-gradient(1.6px 1.6px at 95% 14%, #fff 99%, transparent), radial-gradient(2px 2px at 6% 80%, #fff 99%, transparent); }
+body.ny .hero::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:64px; pointer-events:none;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 64' preserveAspectRatio='none'><path fill='%23FBF4E8' d='M0 34Q180 4 360 34T720 34T1080 34T1440 34V64H0Z'/></svg>") center bottom/100% 100% no-repeat; }
+body.ny .hero .wrap{ position:relative; z-index:1; }
+body.ny .hero .eyebrow{ color:var(--ny-gold); }
+body.ny .hero h1, body.ny .hero-type{ color:var(--ny-cream); }
+body.ny .hero h1 em{ color:var(--ny-gold); }
+body.ny .hero .hero-caret{ background:var(--ny-gold); }
+body.ny .hero .lede{ color:rgba(255,246,230,.88); }
+body.ny .hero .btn-primary{ background:var(--ny-gold); color:var(--ny-red-deep); }
+body.ny .hero .btn-primary:hover{ background:#fff; }
+body.ny .hero .btn-outline{ border-color:var(--ny-cream); color:var(--ny-cream); }
+body.ny .hero .btn-outline:hover{ background:var(--ny-cream); color:var(--ny-red-deep); }
+body.ny #hero-svg{ --hero-ribbon:#E8B93E !important; --hero-ribbon-dark:#C99A22 !important; }
+
+/* Монита багцын хэсэг */
+.ny-section{ display:none; }
+body.ny .ny-section{ display:block; }
+.ny-section .eyebrow{ color:var(--ny-red); }
+.ny-section h2 em{ font-style:normal; color:var(--ny-red); }
+.ny-scroll{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(220px,1fr); gap:18px; overflow-x:auto;
+  padding:4px 4px 18px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; }
+.ny-scroll > *{ scroll-snap-align:start; }
+.ny-scroll::-webkit-scrollbar{ height:8px; } .ny-scroll::-webkit-scrollbar-thumb{ background:rgba(179,32,42,.35); border-radius:8px; }
+@media (min-width:1021px){ .ny-scroll{ grid-auto-columns:calc((100% - 54px)/4); } }
+@media (max-width:760px){ .ny-scroll{ grid-auto-columns:62%; } }
+body.ny .gift-divider .gd-knot{ filter:hue-rotate(-30deg) saturate(1.4); }
+
+/* Цас */
+#ny-snow{ position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:50; }
+@media (prefers-reduced-motion: reduce){ #ny-snow{ display:none; } }

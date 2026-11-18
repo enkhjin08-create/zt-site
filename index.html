@@ -21,6 +21,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
 <link rel="stylesheet" href="assets/style.css?v=4">
+<link rel="stylesheet" href="assets/newyear.css?v=1">
 <noscript><style>#hero-wrap{ opacity:1 !important; }</style></noscript>
 </head>
 <body>
@@ -91,6 +92,20 @@
         <g id="gh-confetti"></g>
       </svg>
     </div>
+  </div>
+</section>
+
+<section class="section ny-section" id="ny-section" style="padding-top:8px">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Шинэ жилийн бэлэг</p>
+        <h2>Монита <em>багцууд</em> 🎁</h2>
+        <p class="lede" style="margin-top:6px">Шинэ жилээр хамгийн хөөрхөн бэлэг өгдөг монита болоорой.</p>
+      </div>
+      <a href="category.html?cat=giftset" class="btn btn-ghost btn-sm">Бүх багц үзэх →</a>
+    </div>
+    <div class="ny-scroll" id="ny-grid"></div>
   </div>
 </section>
 
@@ -240,6 +255,7 @@
 <script src="assets/app.js"></script>
 <script src="assets/products-api.js"></script>
 <script src="assets/gift-hero.js?v=1" defer></script>
+<script src="assets/newyear.js?v=1"></script>
 <script>
   renderHeader("index.html");
   renderFooter();
@@ -308,6 +324,7 @@
     }
 
     renderActiveCampaign();
+    if(window.renderNewYear) renderNewYear();
 
     // Hero-ийн эцсийн байдал (өгөгдмөл эсвэл кампанит ажлын) шийдэгдсэний
     // дараа л зөөлөн харагдуулна — ингэснээр "өгөгдмөл контент нэг агшин

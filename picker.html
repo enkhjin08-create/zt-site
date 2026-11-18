@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Зураг сонгох</title>
+<style>
+:root{--bg:#fff8fb;--fg:#2a2230;--muted:#7a6f85;--card:#fff;--line:#f0dfe8;--accent:#ff6698;--ok:#0f4b42}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--fg);padding-bottom:90px}
+header{padding:18px 16px 8px;max-width:1200px;margin:auto}
+h1{margin:0 0 4px;font-size:20px}
+p.sub{margin:0;color:var(--muted)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;padding:8px 16px;max-width:1200px;margin:auto}
+.tabs button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font:inherit;cursor:pointer}
+.tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.bulk{display:flex;gap:8px;padding:0 16px 8px;max-width:1200px;margin:auto}
+.bulk button{border:0;background:none;color:var(--accent);font:inherit;cursor:pointer;padding:4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:8px 16px;max-width:1200px;margin:auto}
+label.card{position:relative;display:block;background:var(--card);border:2px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer}
+label.card.sel{border-color:var(--accent);box-shadow:0 0 0 2px #ff669833}
+label.card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#f5eef2}
+label.card .meta{padding:8px 10px}
+.n{position:absolute;top:6px;left:6px;background:#000a;color:#fff;border-radius:6px;font-size:12px;padding:2px 7px}
+.nm{font-size:13px;font-weight:600}
+.pr{font-size:12px;color:var(--muted)}
+input[type=checkbox]{position:absolute;top:6px;right:6px;width:22px;height:22px;accent-color:var(--accent)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;align-items:center;justify-content:space-between}
+.bar b{font-size:16px}
+.bar button{border:0;background:var(--ok);color:#fff;border-radius:10px;padding:10px 18px;font:inherit;cursor:pointer}
+#out{width:calc(100% - 32px);max-width:1168px;margin:8px 16px;display:none;margin-inline:auto;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit}
+</style>
+</head>
+<body>
+<header>
+  <h1>Шинэчлэх зургаа сонгоно уу</h1>
+  <p class="sub">Зураг дээр дарж чагтална. Дараа нь доорх «Дугаар хуулах» товчийг дарж Claude-д илгээнэ. Цэцгийн зураг орсонгүй.</p>
+</header>
+<div class="tabs" id="tabs"></div>
+<div class="bulk"><button id="all">Энэ ангиллыг бүгдийг сонгох</button><button id="none">Цэвэрлэх</button></div>
+<div class="grid" id="grid"></div>
+<textarea id="out" rows="3" readonly></textarea>
+<div class="bar"><span>Сонгосон: <b id="cnt">0</b></span><button id="copy">Дугаар хуулах</button></div>
+<script src="assets/data.js"></script>
+<script>
+(function(){
+  var NAMES={giftset:'Бэлгийн багц',extra:'Нэмэлт',greeting:'Мэндчилгээ',box:'Хайрцаг',cup:'Аяга'};
+  var ORDER=['giftset','extra','greeting','box','cup'];
+  var list=[];
+  ORDER.forEach(function(c){PRODUCTS.filter(function(p){return p.category===c&&p.image}).forEach(function(p){list.push(p)})});
+  list.forEach(function(p,i){p._n=i+1});
+  var sel={};try{sel=JSON.parse(localStorage.getItem('pickerSel')||'{}')}catch(e){}
+  var cur='all';
+  function save(){try{localStorage.setItem('pickerSel',JSON.stringify(sel))}catch(e){}}
+  function count(){var n=Object.keys(sel).filter(function(k){return sel[k]}).length;document.getElementById('cnt').textContent=n}
+  function tabs(){
+    var t=document.getElementById('tabs');t.innerHTML='';
+    [['all','Бүгд ('+list.length+')']].concat(ORDER.map(function(c){return [c,NAMES[c]+' ('+list.filter(function(p){return p.category===c}).length+')']})).forEach(function(x){
+      var b=document.createElement('button');b.textContent=x[1];b.className=cur===x[0]?'on':'';
+      b.onclick=function(){cur=x[0];tabs();render()};t.appendChild(b)});
+  }
+  function visible(){return list.filter(function(p){return cur==='all'||p.category===cur})}
+  function render(){
+    var g=document.getElementById('grid');g.innerHTML='';
+    visible().forEach(function(p){
+      var l=document.createElement('label');l.className='card'+(sel[p.id]?' sel':'');
+      var url=p.image;
+      l.innerHTML='<span class="n">'+p._n+'</span><input type="checkbox"'+(sel[p.id]?' checked':'')+'><img loading="lazy" alt="" src="'+url+'"><div class="meta"><div class="nm"></div><div class="pr">'+p.price.toLocaleString('en-US')+'₮</div></div>';
+      l.querySelector('.nm').textContent=p.name;
+      l.querySelector('input').onchange=function(e){sel[p.id]=e.target.checked;l.classList.toggle('sel',e.target.checked);save();count()};
+      g.appendChild(l)});
+    count();
+  }
+  document.getElementById('all').onclick=function(){visible().forEach(function(p){sel[p.id]=true});save();render()};
+  document.getElementById('none').onclick=function(){sel={};save();render()};
+  document.getElementById('copy').onclick=function(){
+    var ch=list.filter(function(p){return sel[p.id]});
+    var txt='Сонгосон '+ch.length+': '+ch.map(function(p){return p._n}).join(', ')+'\nIDs: '+ch.map(function(p){return p.id}).join(', ');
+    var o=document.getElementById('out');o.style.display='block';o.value=txt;o.select();
+    try{navigator.clipboard.writeText(txt).then(function(){document.getElementById('copy').textContent='Хуулагдлаа ✓'},function(){})}catch(e){}
+    setTimeout(function(){document.getElementById('copy').textContent='Дугаар хуулах'},2500);
+  };
+  tabs();render();
+})();
+</script>
+</body>
+</html>

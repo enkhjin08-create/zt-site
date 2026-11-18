@@ -352,7 +352,7 @@ export const PRODUCTS = [
   {
     "id": 562711,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562711.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Үнэг",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -362,7 +362,7 @@ export const PRODUCTS = [
   {
     "id": 562710,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562710.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Залхуу амьтан (Sloth)",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -372,7 +372,7 @@ export const PRODUCTS = [
   {
     "id": 562709,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562709.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Сармагчин",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -382,7 +382,7 @@ export const PRODUCTS = [
   {
     "id": 562708,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562708.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Шар даашинзтай муур",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -392,7 +392,7 @@ export const PRODUCTS = [
   {
     "id": 562707,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562707.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Нохой",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -402,7 +402,7 @@ export const PRODUCTS = [
   {
     "id": 562706,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562706.jpg",
-    "name": "Кактус",
+    "name": "Кактус ваар – Инээсэн муур",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -412,7 +412,7 @@ export const PRODUCTS = [
   {
     "id": 562705,
     "image": "https://cdn.zochil.shop/e4c09caa-d19d-4e0d-bfe7-74dce3ee14ec_t1500.jpg",
-    "name": "Кактус",
+    "name": "Кактус ваар – Цэнхэр нүдтэй муур",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -422,7 +422,7 @@ export const PRODUCTS = [
   {
     "id": 562623,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562623.jpg",
-    "name": "Кактус",
+    "name": "Кактус ваар – Том нүдтэй муур",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",

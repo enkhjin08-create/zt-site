@@ -191,6 +191,13 @@ async function initProducts(){
     });
   }
 
+  if(typeof NAME_PATCH !== "undefined"){
+    ALL_PRODUCTS_INCLUDING_HIDDEN.forEach(p => {
+      const e = NAME_PATCH[p.id];
+      if(e && p.name === e[0]) p.name = e[1];
+    });
+  }
+
   window._ALL_PRODUCTS_ADMIN = ALL_PRODUCTS_INCLUDING_HIDDEN;
 
   updateCartBadge();

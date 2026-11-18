@@ -353,7 +353,7 @@ const PRODUCTS = [
   {
     "id": 562711,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562711.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Үнэг",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -363,7 +363,7 @@ const PRODUCTS = [
   {
     "id": 562710,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562710.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Залхуу амьтан (Sloth)",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -373,7 +373,7 @@ const PRODUCTS = [
   {
     "id": 562709,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562709.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Сармагчин",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -383,7 +383,7 @@ const PRODUCTS = [
   {
     "id": 562708,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562708.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Шар даашинзтай муур",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -393,7 +393,7 @@ const PRODUCTS = [
   {
     "id": 562707,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562707.jpg",
-    "name": "Суккулент",
+    "name": "Суккулент ваар – Нохой",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -403,7 +403,7 @@ const PRODUCTS = [
   {
     "id": 562706,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562706.jpg",
-    "name": "Кактус",
+    "name": "Кактус ваар – Инээсэн муур",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -413,7 +413,7 @@ const PRODUCTS = [
   {
     "id": 562705,
     "image": "https://cdn.zochil.shop/e4c09caa-d19d-4e0d-bfe7-74dce3ee14ec_t1500.jpg",
-    "name": "Кактус",
+    "name": "Кактус ваар – Цэнхэр нүдтэй муур",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -423,7 +423,7 @@ const PRODUCTS = [
   {
     "id": 562623,
     "image": "https://zuvhuntuund.com/images/uploads/pic-562623.jpg",
-    "name": "Кактус",
+    "name": "Кактус ваар – Том нүдтэй муур",
     "price": 23000,
     "oldPrice": null,
     "category": "cup",
@@ -1458,5 +1458,41 @@ const PHOTO_PATCH = {
  "148000": [
   "f684efaa",
   "pic-148000.jpg"
+ ]
+};
+
+// Нэр ялгах: админ засвар хуучин нэрийг хэвээр үлдээсэн бол л солино.
+const NAME_PATCH = {
+ "562706": [
+  "Кактус",
+  "Кактус ваар – Инээсэн муур"
+ ],
+ "562705": [
+  "Кактус",
+  "Кактус ваар – Цэнхэр нүдтэй муур"
+ ],
+ "562623": [
+  "Кактус",
+  "Кактус ваар – Том нүдтэй муур"
+ ],
+ "562711": [
+  "Суккулент",
+  "Суккулент ваар – Үнэг"
+ ],
+ "562710": [
+  "Суккулент",
+  "Суккулент ваар – Залхуу амьтан (Sloth)"
+ ],
+ "562709": [
+  "Суккулент",
+  "Суккулент ваар – Сармагчин"
+ ],
+ "562708": [
+  "Суккулент",
+  "Суккулент ваар – Шар даашинзтай муур"
+ ],
+ "562707": [
+  "Суккулент",
+  "Суккулент ваар – Нохой"
  ]
 };

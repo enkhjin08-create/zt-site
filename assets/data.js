@@ -2,6 +2,160 @@
 // Үнэ ₮-ээр. image талбарыг дараа нь өөрийн studio зурагны замаар солиорой (жишээ: images/776017.jpg)
 const PRODUCTS = [
   {
+    "id": 1794000000001,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-1.jpg",
+    "name": "Монита багц #1 – Санта Өвөөгийн Шуудан",
+    "price": 23000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Kinder шоколад, Таяган чихэр, LED гэрэл, Зөөлөн түлхүүрийн оосор, Чарм-утасны зүүлт, Мэндчилгээ, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000002,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-2.jpg",
+    "name": "Монита багц #2 – Мини Цасан Хүн",
+    "price": 14000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Энгэрийн тэмдэг /pin/, Таяган чихэр, Зөөлөн түлхүүрийн оосор, LED гэрэл, Мэндчилгээ, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000003,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-3.jpg",
+    "name": "Монита багц #3 – Gingerbread Байшин",
+    "price": 18000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Цасан ширхэг лаа, Tom&Jerry Blindbox, Мэндчилгээ, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000004,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-4.jpg",
+    "name": "Монита багц #4 – Ягаан Байшин",
+    "price": 19000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Цөмөөхэй лаа, Hello Kitty Blindbox, Мэндчилгээ, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000005,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-5.jpg",
+    "name": "Монита багц #5 – Ягаан Хаалга",
+    "price": 19000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Таяган чихэр, Календарь, LED гэрэл, Чарм-утасны зүүлт, Мэндчилгээ, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000006,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-6.jpg",
+    "name": "Монита багц #6 – Шинэ Жилийн Дэлгүүр",
+    "price": 20000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Таяган чихэр, Гацуурхан лаа, LED гэрэл, Шинэ Жилийн Оймс, Мэндчилгээ, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000007,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-7.jpg",
+    "name": "Монита багц #7 – Secret Ingredient",
+    "price": 65000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Kinder шоколад, Шинэ Жилийн Аяга, Шинэ Жилийн Оймс, 2027 Тэмдэглэлийн дэвтэр, Бал, Мэндчилгээ, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000008,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-8.jpg",
+    "name": "Монита багц #8 – Зөвхөн Түүнд - Шинэ Оны Эхлэл",
+    "price": 48000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Хийх зүйлсийн жагсаалт, Бал, Зөөлөн түлхүүрийн оосор, Мэндчилгээтэй лаа, Туузтай бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000009,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-9.jpg",
+    "name": "Монита багц #9 – Шинэ Жилийн Ном",
+    "price": 31000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Дулаан бээлий, Шинэ жилийн бал, Мууртай sticky note, Усны жижиг хавчаар, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000010,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-10.jpg",
+    "name": "Монита багц #10 – Зул Сарын Аяга",
+    "price": 35000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Зул сарын аяга, Шинэ жилийн оймс, Таяган чихэр, Бэлгийн боолт.",
+    "url": ""
+  },
+  {
+    "id": 1794000000011,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-11.jpg",
+    "name": "Монита багц #11 – Цасан Ширхэгтэй Цонх",
+    "price": 35000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Халбага, сэрээ, савхны ком, Улаан бөмбөлөг лаа, Зөөлөн түлхүүрийн оосор, Таяган чихэр, Мэндчилгээ, LED гэрэл.",
+    "url": ""
+  },
+  {
+    "id": 1794000000012,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-12.jpg",
+    "name": "Монита багц #12 – Цасан Ширхэгтэй Цонх (Цасан хүн аяга)",
+    "price": 40000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Цасан хүн аяга, Цөмөөхэй лаа, Зөөлөн түлхүүрийн оосор, Таяган чихэр, LED гэрэл, Мэндчилгээ, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000013,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-13.jpg",
+    "name": "Монита багц #13 – Цаасан Чихэр",
+    "price": 25000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Шинэ жилийн бал, Kinder шоколад, Unicorn баллуур, Таяган чихэр, LED гэрэл, Бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1794000000014,
+    "image": "https://zuvhuntuund.com/images/uploads/monita-14.jpg",
+    "name": "Монита багц #14 – Санта Өвөөгийн Бээлий",
+    "price": 44000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: 2027 ширээний календарь, Таяган чихэр, Сарвуутай бал, Шинэ жилийн оймс, LED гэрэл, Бээлий хэлбэртэй цүнх.",
+    "url": ""
+  },
+  {
     "id": 810061,
     "image": "https://cdn.zochil.shop/7af96b25-9415-46b5-9ba4-0527feafd9b7_t1500.jpg",
     "name": "Бүсгүй 1",

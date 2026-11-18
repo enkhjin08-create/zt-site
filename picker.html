@@ -22,6 +22,7 @@ label.card{position:relative;display:block;background:var(--card);border:2px sol
 label.card.sel{border-color:var(--accent);box-shadow:0 0 0 2px #ff669833}
 label.card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#f5eef2}
 label.card .meta{padding:8px 10px}
+.ok{position:absolute;bottom:62px;left:6px;background:#0f4b42;color:#fff;border-radius:6px;font-size:11px;padding:2px 7px}
 .n{position:absolute;top:6px;left:6px;background:#000a;color:#fff;border-radius:6px;font-size:12px;padding:2px 7px}
 .nm{font-size:13px;font-weight:600}
 .pr{font-size:12px;color:var(--muted)}
@@ -35,7 +36,7 @@ input[type=checkbox]{position:absolute;top:6px;right:6px;width:22px;height:22px;
 <body>
 <header>
   <h1>Шинэчлэх зургаа сонгоно уу</h1>
-  <p class="sub">Зураг дээр дарж чагтална. Дараа нь доорх «Дугаар хуулах» товчийг дарж Claude-д илгээнэ. Цэцгийн зураг орсонгүй.</p>
+  <p class="sub">Зураг дээр дарж чагтална. Дараа нь доорх «Дугаар хуулах» товчийг дарж Claude-д илгээнэ. Цэцгийн зураг орсонгүй. Ногоон «✓ шинэ» тэмдэгтэй нь аль хэдийн шинэ загвараар солигдсон.</p>
 </header>
 <div class="tabs" id="tabs"></div>
 <div class="bulk"><button id="all">Энэ ангиллыг бүгдийг сонгох</button><button id="none">Цэвэрлэх</button></div>
@@ -43,30 +44,35 @@ input[type=checkbox]{position:absolute;top:6px;right:6px;width:22px;height:22px;
 <textarea id="out" rows="3" readonly></textarea>
 <div class="bar"><span>Сонгосон: <b id="cnt">0</b></span><button id="copy">Дугаар хуулах</button></div>
 <script src="assets/data.js"></script>
+<script>function updateCartBadge(){}</script>
+<script src="assets/products-api.js"></script>
 <script>
-(function(){
-  var NAMES={giftset:'Бэлгийн багц',extra:'Нэмэлт',greeting:'Мэндчилгээ',box:'Хайрцаг',cup:'Аяга'};
+(async function(){
+  await initProducts(); // data.js + админы засвар + админаар нэмсэн бараа (сайтын жинхэнэ жагсаалт)
   var ORDER=['giftset','extra','greeting','box','cup'];
+  var cats=ORDER.concat(Object.keys(CATEGORIES).filter(function(c){return ORDER.indexOf(c)<0&&c!=='flower'}));
+  function lbl(c){return (CATEGORIES[c]&&(CATEGORIES[c].short||CATEGORIES[c].label))||c}
   var list=[];
-  ORDER.forEach(function(c){PRODUCTS.filter(function(p){return p.category===c&&p.image}).forEach(function(p){list.push(p)})});
-  list.forEach(function(p,i){p._n=i+1});
-  var sel={};try{sel=JSON.parse(localStorage.getItem('pickerSel')||'{}')}catch(e){}
+  cats.forEach(function(c){PRODUCTS.filter(function(p){return p.category===c&&p.image}).forEach(function(p){list.push(p)})});
+  list.forEach(function(p,i){p._n=i+1;p._new=String(p.image).indexOf('/pic-')>-1});
+  var sel={};try{sel=JSON.parse(localStorage.getItem('pickerSel2')||'{}')}catch(e){}
   var cur='all';
-  function save(){try{localStorage.setItem('pickerSel',JSON.stringify(sel))}catch(e){}}
-  function count(){var n=Object.keys(sel).filter(function(k){return sel[k]}).length;document.getElementById('cnt').textContent=n}
+  function save(){try{localStorage.setItem('pickerSel2',JSON.stringify(sel))}catch(e){}}
+  function count(){document.getElementById('cnt').textContent=Object.keys(sel).filter(function(k){return sel[k]}).length}
   function tabs(){
     var t=document.getElementById('tabs');t.innerHTML='';
-    [['all','Бүгд ('+list.length+')']].concat(ORDER.map(function(c){return [c,NAMES[c]+' ('+list.filter(function(p){return p.category===c}).length+')']})).forEach(function(x){
+    var items=[['all','Бүгд ('+list.length+')'],['old','Шинэчлээгүй ('+list.filter(function(p){return !p._new}).length+')']];
+    cats.forEach(function(c){var n=list.filter(function(p){return p.category===c}).length;if(n)items.push([c,lbl(c)+' ('+n+')'])});
+    items.forEach(function(x){
       var b=document.createElement('button');b.textContent=x[1];b.className=cur===x[0]?'on':'';
       b.onclick=function(){cur=x[0];tabs();render()};t.appendChild(b)});
   }
-  function visible(){return list.filter(function(p){return cur==='all'||p.category===cur})}
+  function visible(){return list.filter(function(p){return cur==='all'||(cur==='old'?!p._new:p.category===cur)})}
   function render(){
     var g=document.getElementById('grid');g.innerHTML='';
     visible().forEach(function(p){
       var l=document.createElement('label');l.className='card'+(sel[p.id]?' sel':'');
-      var url=p.image;
-      l.innerHTML='<span class="n">'+p._n+'</span><input type="checkbox"'+(sel[p.id]?' checked':'')+'><img loading="lazy" alt="" src="'+url+'"><div class="meta"><div class="nm"></div><div class="pr">'+p.price.toLocaleString('en-US')+'₮</div></div>';
+      l.innerHTML='<span class="n">'+p._n+'</span>'+(p._new?'<span class="ok">✓ шинэ</span>':'')+'<input type="checkbox"'+(sel[p.id]?' checked':'')+'><img loading="lazy" alt="" src="'+p.image+'"><div class="meta"><div class="nm"></div><div class="pr">'+Number(p.price||0).toLocaleString('en-US')+'₮</div></div>';
       l.querySelector('.nm').textContent=p.name;
       l.querySelector('input').onchange=function(e){sel[p.id]=e.target.checked;l.classList.toggle('sel',e.target.checked);save();count()};
       g.appendChild(l)});

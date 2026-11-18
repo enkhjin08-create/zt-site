@@ -51,7 +51,7 @@ export const PRODUCTS = [
   },
   {
     "id": 778920,
-    "image": "https://cdn.zochil.shop/bb556fc0-a0dd-4559-941e-4890480dd7c6_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-778920.jpg",
     "name": "Туулай цагаан, ягаан",
     "price": 35000,
     "oldPrice": null,
@@ -61,7 +61,7 @@ export const PRODUCTS = [
   },
   {
     "id": 778914,
-    "image": "https://cdn.zochil.shop/dccaf41d-1c2f-431b-b8a2-b9576180c863_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-778914.jpg",
     "name": "Cat tail",
     "price": 34000,
     "oldPrice": null,
@@ -71,7 +71,7 @@ export const PRODUCTS = [
   },
   {
     "id": 778904,
-    "image": "https://cdn.zochil.shop/f43e60cc-46a1-4d05-8e25-7d18655b8df9_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-778904.jpg",
     "name": "Cute cat цагаан, ягаан",
     "price": 34000,
     "oldPrice": null,
@@ -81,7 +81,7 @@ export const PRODUCTS = [
   },
   {
     "id": 778896,
-    "image": "https://cdn.zochil.shop/0d3a2fd7-5487-43a0-9614-5e3c29348c3b_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-778896.jpg",
     "name": "Butterfly аяга 3 өнгө",
     "price": 24000,
     "oldPrice": null,
@@ -91,7 +91,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776048,
-    "image": "https://cdn.zochil.shop/7b7a46ed-0fdf-40f5-b769-e252d4ae7e80_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776048.jpg",
     "name": "Том тавагтай мууртай аяга 3 өнгөтэй",
     "price": 40000,
     "oldPrice": null,
@@ -101,7 +101,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776045,
-    "image": "https://cdn.zochil.shop/6568726a-759c-4d7f-a316-3e7a890edc55_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776045.jpg",
     "name": "One piece Sabo аяга таваг",
     "price": 43000,
     "oldPrice": null,
@@ -111,7 +111,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776043,
-    "image": "https://cdn.zochil.shop/0ad9bbf0-6de1-4894-9316-e99c6583f107_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776043.jpg",
     "name": "One piece Asce аяга таваг",
     "price": 43000,
     "oldPrice": null,
@@ -121,7 +121,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776042,
-    "image": "https://cdn.zochil.shop/3217c024-21f2-4cc3-91a1-dc2bcdba6d4d_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776042.jpg",
     "name": "One piece Luffy аяга таваг",
     "price": 43000,
     "oldPrice": null,
@@ -131,7 +131,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776039,
-    "image": "https://cdn.zochil.shop/551f5ff4-b002-48db-beb7-052aba76bd17_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776039.jpg",
     "name": "One piece Chopper аяга таваг",
     "price": 43000,
     "oldPrice": null,
@@ -141,7 +141,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776038,
-    "image": "https://cdn.zochil.shop/be0c48b5-19e2-4dcb-93f0-3a3973ff76bc_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776038.jpg",
     "name": "Zootopia үнэг, туулай хос аяга",
     "price": 68000,
     "oldPrice": null,
@@ -161,7 +161,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776031,
-    "image": "https://cdn.zochil.shop/eb0bdb6c-fecb-456e-93c4-61960a6954e7_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776031.jpg",
     "name": "Lilo Stitch хос аяга",
     "price": 75000,
     "oldPrice": null,
@@ -171,7 +171,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776022,
-    "image": "https://cdn.zochil.shop/a85ec433-19a4-480b-95a1-314c30903999_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776022.jpg",
     "name": "Бантиктай бариултай аяга нил ягаан, ягаан",
     "price": 40000,
     "oldPrice": null,
@@ -181,7 +181,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776019,
-    "image": "https://cdn.zochil.shop/1379aad4-af55-46d9-8b96-7dfbba1471e6_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776019.jpg",
     "name": "Love аяга",
     "price": 33000,
     "oldPrice": null,
@@ -191,7 +191,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776017,
-    "image": "https://cdn.zochil.shop/58041639-1af9-4158-ba52-2ddaf6e68a35_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776017.jpg",
     "name": "Love dog аяга",
     "price": 37000,
     "oldPrice": null,
@@ -201,7 +201,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776016,
-    "image": "https://cdn.zochil.shop/99b62009-c6a5-45d6-8329-2112182723db_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776016.jpg",
     "name": "Bee unique аяга",
     "price": 35000,
     "oldPrice": null,
@@ -211,7 +211,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776012,
-    "image": "https://cdn.zochil.shop/cebc9f4a-dc73-4f1a-b5cd-9aac068901dc_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776012.jpg",
     "name": "Harry Potter ном аяга",
     "price": 52000,
     "oldPrice": null,
@@ -221,7 +221,7 @@ export const PRODUCTS = [
   },
   {
     "id": 776007,
-    "image": "https://cdn.zochil.shop/fb52beb8-b31b-43a8-b412-a8f6fa0d37d3_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-776007.jpg",
     "name": "Marie мууртай аяга",
     "price": 34000,
     "oldPrice": null,
@@ -241,7 +241,7 @@ export const PRODUCTS = [
   },
   {
     "id": 775986,
-    "image": "https://cdn.zochil.shop/da11cfac-8b5b-4d50-a9cc-2b3b7b74e3b2_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-775986.jpg",
     "name": "Dambo",
     "price": 58000,
     "oldPrice": null,
@@ -251,7 +251,7 @@ export const PRODUCTS = [
   },
   {
     "id": 775967,
-    "image": "https://cdn.zochil.shop/29ba858c-c6af-4da2-905e-fa5205326b00_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-775967.jpg",
     "name": "Pink pooh",
     "price": 54000,
     "oldPrice": null,
@@ -261,7 +261,7 @@ export const PRODUCTS = [
   },
   {
     "id": 775952,
-    "image": "https://cdn.zochil.shop/df371138-fb86-4fd7-a49f-d21f685bc25a_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-775952.jpg",
     "name": "Hunny",
     "price": 59000,
     "oldPrice": null,
@@ -271,7 +271,7 @@ export const PRODUCTS = [
   },
   {
     "id": 775947,
-    "image": "https://cdn.zochil.shop/54a142b9-4a07-4e58-912d-15c531d457fb_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-775947.jpg",
     "name": "Alice wonderland cat",
     "price": 55000,
     "oldPrice": null,
@@ -301,7 +301,7 @@ export const PRODUCTS = [
   },
   {
     "id": 594200,
-    "image": "https://cdn.zochil.shop/a2959163-fe99-445b-b747-22b825347f39_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-594200.jpg",
     "name": "Аягатай багц #5",
     "price": 82000,
     "oldPrice": null,
@@ -311,7 +311,7 @@ export const PRODUCTS = [
   },
   {
     "id": 594197,
-    "image": "https://cdn.zochil.shop/b4b68a76-cef7-4c38-899e-ccb4ffea721b_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-594197.jpg",
     "name": "Аягатай багц #3",
     "price": 80000,
     "oldPrice": null,
@@ -321,7 +321,7 @@ export const PRODUCTS = [
   },
   {
     "id": 594193,
-    "image": "https://cdn.zochil.shop/fffc225b-d604-46b5-9c30-c8c24e98428b_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-594193.jpg",
     "name": "Аягатай багц #2",
     "price": 78000,
     "oldPrice": null,
@@ -331,7 +331,7 @@ export const PRODUCTS = [
   },
   {
     "id": 594192,
-    "image": "https://cdn.zochil.shop/250b1b9c-02db-45ae-aebe-12784efbdb4c_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-594192.jpg",
     "name": "Аягатай багц #1",
     "price": 70000,
     "oldPrice": null,
@@ -341,7 +341,7 @@ export const PRODUCTS = [
   },
   {
     "id": 594190,
-    "image": "https://cdn.zochil.shop/f78cc8fe-5de7-4aed-a7eb-b836b04e5a9c_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-594190.jpg",
     "name": "Love you #4",
     "price": 60000,
     "oldPrice": null,
@@ -431,7 +431,7 @@ export const PRODUCTS = [
   },
   {
     "id": 562621,
-    "image": "https://cdn.zochil.shop/b7080053-d4e2-4f09-a150-50a5c0df996d_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562621.jpg",
     "name": "Girl with a Pearl Earring",
     "price": 52000,
     "oldPrice": null,
@@ -441,7 +441,7 @@ export const PRODUCTS = [
   },
   {
     "id": 562619,
-    "image": "https://cdn.zochil.shop/1a12595f-57ab-45a3-96ed-7dc32c5005f7_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562619.jpg",
     "name": "Бантиктай аяга (нил ягаан)",
     "price": 40000,
     "oldPrice": null,
@@ -471,7 +471,7 @@ export const PRODUCTS = [
   },
   {
     "id": 562611,
-    "image": "https://cdn.zochil.shop/b7c4a2a8-8466-4f0e-85e3-196da85a57d9_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562611.jpg",
     "name": "Van Gogh cup",
     "price": 52000,
     "oldPrice": null,
@@ -491,7 +491,7 @@ export const PRODUCTS = [
   },
   {
     "id": 482901,
-    "image": "https://cdn.zochil.shop/51a550e1-bab2-4402-97ea-ef5a1b4c762d_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-482901.jpg",
     "name": "Төлөвлөгч багц",
     "price": 70000,
     "oldPrice": null,
@@ -511,7 +511,7 @@ export const PRODUCTS = [
   },
   {
     "id": 435602,
-    "image": "https://cdn.zochil.shop/9f2dc8d3-84b3-426c-b010-b95445c1f595_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-435602.jpg",
     "name": "Банхар төлөвлөгч багц",
     "price": 35000,
     "oldPrice": null,
@@ -541,7 +541,7 @@ export const PRODUCTS = [
   },
   {
     "id": 427860,
-    "image": "https://cdn.zochil.shop/cadeeea0-7ec4-45fe-a88c-3329273f34c5_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-427860.jpg",
     "name": "Meow #4",
     "price": 69000,
     "oldPrice": null,
@@ -551,7 +551,7 @@ export const PRODUCTS = [
   },
   {
     "id": 427859,
-    "image": "https://cdn.zochil.shop/b3662d02-5499-442e-9ab6-3d0acc6a40cb_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-427859.jpg",
     "name": "Meow #3",
     "price": 69000,
     "oldPrice": null,
@@ -561,7 +561,7 @@ export const PRODUCTS = [
   },
   {
     "id": 427857,
-    "image": "https://cdn.zochil.shop/aefcc9d3-febb-4829-a267-487e28098b20_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-427857.jpg",
     "name": "Meow #2",
     "price": 69000,
     "oldPrice": null,
@@ -592,7 +592,7 @@ export const PRODUCTS = [
   },
   {
     "id": 425004,
-    "image": "https://cdn.zochil.shop/7ffe6205-6cdb-4e6e-9df6-9bcfc8effb19_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-425004.jpg",
     "name": "Тоор-ой",
     "price": 38000,
     "oldPrice": null,
@@ -602,7 +602,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424760,
-    "image": "https://cdn.zochil.shop/ee15981a-b5fb-47d7-953d-59f020fe9cf0_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424760.jpg",
     "name": "Mrs. Pot and Chip",
     "price": 108000,
     "oldPrice": null,
@@ -612,7 +612,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424719,
-    "image": "https://cdn.zochil.shop/14917aa1-3903-4c28-9c48-0010008297ea_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424719.jpg",
     "name": "Шар мууртай ягаан аяга",
     "price": 36000,
     "oldPrice": null,
@@ -622,7 +622,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424715,
-    "image": "https://cdn.zochil.shop/ffe64108-0490-4e53-b033-74fc3bb76ba3_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424715.jpg",
     "name": "Dino ягаан",
     "price": 34000,
     "oldPrice": null,
@@ -632,7 +632,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424714,
-    "image": "https://cdn.zochil.shop/5c388f6d-99ea-4854-9cef-69ba605ce1e0_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424714.jpg",
     "name": "Dino цэнхэр",
     "price": 34000,
     "oldPrice": null,
@@ -642,7 +642,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424711,
-    "image": "https://cdn.zochil.shop/aaee19d0-b9f9-46f2-90b8-4e1824c7f517_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424711.jpg",
     "name": "Buchi cat paw",
     "price": 36000,
     "oldPrice": null,
@@ -652,7 +652,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424710,
-    "image": "https://cdn.zochil.shop/67ffe7bb-610b-43a0-881e-44ebe8c5eb60_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424710.jpg",
     "name": "Mike cat paw",
     "price": 36000,
     "oldPrice": null,
@@ -662,7 +662,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424685,
-    "image": "https://cdn.zochil.shop/699c786d-a43f-4ac3-9a91-16a103271a1b_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424685.jpg",
     "name": "Warm heart хос аяга",
     "price": 64000,
     "oldPrice": null,
@@ -672,7 +672,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424683,
-    "image": "https://cdn.zochil.shop/23b0396e-79c4-4074-8217-efd63ba4c33a_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424683.jpg",
     "name": "Drink more water хос аяга",
     "price": 45000,
     "oldPrice": null,
@@ -682,7 +682,7 @@ export const PRODUCTS = [
   },
   {
     "id": 424682,
-    "image": "https://cdn.zochil.shop/ab3bb9dc-7262-4f18-8bbd-4ce5b031e83a_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-424682.jpg",
     "name": "Two of us хос аяга",
     "price": 53000,
     "oldPrice": null,
@@ -692,7 +692,7 @@ export const PRODUCTS = [
   },
   {
     "id": 423586,
-    "image": "https://cdn.zochil.shop/aae61766-eba0-4486-b73d-739a1186ff7c_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-423586.jpg",
     "name": "Mike cat paw",
     "price": 36000,
     "oldPrice": null,
@@ -702,7 +702,7 @@ export const PRODUCTS = [
   },
   {
     "id": 423575,
-    "image": "https://cdn.zochil.shop/32e57b2c-5f09-4fb9-b887-ab540c865602_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-423575.jpg",
     "name": "Fuku fuku хос аягатай багц",
     "price": 97000,
     "oldPrice": null,
@@ -712,7 +712,7 @@ export const PRODUCTS = [
   },
   {
     "id": 423563,
-    "image": "https://cdn.zochil.shop/310de646-3da8-456d-99aa-66d419e4c0f3_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-423563.jpg",
     "name": "Cat paw хос аягатай багц",
     "price": 97000,
     "oldPrice": null,
@@ -722,7 +722,7 @@ export const PRODUCTS = [
   },
   {
     "id": 423560,
-    "image": "https://cdn.zochil.shop/1c46b0e2-d328-4829-9f16-c3b61d2696f2_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-423560.jpg",
     "name": "Dino хос аягатай багц",
     "price": 93000,
     "oldPrice": null,
@@ -732,7 +732,7 @@ export const PRODUCTS = [
   },
   {
     "id": 423064,
-    "image": "https://cdn.zochil.shop/791599ac-64aa-4300-b663-24254d82e36c_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-423064.jpg",
     "name": "Хайрын купон цулгай",
     "price": 12000,
     "oldPrice": null,
@@ -742,7 +742,7 @@ export const PRODUCTS = [
   },
   {
     "id": 422030,
-    "image": "https://cdn.zochil.shop/ee21343a-05e5-40ed-9488-38a004cf986a_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-422030.jpg",
     "name": "Дугтуй",
     "price": 3500,
     "oldPrice": null,
@@ -812,7 +812,7 @@ export const PRODUCTS = [
   },
   {
     "id": 150174,
-    "image": "https://cdn.zochil.shop/7f967a82-6779-48ee-99db-c52c17257769_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-150174.jpg",
     "name": "Хайрын купон",
     "price": 15000,
     "oldPrice": null,
@@ -1032,7 +1032,7 @@ export const PRODUCTS = [
   },
   {
       "id": 1793000000001,
-      "image": "https://zuvhuntuund.com/images/uploads/cup-candle-star.jpg",
+      "image": "https://zuvhuntuund.com/images/uploads/pic-1793000000001.jpg",
       "name": "Candle Star аяга",
       "price": 34000,
       "oldPrice": null,
@@ -1042,7 +1042,7 @@ export const PRODUCTS = [
   },
   {
       "id": 1793000000002,
-      "image": "https://zuvhuntuund.com/images/uploads/cup-christmas-red.jpg",
+      "image": "https://zuvhuntuund.com/images/uploads/pic-1793000000002.jpg",
       "name": "Улаан сэнжтэй Christmas аяга",
       "price": 23500,
       "oldPrice": null,
@@ -1052,7 +1052,7 @@ export const PRODUCTS = [
   },
   {
       "id": 1793000000003,
-      "image": "https://zuvhuntuund.com/images/uploads/cup-red-black-pair.jpg",
+      "image": "https://zuvhuntuund.com/images/uploads/pic-1793000000003.jpg",
       "name": "Улаан хар хос аяга",
       "price": 65000,
       "oldPrice": null,
@@ -1062,7 +1062,7 @@ export const PRODUCTS = [
   },
   {
       "id": 1793000000004,
-      "image": "https://zuvhuntuund.com/images/uploads/cup-penguin-hat.jpg",
+      "image": "https://zuvhuntuund.com/images/uploads/pic-1793000000004.jpg",
       "name": "Нугас аяга · таглай",
       "price": 32500,
       "oldPrice": null,
@@ -1072,7 +1072,7 @@ export const PRODUCTS = [
   },
   {
       "id": 1793000000005,
-      "image": "https://zuvhuntuund.com/images/uploads/cup-sweet-dreams.jpg",
+      "image": "https://zuvhuntuund.com/images/uploads/pic-1793000000005.jpg",
       "name": "Мууртай аяга (Sweet dreams)",
       "price": 33000,
       "oldPrice": null,
@@ -1082,7 +1082,7 @@ export const PRODUCTS = [
   },
   {
       "id": 1793000000006,
-      "image": "https://zuvhuntuund.com/images/uploads/cup-mushroom.jpg",
+      "image": "https://zuvhuntuund.com/images/uploads/pic-1793000000006.jpg",
       "name": "Мөөгтэй аяга · таглай",
       "price": 32000,
       "oldPrice": null,
@@ -1092,7 +1092,7 @@ export const PRODUCTS = [
   },
   {
       "id": 1793000000007,
-      "image": "https://zuvhuntuund.com/images/uploads/cup-small-cat.jpg",
+      "image": "https://zuvhuntuund.com/images/uploads/pic-1793000000007.jpg",
       "name": "Жижиг мууртай аяга",
       "price": 20000,
       "oldPrice": null,

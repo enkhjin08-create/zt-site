@@ -175,6 +175,22 @@ async function initProducts(){
     if(!p.hidden) PRODUCTS.push(p);
   });
 
+  // Meridian-маягийн шинэ зургийг (assets/data.js → PHOTO_PATCH) тавина.
+  if(typeof PHOTO_PATCH !== "undefined"){
+    ALL_PRODUCTS_INCLUDING_HIDDEN.forEach(p => {
+      const e = PHOTO_PATCH[p.id];
+      if(!e) return;
+      const tok = e[0], url = PHOTO_BASE + e[1];
+      let hit = false;
+      if(typeof p.image === "string" && p.image.includes(tok)){ p.image = url; hit = true; }
+      if(Array.isArray(p.images)){
+        const next = p.images.map(u => (typeof u === "string" && u.includes(tok)) ? url : u);
+        if(next.some((u, i) => u !== p.images[i])){ p.images = next.filter((u, i) => next.indexOf(u) === i); hit = true; }
+      }
+      if(hit && !(Array.isArray(p.images) && p.images.length)) p.images = [url];
+    });
+  }
+
   window._ALL_PRODUCTS_ADMIN = ALL_PRODUCTS_INCLUDING_HIDDEN;
 
   updateCartBadge();

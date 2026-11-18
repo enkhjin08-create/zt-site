@@ -352,7 +352,7 @@ const PRODUCTS = [
   },
   {
     "id": 562711,
-    "image": "https://cdn.zochil.shop/aa3a98e9-0b23-49e7-80d9-c94124874163_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562711.jpg",
     "name": "Суккулент",
     "price": 23000,
     "oldPrice": null,
@@ -362,7 +362,7 @@ const PRODUCTS = [
   },
   {
     "id": 562710,
-    "image": "https://cdn.zochil.shop/04857f3e-b57a-4e57-b2f8-3e88fc5b758d_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562710.jpg",
     "name": "Суккулент",
     "price": 23000,
     "oldPrice": null,
@@ -372,7 +372,7 @@ const PRODUCTS = [
   },
   {
     "id": 562709,
-    "image": "https://cdn.zochil.shop/566ae2cc-b18c-4b73-b373-e3994fb2ef12_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562709.jpg",
     "name": "Суккулент",
     "price": 23000,
     "oldPrice": null,
@@ -382,7 +382,7 @@ const PRODUCTS = [
   },
   {
     "id": 562708,
-    "image": "https://cdn.zochil.shop/bd2535fd-c475-47c0-ab78-97989108a5aa_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562708.jpg",
     "name": "Суккулент",
     "price": 23000,
     "oldPrice": null,
@@ -392,7 +392,7 @@ const PRODUCTS = [
   },
   {
     "id": 562707,
-    "image": "https://cdn.zochil.shop/29abed60-5526-4c36-a7ff-ff71c6abcafb_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562707.jpg",
     "name": "Суккулент",
     "price": 23000,
     "oldPrice": null,
@@ -402,7 +402,7 @@ const PRODUCTS = [
   },
   {
     "id": 562706,
-    "image": "https://cdn.zochil.shop/57928b66-a3e6-4d24-9ff4-ea7ab2f32c9b_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562706.jpg",
     "name": "Кактус",
     "price": 23000,
     "oldPrice": null,
@@ -422,7 +422,7 @@ const PRODUCTS = [
   },
   {
     "id": 562623,
-    "image": "https://cdn.zochil.shop/aec505d5-9c55-4a41-b15f-0add52cdbb58_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-562623.jpg",
     "name": "Кактус",
     "price": 23000,
     "oldPrice": null,
@@ -522,7 +522,7 @@ const PRODUCTS = [
   },
   {
     "id": 434516,
-    "image": "https://cdn.zochil.shop/09fb9e3a-c2ad-4ad5-91b2-2f282d072518_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-434516.jpg",
     "name": "\"Банхар\" төлөвлөгч",
     "price": 30000,
     "oldPrice": null,
@@ -753,7 +753,7 @@ const PRODUCTS = [
   },
   {
     "id": 419642,
-    "image": "https://cdn.zochil.shop/da2d6123-20d2-477d-8c07-0a8d145894fa_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-419642.jpg",
     "name": "Төрсөн өдрийн мэндчилгээ #3",
     "price": 1500,
     "oldPrice": null,
@@ -763,7 +763,7 @@ const PRODUCTS = [
   },
   {
     "id": 419641,
-    "image": "https://cdn.zochil.shop/6c9b143c-8268-4bbb-8290-d0d3ceab0b4a_t1500.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-419641.jpg",
     "name": "Төрсөн өдрийн мэндчилгээ #2",
     "price": 1500,
     "oldPrice": null,
@@ -783,7 +783,7 @@ const PRODUCTS = [
   },
   {
     "id": 400567,
-    "image": "https://cdn.zochil.shop/3b18c9f8-ede1-49e2-94e0-a842a6af7056_t1500.png",
+    "image": "https://zuvhuntuund.com/images/uploads/pic-400567.jpg",
     "name": "Банхар sticky note",
     "price": 4000,
     "oldPrice": 5000,
@@ -1434,5 +1434,29 @@ const PHOTO_PATCH = {
  "778920": [
   "1783501140834",
   "pic-778920.jpg"
+ ],
+ "789590": [
+  "1785386180141",
+  "pic-789590.jpg"
+ ],
+ "789589": [
+  "1785386272081",
+  "pic-789589.jpg"
+ ],
+ "426839": [
+  "1783501007788",
+  "pic-426839.jpg"
+ ],
+ "776004": [
+  "1783501054993",
+  "pic-776004.jpg"
+ ],
+ "562705": [
+  "e4c09caa",
+  "pic-562705.jpg"
+ ],
+ "148000": [
+  "f684efaa",
+  "pic-148000.jpg"
  ]
 };

@@ -37,6 +37,7 @@
 <script src="assets/auth.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/products-api.js"></script>
+<script src="assets/meowie.js"></script>
 <script>
 renderHeader("category.html");
 renderFooter();
@@ -46,6 +47,7 @@ const DESCRIPTIONS = {
   giftset: "Хэд хэдэн зүйл нэг дор уядаг бэлгийн багц. Өөрөө хайрцаглаж дахин уях шаардлагагүй — шууд бэлэг болгон өргөж болно.",
   flower: "Шинэхэн цэцгийн баглаа. Хайрцагтай хослуулж, эсвэл дан өргөж болно.",
   extra: "Хайрцагаа өнгөлөх жижиг мэдрэмж — захидал, лаа, нэг хуудас сэтгэл хөдлөл.",
+  meowie: "Meowie Giftshop-ийн Edupark салбарт бэлэн байгаа бэлэг. Өөрийн хайрцагт нэмээд бэлгээ бүрдүүлээрэй.",
   box: "Бэлгээ сайхан өргөхөд хэрэгтэй сав, баглаа боодлын суурь хэсэг.",
   greeting: "Хайрцагтайгаа хамт очих дулаан мэндчилгээ — хэдхэн үгээр сэтгэлээ илэрхийлээрэй."
 };
@@ -63,8 +65,8 @@ function switchMainImage(url, btn){
 
 (async function(){
   await initProducts();
-
   const id = Number(new URLSearchParams(location.search).get("id"));
+  if(id >= 7e15) await loadMeowieProducts();   // Meowie бараа зөвхөн хэрэгтэй үед ачаална
   const p = getProduct(id);
   const content = document.getElementById("content");
 
@@ -91,7 +93,7 @@ function switchMainImage(url, btn){
   ` : productArtHTML(p, {detail: true});
 
   content.innerHTML = `
-    <p class="crumb"><a href="index.html">Нүүр</a> / <a href="category.html?cat=${p.category}">${cat.label}</a> / ${p.name}</p>
+    <p class="crumb"><a href="index.html">Нүүр</a> / <a href="${p.category === 'meowie' ? 'meowie.html' : 'category.html?cat=' + p.category}">${p.category === 'meowie' ? '🐾 Meowie бүтээгдэхүүн' : cat.label}</a> / ${p.name}</p>
     <div class="product-detail-grid">
       <div>${galleryHTML}</div>
       <div>
@@ -103,6 +105,7 @@ function switchMainImage(url, btn){
           ${p.soldOut ? `<span class="badge sold" style="position:static">Дууссан</span>` : ""}
         </div>
         <p class="lede">${descriptionFor(p)}</p>
+        ${p.category === "meowie" ? `<p style="font-size:13.5px;color:var(--ink-soft);margin-top:8px">📍 Edupark салбар · ${p.stock > 0 ? p.stock + " ширхэг бэлэн" : "бэлэн байгаа"}${p.mCat && p.mCat !== "Бусад" ? " · " + escapeHTML(p.mCat) : ""}</p>` : ""}
         <div style="display:flex;gap:12px;margin-top:26px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="addToBox(${p.id})" ${p.soldOut ? "disabled" : ""}>Хайрцагт нэмэх</button>
           
@@ -111,7 +114,7 @@ function switchMainImage(url, btn){
       </div>
     </div>`;
 
-  const related = PRODUCTS.filter(x => x.category === p.category && x.id !== p.id).slice(0,4);
+  const related = PRODUCTS.filter(x => x.category === p.category && x.id !== p.id && (p.category !== "meowie" || x.mCat === p.mCat)).slice(0,4);
   document.getElementById("related").innerHTML = related.map(productCardHTML).join("");
 })();
 </script>

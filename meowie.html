@@ -44,9 +44,9 @@ let mItems = [];
 
 function meowieCardHTML(p){
   return `<div class="product-card" data-id="${p.id}">
-    <div>${productArtHTML(p)}</div>
+    <a href="product.html?id=${p.id}">${productArtHTML(p)}</a>
     <div class="product-body">
-      <div class="name">${escapeHTML(p.name)}</div>
+      <a href="product.html?id=${p.id}" class="name">${escapeHTML(p.name)}</a>
       ${priceRowHTML(p)}
       <div style="display:flex;gap:8px;margin-top:10px">
         <button class="btn btn-ghost btn-sm product-add-btn" onclick="addToBox(${p.id})" style="flex:1">Нэмэх</button>

@@ -41,7 +41,7 @@ async function loadMeowieProducts(){
       PRODUCTS.push({
         id, name: label.get(it) || it.name, price: Number(it.price), oldPrice: null, image: photos[it.image] || it.image, restyled: !!photos[it.image],
         category: "meowie", role: "extra", brand: "Meowie", mCat: it.category || "Бусад",
-        soldOut: false, description: "", url: "", recipients: allRecipients
+        stock: Number(it.qty)||0, soldOut: false, description: "", url: "", recipients: allRecipients
       });
     });
   }catch(e){

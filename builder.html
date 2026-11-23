@@ -206,6 +206,14 @@ function renderStepPanel(){
     if(step === 3) list = list.filter(p => p.category !== "flower");
     if(step === 4) list = list.filter(p => p.category !== "greeting");
     if(recFilterOn && box.recipient) list = list.filter(p => p.recipients.includes(box.recipient));
+    const mainList = list.filter(p => p.category !== "meowie");
+    const meowieList = step === 4 ? list.filter(p => p.category === "meowie") : [];
+    const pickCardHTML = p => `
+          <div class="pick-card ${box.itemIds.includes(p.id)?"is-selected":""}" onclick="toggleItem(${p.id})">
+            ${productArtHTML(p)}
+            <div class="pname">${p.name}</div>
+            <div class="pprice">${formatPrice(p.price)}</div>
+          </div>`;
     panel.innerHTML = `
       <p class="eyebrow">Алхам ${step}</p>
       <h2>${title}</h2>
@@ -213,13 +221,12 @@ function renderStepPanel(){
         <input type="checkbox" ${recFilterOn?"checked":""} onchange="toggleRecFilter(this.checked)"> Зөвхөн ${RECIPIENTS[box.recipient].label.toLowerCase()} тохирсон зүйлс
       </label>` : ""}
       <div class="item-pick-grid">
-        ${list.map(p => `
-          <div class="pick-card ${box.itemIds.includes(p.id)?"is-selected":""}" onclick="toggleItem(${p.id})">
-            ${productArtHTML(p)}
-            <div class="pname">${p.name}</div>
-            <div class="pprice">${formatPrice(p.price)}</div>
-          </div>`).join("") || `<p class="lede" style="padding:20px 0">Тохирох зүйл олдсонгүй. Шүүлтүүрээ арилгаж үзээрэй.</p>`}
+        ${mainList.map(pickCardHTML).join("") || (meowieList.length ? "" : `<p class="lede" style="padding:20px 0">Тохирох зүйл олдсонгүй. Шүүлтүүрээ арилгаж үзээрэй.</p>`)}
       </div>
+      ${meowieList.length ? `
+        <h3 style="margin:26px 0 4px;font-size:18px">🐾 Meowie-ийн жижиг бэлгүүд</h3>
+        <p style="font-size:13px;color:var(--ink-soft);margin-bottom:10px">Meowie Giftshop-ийн пинал, жижиг зүйлсээс хайрцагтаа нэм.</p>
+        <div class="item-pick-grid">${meowieList.map(pickCardHTML).join("")}</div>` : ""}
       ${stepActionsHTML()}
     `;
     return;
@@ -510,7 +517,7 @@ function buildOrderObject(){
     recipientKey: box.recipient,
     recipient: box.recipient ? RECIPIENTS[box.recipient].label : "—",
     container: container ? { id: container.id, name: container.name, price: container.price } : null,
-    items: items.map(p => ({ id: p.id, name: p.name, price: p.price })),
+    items: items.map(p => ({ id: p.id, name: (p.brand ? "[" + p.brand + "] " : "") + p.name, price: p.price })),
     message: box.message || "",
     subtotal: subtotal,
     deliveryFee: getDeliveryFee(),
@@ -545,7 +552,7 @@ function buildOrderText(){
   else lines.push("Сав: дахин боловсруулсан бор цаасан уут (үнэгүй)");
   if(items.length){
     lines.push("Бараа:");
-    items.forEach(p => lines.push("  • " + p.name + " — " + formatPrice(p.price)));
+    items.forEach(p => lines.push("  • " + (p.brand ? "[" + p.brand + "] " : "") + p.name + " — " + formatPrice(p.price)));
   }
   if(box.message) lines.push("Зурвас: \"" + box.message + "\"");
   lines.push("Барааны дүн: " + formatPrice(subtotal));
@@ -984,8 +991,53 @@ function clearBox(){
   renderStepsNav(); renderStepPanel(); renderBoxPreview();
 }
 
+
+// ============================================================
+// Meowie Giftshop-ийн бараа (meowie-quiz.netlify.app-ийн products.json)
+// Жижиг зүйлс + пинал-ыг "Нэмэлт" алхамд тусдаа бүлгээр харуулна.
+// Бараа Orchlon салбараас гарна. Meowie-ийн админ дээр "дууссан" гэж
+// тэмдэглэсэн (hidden) бараа автоматаар нуугдана.
+// ============================================================
+const MEOWIE_URL = "https://raw.githubusercontent.com/enkhjin08-create/meowie/main/products.json";
+function meowieId(key){
+  let h = 5381;
+  for(let i=0;i<key.length;i++){ h = ((h<<5)+h + key.charCodeAt(i)) >>> 0; }
+  return 7000000000000000 + (h % 1000000000);   // тогтвортой, одоо байгаа id-тай давхцахгүй
+}
+async function loadMeowieProducts(){
+  try{
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 6000);
+    const r = await fetch(MEOWIE_URL + "?t=" + Date.now(), { signal: ctrl.signal });
+    clearTimeout(t);
+    if(!r.ok) return;
+    const d = await r.json();
+    const ok = u => u && String(u).startsWith("http");
+    const price = v => parseInt(String(v||"").replace(/[^\d]/g,""),10) || 0;
+    const allRecipients = Object.keys(RECIPIENTS);
+    CATEGORIES.meowie = { label: "Meowie дагалдах зүйлс", short: "Meowie", iconRef: "extra", icon: "note", color: "#C2456E", tint: "#FFEAF1" };
+    const seen = new Set();
+    const add = (name, img, pr) => {
+      if(!name || !ok(img) || !pr) return;
+      const id = meowieId(name + "|" + img);
+      if(seen.has(id)) return;
+      seen.add(id);
+      PRODUCTS.push({
+        id, name, price: pr, oldPrice: null, image: img,
+        category: "meowie", role: "extra", brand: "Meowie",
+        soldOut: false, description: "", url: "", recipients: allRecipients
+      });
+    };
+    (d.items||[]).forEach(it => add(it.name, it.img, price(it.price)));
+    (d.products||[]).forEach(p => { if(p.type === "пинал" && !p.hidden) add(p.title, p.photo, price(p.price)); });
+  }catch(e){
+    console.warn("Meowie products failed to load:", e);
+  }
+}
+
 (async function(){
   await initProducts();
+  await loadMeowieProducts();
   renderStepsNav();
   renderStepPanel();
   renderBoxPreview();

@@ -198,6 +198,11 @@ async function initProducts(){
     });
   }
 
+  // Кактус / суккулент — нэрэнд аль нэг нь байвал хоёуланг нь шошголно (хайлтад хамт гарна).
+  ALL_PRODUCTS_INCLUDING_HIDDEN.forEach(p => {
+    if(/кактус|суккулент/i.test(p.name || "") && !/кактус/i.test(p.tag || "")) p.tag = "Кактус, суккулент";
+  });
+
   window._ALL_PRODUCTS_ADMIN = ALL_PRODUCTS_INCLUDING_HIDDEN;
 
   updateCartBadge();

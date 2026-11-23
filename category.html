@@ -108,7 +108,7 @@ function renderCatQuicklinks(){
 }
 
 function applyFiltersSort(list){
-  if(activeSearch){ const q = activeSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || (p.tag || "").toLowerCase().includes(q)); }
+  if(activeSearch){ const q = activeSearch.toLowerCase(); const qs = /кактус|суккулент/.test(q) ? ["кактус","суккулент"] : [q]; list = list.filter(p => { const t = (p.name + " " + (p.tag || "")).toLowerCase(); return qs.some(w => t.includes(w)); }); }
   if(activeRec !== "all") list = list.filter(p => (p.recipients||[]).includes(activeRec));
   if(activeBudget !== "all"){
     const [min,max] = activeBudget.split("-").map(Number);

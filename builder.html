@@ -345,10 +345,24 @@ function hasFlower(){
 }
 // Амьд цэцэгтэй захиалга UBCab-аар хүргэгдэнэ (bouquet.zuvhuntuund.com-тай ижил тооцоо):
 // газрын зураг дээрх байршлаас замын зайг бодож UBCab-ын үнийг гаргана.
-const PICKUP_INFO = {
+const PICKUP_ORCHLON = {
   name: "Орчлон салбар",
   address: "Орчлон цогцолбор, 3 давхар, 312 тоот (Хүнс, хөдөө аж ахуйн яамны эсрэг), Улаанбаатар",
   hours: "19:00 хүртэл"
+};
+const PICKUP_EDUPARK = {
+  name: "Meowie Giftshop · Edupark салбар",
+  address: "Edupark, 1 давхар, эскалаторын хажууд, Улаанбаатар",
+  hours: "11:00–19:00"
+};
+// Meowie бараатай (Edupark-ийн нөөц) хайрцгийг Edupark салбараас авна.
+function hasMeowie(){
+  return box.itemIds.some(id => { const p = getProduct(id); return p && p.brand === "Meowie"; });
+}
+const PICKUP_INFO = {
+  get name(){ return hasMeowie() && !hasFlower() ? PICKUP_EDUPARK.name : PICKUP_ORCHLON.name; },
+  get address(){ return hasMeowie() && !hasFlower() ? PICKUP_EDUPARK.address : PICKUP_ORCHLON.address; },
+  get hours(){ return hasMeowie() && !hasFlower() ? PICKUP_EDUPARK.hours : PICKUP_ORCHLON.hours; }
 };
 function isPickup(){ return box.deliveryMode === "pickup"; }
 function setDeliveryMode(m){

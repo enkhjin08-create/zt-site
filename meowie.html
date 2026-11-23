@@ -70,6 +70,7 @@ function renderMeowie(){
 function setMCat(c){ mCat = c; renderMeowie(); }
 document.getElementById("m-search").addEventListener("input", e => { mQuery = e.target.value; renderMeowie(); });
 
+window.onMeowieUpdate = function(){ mItems = PRODUCTS.filter(p => p.category === "meowie"); renderMeowie(); };
 (async function(){
   await initProducts();
   await loadMeowieProducts();

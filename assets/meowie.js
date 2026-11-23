@@ -22,13 +22,24 @@ async function loadMeowieProducts(){
     const allRecipients = Object.keys(RECIPIENTS);
     CATEGORIES.meowie = { label: "Meowie дагалдах зүйлс", short: "Meowie", iconRef: "extra", icon: "note", color: "#C2456E", tint: "#FFEAF1" };
     const seen = new Set();
-    (d.items||[]).forEach(it => {
+    // Ижил нэртэй барааг "#2, #3" гэж ялгана (id-аар эрэмбэлсэн тул тогтвортой).
+    const nk = n => String(n||"").toLowerCase().replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/^sticky note$/,"sticky notes");
+    const valid = (d.items||[]).filter(it => it && it.name && it.image && it.price > 0);
+    const groups = {};
+    valid.forEach(it => (groups[nk(it.name)] = groups[nk(it.name)] || []).push(it));
+    const label = new Map();
+    Object.values(groups).forEach(g => {
+      if(g.length < 2) return;
+      g.slice().sort((a,b)=>String(a.id||a.name).localeCompare(String(b.id||b.name)))
+        .forEach((it,i)=>label.set(it, it.name + " #" + (i+1)));
+    });
+    valid.forEach(it => {
       if(!it || !it.name || !it.image || !(it.price > 0)) return;
       const id = meowieId(String(it.id || it.name));
       if(seen.has(id)) return;
       seen.add(id);
       PRODUCTS.push({
-        id, name: it.name, price: Number(it.price), oldPrice: null, image: photos[it.image] || it.image, restyled: !!photos[it.image],
+        id, name: label.get(it) || it.name, price: Number(it.price), oldPrice: null, image: photos[it.image] || it.image, restyled: !!photos[it.image],
         category: "meowie", role: "extra", brand: "Meowie", mCat: it.category || "Бусад",
         soldOut: false, description: "", url: "", recipients: allRecipients
       });

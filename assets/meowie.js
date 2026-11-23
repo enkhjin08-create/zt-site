@@ -13,10 +13,12 @@ async function loadMeowieProducts(){
   try{
     const ctrl = new AbortController();
     const t = setTimeout(()=>ctrl.abort(), 12000);
+    const photosP = fetch('assets/meowie-photos.json').then(x=>x.ok?x.json():{}).catch(()=>({}));
     const r = await fetch(MEOWIE_URL, { signal: ctrl.signal });
     clearTimeout(t);
     if(!r.ok) return;
     const d = await r.json();
+    const photos = await photosP;
     const allRecipients = Object.keys(RECIPIENTS);
     CATEGORIES.meowie = { label: "Meowie дагалдах зүйлс", short: "Meowie", iconRef: "extra", icon: "note", color: "#C2456E", tint: "#FFEAF1" };
     const seen = new Set();
@@ -26,7 +28,7 @@ async function loadMeowieProducts(){
       if(seen.has(id)) return;
       seen.add(id);
       PRODUCTS.push({
-        id, name: it.name, price: Number(it.price), oldPrice: null, image: it.image,
+        id, name: it.name, price: Number(it.price), oldPrice: null, image: photos[it.image] || it.image, restyled: !!photos[it.image],
         category: "meowie", role: "extra", brand: "Meowie", mCat: it.category || "Бусад",
         soldOut: false, description: "", url: "", recipients: allRecipients
       });

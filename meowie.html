@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meowie бүтээгдэхүүн — Зөвхөн түүнд</title>
+<meta name="description" content="Meowie Giftshop-ийн Edupark салбарт бэлэн байгаа бүтээгдэхүүнүүд. Бэлгийн хайрцагтаа нэмээрэй.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/images/logo-icon-64.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header"></header>
+
+<div class="wrap page-head">
+  <p class="crumb"><a href="index.html">Нүүр</a> / Meowie бүтээгдэхүүн</p>
+  <h1>🐾 Meowie бүтээгдэхүүн</h1>
+  <p class="lede">Meowie Giftshop-ийн Edupark салбарт яг одоо бэлэн байгаа бүтээгдэхүүнүүд. Дуртайгаа бэлгийн хайрцагтаа нэмээрэй.</p>
+</div>
+
+<div class="wrap section" style="padding-top:0">
+  <input id="m-search" class="field-input" type="text" placeholder="🔍 Нэрээр хайх..." style="margin-bottom:16px;max-width:360px">
+  <div class="filter-pills" id="m-cats"></div>
+  <p id="m-count" style="font-size:13px;color:var(--ink-faint);margin:-12px 0 16px"></p>
+  <div class="product-grid" id="m-grid"><p class="lede">Ачаалж байна... 🐾</p></div>
+</div>
+
+<footer class="site-footer"></footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/products-api.js"></script>
+<script src="assets/meowie.js"></script>
+<script>
+renderHeader("meowie.html");
+renderFooter();
+
+let mCat = "all", mQuery = "";
+let mItems = [];
+
+function meowieCardHTML(p){
+  return `<div class="product-card" data-id="${p.id}">
+    <div>${productArtHTML(p)}</div>
+    <div class="product-body">
+      <div class="name">${escapeHTML(p.name)}</div>
+      ${priceRowHTML(p)}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-ghost btn-sm product-add-btn" onclick="addToBox(${p.id})" style="flex:1">Хайрцагт нэмэх</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderMeowie(){
+  const cats = Array.from(new Set(mItems.map(p => p.mCat))).sort();
+  if(mCat !== "all" && !cats.includes(mCat)) mCat = "all";
+  document.getElementById("m-cats").innerHTML = ["all", ...cats].map(c =>
+    `<button class="pill ${mCat===c?"is-active":""}" onclick="setMCat(${JSON.stringify(c).replace(/"/g,"&quot;")})">${c==="all"?"Бүгд":escapeHTML(c)}</button>`).join("");
+  const q = mQuery.trim().toLowerCase();
+  const list = mItems.filter(p => (mCat==="all" || p.mCat===mCat) && (!q || p.name.toLowerCase().includes(q)));
+  document.getElementById("m-count").textContent = list.length + " бараа";
+  document.getElementById("m-grid").innerHTML = list.length
+    ? list.map(meowieCardHTML).join("")
+    : `<p class="lede">Тохирох бараа олдсонгүй.</p>`;
+}
+function setMCat(c){ mCat = c; renderMeowie(); }
+document.getElementById("m-search").addEventListener("input", e => { mQuery = e.target.value; renderMeowie(); });
+
+(async function(){
+  await initProducts();
+  await loadMeowieProducts();
+  mItems = PRODUCTS.filter(p => p.category === "meowie");
+  if(!mItems.length){
+    document.getElementById("m-grid").innerHTML = `<p class="lede">Одоогоор бараа ачаалж чадсангүй. Түр хүлээгээд дахин оролдоно уу.</p>`;
+    return;
+  }
+  renderMeowie();
+})();
+</script>
+</body>
+</html>

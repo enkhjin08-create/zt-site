@@ -203,6 +203,7 @@ function renderHeader(active){
     ["index.html","Нүүр"],
     ["category.html","Бүтээгдэхүүн"],
     ["builder.html","Бэлэг бэлдэх"],
+    ["meowie.html","🐾 Meowie бүтээгдэхүүн"],
   ];
   const navLinks = links.map(([href,label]) =>
     `<a href="${href}" class="${active===href ? "active" : ""}">${label}</a>`).join("")

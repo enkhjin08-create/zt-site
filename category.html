@@ -108,7 +108,7 @@ function renderCatQuicklinks(){
 }
 
 function applyFiltersSort(list){
-  if(activeSearch) list = list.filter(p => p.name.toLowerCase().includes(activeSearch.toLowerCase()));
+  if(activeSearch){ const q = activeSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || (p.tag || "").toLowerCase().includes(q)); }
   if(activeRec !== "all") list = list.filter(p => (p.recipients||[]).includes(activeRec));
   if(activeBudget !== "all"){
     const [min,max] = activeBudget.split("-").map(Number);

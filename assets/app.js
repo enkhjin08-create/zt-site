@@ -166,7 +166,7 @@ function productArtHTML(p, opts){
   if(p.image){
     return `<div class="${artClass}" style="background:${cat.tint}">
         ${badge}${starBadge}
-        <img src="${p.image}" alt="${escapeHTML(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:${opts.detail ? 'contain' : 'cover'};object-position:center ${opts.detail ? 'center' : '25%'}">
+        <img src="${p.image}" alt="${escapeHTML(p.name)}" loading="lazy" style="${p.brand === 'Meowie' ? 'width:100%;height:100%;object-fit:contain;object-position:center;padding:6%;box-sizing:border-box;mix-blend-mode:multiply' : `width:100%;height:100%;object-fit:${opts.detail ? 'contain' : 'cover'};object-position:center ${opts.detail ? 'center' : '25%'}`}">
       </div>`;
   }
   return `<div class="${artClass}" style="background:${cat.tint};color:${cat.color}">

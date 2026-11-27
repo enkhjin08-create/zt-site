@@ -232,6 +232,17 @@ export const PRODUCTS = [
     "url": ""
   },
   {
+    "id": 1796000000001,
+    "image": "https://zuvhuntuund.com/images/uploads/blindbox-disney.jpg",
+    "name": "Disney Villains Plush Blind Box – Сюрприз хайрцаг",
+    "price": 47000,
+    "oldPrice": null,
+    "category": "extra",
+    "soldOut": false,
+    "description": "Нэг хайрцагт нэг сюрприз дүрс. Disney Villains цуглуулгын зөөлөн хүүхэлдэй, түлхүүрийн оосортой – аль нь гарахыг нээж байж мэднэ.",
+    "url": ""
+  },
+  {
     "id": 1796000000002,
     "image": "https://zuvhuntuund.com/images/uploads/blindbox-ghost.jpg",
     "name": "Little Ghost Cat Blind Box – Сюрприз хайрцаг",

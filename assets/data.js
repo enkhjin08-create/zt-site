@@ -157,7 +157,7 @@ const PRODUCTS = [
   },
   {
     "id": 1795000000001,
-    "image": "https://zuvhuntuund.com/images/uploads/meowie-giftset-1.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/meowie-set-1.jpg",
     "name": "Meowie багц #1 – Нойрмог муур аяга",
     "price": 55000,
     "oldPrice": null,
@@ -168,7 +168,7 @@ const PRODUCTS = [
   },
   {
     "id": 1795000000002,
-    "image": "https://zuvhuntuund.com/images/uploads/meowie-giftset-2.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/meowie-set-2.jpg",
     "name": "Meowie багц #2 – Захидлын дугтуй",
     "price": 44500,
     "oldPrice": null,
@@ -179,7 +179,7 @@ const PRODUCTS = [
   },
   {
     "id": 1795000000003,
-    "image": "https://zuvhuntuund.com/images/uploads/meowie-giftset-3.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/meowie-set-3.jpg",
     "name": "Meowie багц #3 – Муурын сарвуу",
     "price": 32000,
     "oldPrice": null,
@@ -190,7 +190,7 @@ const PRODUCTS = [
   },
   {
     "id": 1795000000004,
-    "image": "https://zuvhuntuund.com/images/uploads/meowie-giftset-4.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/meowie-set-4.jpg",
     "name": "Meowie багц #4 – Мяугийн халаас",
     "price": 43000,
     "oldPrice": null,
@@ -201,7 +201,7 @@ const PRODUCTS = [
   },
   {
     "id": 1795000000005,
-    "image": "https://zuvhuntuund.com/images/uploads/meowie-giftset-5.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/meowie-set-5.jpg",
     "name": "Meowie багц #5 – Хар аяга, баярлалаа",
     "price": 40000,
     "oldPrice": null,
@@ -212,7 +212,7 @@ const PRODUCTS = [
   },
   {
     "id": 1795000000006,
-    "image": "https://zuvhuntuund.com/images/uploads/meowie-giftset-6.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/meowie-set-6.jpg",
     "name": "Meowie багц #6 – Сакура хар аяга",
     "price": 60000,
     "oldPrice": null,
@@ -223,7 +223,7 @@ const PRODUCTS = [
   },
   {
     "id": 1795000000007,
-    "image": "https://zuvhuntuund.com/images/uploads/meowie-giftset-7.jpg",
+    "image": "https://zuvhuntuund.com/images/uploads/meowie-set-7.jpg",
     "name": "Meowie багц #7 – Зүрхтэй цагаан аяга",
     "price": 65000,
     "oldPrice": null,

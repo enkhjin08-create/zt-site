@@ -987,6 +987,24 @@ function renderList(){
   wrap.innerHTML = list.map(orderCardHTML).join("");
 }
 
+const PICKUP_MSG_ADDRESS = "Хөдөлмөрийн яамны эсрэг талд Orchlon complex 3 давхарт 312 тоот\nhttps://maps.app.goo.gl/DTpQAYMEaV3J9i9b8?g_st=ipc";
+function pickupMessageText(o){
+  const name = (o.customerName || "").trim();
+  return "Сайн байна уу" + (name ? ", " + name : "") + "! Таны захиалга" + (o.orderNumber ? " (№" + o.orderNumber + ")" : "") +
+    " Орчлон салбарт бэлэн боллоо, ажлын цагаар (19:00 хүртэл) ирж авах боломжтой. Баярлалаа!\nХаяг: " + PICKUP_MSG_ADDRESS;
+}
+async function copyPickupMsg(id){
+  const ta = document.getElementById("pm-" + id);
+  if(!ta) return;
+  try{ await navigator.clipboard.writeText(ta.value); toast("Мессеж хуулагдлаа ✓"); }
+  catch(e){ ta.select(); document.execCommand("copy"); toast("Мессеж хуулагдлаа ✓"); }
+}
+function openPickupSms(id, phone){
+  const ta = document.getElementById("pm-" + id);
+  if(!ta || !phone) return;
+  location.href = "sms:" + encodeURIComponent(phone) + "?&body=" + encodeURIComponent(ta.value);
+}
+
 function orderCardHTML(o){
   const st = STATUSES[o.status] || STATUSES.new;
   let date = "—";
@@ -1027,6 +1045,14 @@ function orderCardHTML(o){
       ${o.container ? `<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0"><span>📦 ${escapeHTML(o.container.name)}</span><span>${formatPrice(o.container.price)}</span></div>` : `<div style="font-size:12.5px;color:var(--ink-faint)">Сав: бор цаасан уут</div>`}
       ${itemsHTML || `<div style="font-size:12.5px;color:var(--ink-faint)">Гол бэлэг сонгоогүй</div>`}
     </div>
+    ${o.deliveryMethod === "pickup" ? `<details style="margin-top:10px;background:var(--sage-tint);border-radius:12px;padding:10px 14px">
+      <summary style="cursor:pointer;font-weight:700;font-size:13.5px">📩 Ирж авах мессеж явуулах</summary>
+      <textarea id="pm-${o.id}" class="field-input" style="margin-top:8px;min-height:130px;resize:vertical;font-size:13.5px">${escapeHTML(pickupMessageText(o))}</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button type="button" class="pill" onclick="copyPickupMsg('${o.id}')">📋 Хуулах</button>
+        ${o.customerPhone ? `<button type="button" class="pill" onclick="openPickupSms('${o.id}','${escapeHTML(o.customerPhone).replace(/'/g, "")}')">💬 SMS нээх (${safePhone})</button>` : ""}
+      </div>
+    </details>` : ""}
     ${o.note ? `<div style="margin-top:10px;font-size:13.5px;color:var(--ink);background:#FFF4D6;border-radius:10px;padding:8px 14px"><b>Нэмэлт тайлбар:</b> ${safeNote}</div>` : ""}
     ${o.message ? `<div style="margin-top:10px;font-family:var(--font-hand);font-size:18px;color:var(--ink-soft);background:var(--paper-deep);border-radius:10px;padding:8px 14px">"${safeMessage}"</div>` : ""}
     <div style="margin-top:10px;border-top:1px dashed var(--line);padding-top:10px">

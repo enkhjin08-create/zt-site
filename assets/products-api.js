@@ -133,6 +133,37 @@ const BASE_PRODUCTS = JSON.parse(JSON.stringify(PRODUCTS));
 const BASE_CATEGORIES = JSON.parse(JSON.stringify(CATEGORIES));
 const BASE_RECIPIENTS = JSON.parse(JSON.stringify(RECIPIENTS));
 
+// ── Нэг өдрийн хямдрал (Black Friday) ──────────────────────────────────────
+// Зөвхөн date өдөр (Улаанбаатарын цагаар) бүх барааны үнэ percent% буурна.
+// Админ хуудсанд үнэ өөрчлөгдөхгүй (админ жинхэнэ үнийг харж засна).
+const SITE_SALE = { name: "Black Friday", percent: 20, date: "2026-11-27" };
+
+function isSiteSaleActive(){
+  const ub = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10); // UTC+8
+  return ub === SITE_SALE.date;
+}
+
+function applySiteSale(){
+  if(/admin/i.test(location.pathname)) return;
+  if(!isSiteSaleActive()) return;
+  const k = 1 - SITE_SALE.percent / 100;
+  PRODUCTS.forEach(p => {
+    if(!p || !(p.price > 0)) return;
+    p.oldPrice = p.price;
+    p.price = Math.round(p.price * k / 100) * 100; // 100₮-д бүхэлчилнэ
+  });
+  window.SITE_SALE_ACTIVE = SITE_SALE;
+  const show = () => {
+    if(document.getElementById("site-sale-bar") || !document.body) return;
+    const bar = document.createElement("div");
+    bar.id = "site-sale-bar";
+    bar.style.cssText = "background:#111;color:#fff;text-align:center;padding:9px 14px;font:600 14px/1.35 system-ui,-apple-system,sans-serif;letter-spacing:.2px";
+    bar.innerHTML = '<span style="background:#ff3b5c;color:#fff;border-radius:6px;padding:2px 8px;margin-right:8px">BLACK FRIDAY</span>Зөвхөн өнөөдөр бүх бараа -' + SITE_SALE.percent + '% · 23:59 хүртэл';
+    document.body.insertBefore(bar, document.body.firstChild);
+  };
+  if(document.body) show(); else document.addEventListener("DOMContentLoaded", show);
+}
+
 let LAST_OVERRIDES = {};
 let LAST_RECIPIENT_OVERRIDES = {};
 window.ACTIVE_CAMPAIGN = null;
@@ -204,6 +235,8 @@ async function initProducts(){
   });
 
   window._ALL_PRODUCTS_ADMIN = ALL_PRODUCTS_INCLUDING_HIDDEN;
+
+  applySiteSale();
 
   updateCartBadge();
 }

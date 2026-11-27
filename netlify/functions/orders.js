@@ -83,6 +83,7 @@ function sanitizeOrder(input){
     container,
     items,
     message: str(input.message, 1000),
+    note: str(input.note, 500),
     subtotal: num(input.subtotal),
     deliveryFee: num(input.deliveryFee),
     deliveryMethod: input.deliveryMethod === "ubcab" ? "ubcab" : (input.deliveryMethod === "pickup" ? "pickup" : ""),
@@ -126,6 +127,7 @@ async function sendOrderNotificationEmail(order){
       ${order.container ? `<p><b>Сав:</b> ${escapeHtml(order.container.name)} (${order.container.price.toLocaleString()}₮)</p>` : ""}
       <table style="width:100%;border-collapse:collapse;margin-top:10px">${itemsHtml}</table>
       ${order.message ? `<p style="margin-top:10px"><b>Зурвас:</b> "${escapeHtml(order.message)}"</p>` : ""}
+      ${order.note ? `<p style="margin-top:10px;background:#FFF4D6;padding:8px 12px;border-radius:8px"><b>Нэмэлт тайлбар:</b> ${escapeHtml(order.note)}</p>` : ""}
       ${order.couponCode ? `<p><b>Купон:</b> ${escapeHtml(order.couponCode)} (-${(order.discount||0).toLocaleString()}₮)</p>` : ""}
       <p style="font-size:18px;margin-top:14px"><b>Нийт төлөх дүн: ${order.total.toLocaleString()}₮</b></p>
       <p style="margin-top:18px;font-size:13px;color:#888">Админ хэсэгт нэвтэрч дэлгэрэнгүйг харах болон төлвийг шинэчлэх боломжтой.</p>

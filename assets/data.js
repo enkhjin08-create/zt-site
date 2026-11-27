@@ -156,6 +156,83 @@ const PRODUCTS = [
     "url": ""
   },
   {
+    "id": 1795000000001,
+    "image": "/images/uploads/og-image.png",
+    "name": "Meowie багц #1 – Нойрмог муур аяга",
+    "price": 55000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Хөөрхөн аяга (нойрсож буй муур), Mofusand × Sanrio фигур, Meowie муурын үсний хавчаар, мэндчилгээ, бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1795000000002,
+    "image": "/images/uploads/og-image.png",
+    "name": "Meowie багц #2 – Захидлын дугтуй",
+    "price": 44500,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Өнгөлөг зурагтай аяга, Meowie мэндчилгээ, дугтуй хэлбэртэй энгэрийн тэмдэг, чимэглэлийн хайрцаг, бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1795000000003,
+    "image": "/images/uploads/og-image.png",
+    "name": "Meowie багц #3 – Муурын сарвуу",
+    "price": 32000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Муурын сарвуу хэлбэртэй 2 бүтээгдэхүүн, зүрх энгэрийн тэмдэг, Blind box, бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1795000000004,
+    "image": "/images/uploads/og-image.png",
+    "name": "Meowie багц #4 – Мяугийн халаас",
+    "price": 43000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Муурын картын түрийвч, Meowie үсний хавчаар, Hello Kitty сам, Mofusand зүйл, бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1795000000005,
+    "image": "/images/uploads/og-image.png",
+    "name": "Meowie багц #5 – Хар аяга, баярлалаа",
+    "price": 40000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Хар аяга, Scrunchie, хар сувдан зүүлт, \"Баярлалаа\" мэндчилгээ, бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1795000000006,
+    "image": "/images/uploads/og-image.png",
+    "name": "Meowie багц #6 – Сакура хар аяга",
+    "price": 60000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Сакура хээтэй хар аяга, Hello Kitty толь, зөөлөн түлхүүрийн оосор, энгэрийн тэмдэг, бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
+    "id": 1795000000007,
+    "image": "/images/uploads/og-image.png",
+    "name": "Meowie багц #7 – Зүрхтэй цагаан аяга",
+    "price": 65000,
+    "oldPrice": null,
+    "category": "giftset",
+    "soldOut": false,
+    "description": "Багцад орсон: Зүрхтэй цагаан аяга, Bubble Fish наалт, Meowie үсний хавчаар, муурын мэндчилгээ, Mofusand зүйл, бэлгийн хайрцаг.",
+    "url": ""
+  },
+  {
     "id": 810061,
     "image": "https://cdn.zochil.shop/7af96b25-9415-46b5-9ba4-0527feafd9b7_t1500.jpg",
     "name": "Бүсгүй 1",

@@ -391,6 +391,7 @@ function syncCustomerFields(){
   if(g("cust-district")) box.deliveryDistrict = g("cust-district").value;
   if(g("cust-khoroo")) box.deliveryKhoroo = g("cust-khoroo").value.trim();
   if(g("cust-address")) box.deliveryAddress = g("cust-address").value.trim();
+  if(g("cust-note")) box.note = g("cust-note").value.trim();
 }
 function setDeliveryPayer(v){
   syncCustomerFields();
@@ -512,6 +513,7 @@ function buildOrderObject(){
     container: container ? { id: container.id, name: container.name, price: container.price } : null,
     items: items.map(p => ({ id: p.id, name: p.name, price: p.price })),
     message: box.message || "",
+    note: box.note || "",
     subtotal: subtotal,
     deliveryFee: getDeliveryFee(),
     deliveryMethod: isPickup() ? "pickup" : (hasFlower() ? "ubcab" : ""),
@@ -548,6 +550,7 @@ function buildOrderText(){
     items.forEach(p => lines.push("  • " + p.name + " — " + formatPrice(p.price)));
   }
   if(box.message) lines.push("Зурвас: \"" + box.message + "\"");
+  if(box.note) lines.push("Нэмэлт тайлбар: " + box.note);
   lines.push("Барааны дүн: " + formatPrice(subtotal));
   if(isPickup()){
     lines.push("Хүргэлт: үнэгүй (өөрөө очиж авна)");
@@ -628,6 +631,11 @@ function renderSummary(){
     </div>
 
     ${hasFlower() && !isPickup() ? flowerDeliveryHTML() : ""}
+
+    <div style="margin-top:14px">
+      <label class="field-label">Нэмэлт тайлбар (заавал биш)</label>
+      <textarea id="cust-note" class="field-input" maxlength="500" style="margin-top:6px;min-height:70px;resize:vertical" placeholder="Хүргэлтийн цаг, нэмэлт хүсэлт, анхаарах зүйл гэх мэт" onchange="box.note=this.value.trim();persist();">${escapeHTML(box.note || "")}</textarea>
+    </div>
 
     <div style="margin-top:14px">
       <label class="field-label">Хямдралын купон (заавал биш)</label>

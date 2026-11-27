@@ -232,39 +232,6 @@ export const PRODUCTS = [
     "url": ""
   },
   {
-    "id": 1796000000001,
-    "image": "https://zuvhuntuund.com/images/uploads/blindbox-disney.jpg",
-    "name": "Disney Villains Plush Blind Box – Сюрприз хайрцаг",
-    "price": 47000,
-    "oldPrice": null,
-    "category": "extra",
-    "soldOut": false,
-    "description": "Нэг хайрцагт нэг сюрприз дүрс. Disney Villains цуглуулгын зөөлөн хүүхэлдэй, түлхүүрийн оосортой – аль нь гарахыг нээж байж мэднэ.",
-    "url": ""
-  },
-  {
-    "id": 1796000000002,
-    "image": "https://zuvhuntuund.com/images/uploads/blindbox-ghost.jpg",
-    "name": "Little Ghost Cat Blind Box – Сюрприз хайрцаг",
-    "price": 20000,
-    "oldPrice": null,
-    "category": "extra",
-    "soldOut": false,
-    "description": "Нэг хайрцагт нэг сюрприз дүрс. Хөөрхөн сүнс ба муур хосолсон цуглуулгын хөшөөнүүд – аль нь гарахыг нээж байж мэднэ.",
-    "url": ""
-  },
-  {
-    "id": 1796000000003,
-    "image": "https://zuvhuntuund.com/images/uploads/blindbox-hp.jpg",
-    "name": "Harry Potter Plush Coin Purse Blind Box – Сюрприз хайрцаг",
-    "price": 29000,
-    "oldPrice": null,
-    "category": "extra",
-    "soldOut": false,
-    "description": "Нэг хайрцагт нэг сюрприз дүрс. Harry Potter сэдэвтэй зөөлөн хүүхэлдэйн зоосны түрийвч, түлхүүрийн оосор – аль нь гарахыг нээж байж мэднэ.",
-    "url": ""
-  },
-  {
     "id": 810061,
     "image": "https://cdn.zochil.shop/7af96b25-9415-46b5-9ba4-0527feafd9b7_t1500.jpg",
     "name": "Бүсгүй 1",

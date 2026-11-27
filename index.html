@@ -315,7 +315,7 @@
     }).join("");
 
     const giftsetPreview = document.getElementById("giftset-preview");
-    giftsetPreview.innerHTML = PRODUCTS.filter(p => p.category === "giftset" && !p.soldOut && !(p.id >= 1794000000000 && p.id < 1794000000100)).slice(0,4).map(productCardHTML).join("");
+    giftsetPreview.innerHTML = PRODUCTS.filter(p => p.category === "giftset" && !p.soldOut && !(p.id >= 1794000000000 && p.id < 1794000000100)).sort((a,b) => a.id - b.id).slice(0,4).map(productCardHTML).join("");
 
     const bestSellers = PRODUCTS.filter(p => p.bestSeller && !p.soldOut).sort((a,b) => b.id - a.id); // сүүлд нэмсэн нь эхэнд
     if(bestSellers.length){
